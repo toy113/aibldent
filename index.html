@@ -1105,13 +1105,13 @@ function renderHome(){
     apptList.innerHTML = appts.map(a=>{
       const sm = STATUS_META[a.status]||STATUS_META["รอ"];
       return `<div class="appt-row">
+        <div class="status-badge" style="color:${sm.color};background:${sm.bg};border-color:${sm.color}30;flex-shrink:0"
+          onclick="cycleStatus('${a.id}','${a.time}','${a.patient}')">${a.status}</div>
         <div class="appt-time">${a.time}</div>
         <div class="appt-info">
           <div class="appt-name">${a.hn?'<span style="color:#38BDF8;font-size:12px;font-weight:700;background:rgba(56,189,248,.15);padding:1px 7px;border-radius:5px;margin-right:6px">'+(a.hn)+'</span>':''}${a.patient}</div>
           <div class="appt-treat">${a.treatment}</div>
         </div>
-        <div class="status-badge" style="color:${sm.color};background:${sm.bg};border-color:${sm.color}30"
-          onclick="cycleStatus(${a.id})">${a.status}</div>
       </div>`;
     }).join("");
   }
@@ -1135,21 +1135,26 @@ function renderHome(){
   }
 }
 
-function cycleStatus(id){
-  const numId = +id; // ensure numeric comparison
+function cycleStatus(id, time, patient){
+  // Match by time+patient as unique key (most reliable)
+  let matched = false;
   appts = appts.map(a=>{
-    if(+a.id !== numId) return a;
+    if(matched) return a;
+    const isMatch = (String(a.id)===String(id)) ||
+                    (a.time===time && a.patient===patient);
+    if(!isMatch) return a;
+    matched = true;
     return {...a, status: STATUS_ORDER[(STATUS_ORDER.indexOf(a.status)+1)%STATUS_ORDER.length]};
   });
   save(currentDoctor?'dn_'+currentDoctor.dataKey+'_appts':'dn_appts', appts);
   renderHome();
   // Push status update to Sheet
   if(currentDoctor && !currentDoctor.isAdmin){
-    const updated = appts.find(a=>+a.id===numId);
+    const updated = appts.find(a=>a.time===time && a.patient===patient);
     if(updated){
       const apptRow = [updated.id, updated.time, updated.hn||"",
                        updated.patient, updated.treatment, updated.status];
-      pushToSheet(getSheetName("appts", currentDoctor.dataKey), "update", apptRow, id);
+      pushToSheet(getSheetName("appts", currentDoctor.dataKey), "update", apptRow, updated.id);
     }
   }
 }
@@ -1235,7 +1240,8 @@ function submitRecord(){
     treatment:document.getElementById("f-treatment").value, cash,transfer,insurance,company};
   if(editId){ records=records.map(r=>r.id===editId?rec:r); }
   else       { records=[...records,rec]; }
-  save("dn_records",records);
+  save(currentDoctor?"dn_"+currentDoctor.dataKey+"_records":"dn_records",records);
+  const savedEditId = editId; // capture before reset
   toggleForm(false); resetForm();
   renderRecordsTable();
   showToast("✅ บันทึกรายการแล้ว");
@@ -1244,8 +1250,8 @@ function submitRecord(){
     const sheetName = getSheetName("records", currentDoctor.dataKey);
     const row = [rec.id, rec.date, rec.hn||"", rec.patient, rec.treatment,
                  rec.price, rec.cash, rec.transfer, rec.insurance, rec.company];
-    const action = editId ? "update" : "add";
-    const pushId = editId || rec.id;
+    const action = savedEditId ? "update" : "add";
+    const pushId = savedEditId || rec.id;
     pushToSheet(sheetName, action, row, pushId)
       .then(ok=>{ if(ok) showToast("☁️ "+(action==="add"?"บันทึก":"อัปเดต")+" Sheet แล้ว"); });
   }
