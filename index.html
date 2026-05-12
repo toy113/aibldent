@@ -1228,7 +1228,8 @@ function submitRecord(){
   try{
     const hn       = (document.getElementById("f-hn")||{value:""}).value.trim();
     const patient  = (document.getElementById("f-patient")||{value:""}).value.trim();
-    const price    = parseInt(document.getElementById("f-price").value)||0;
+    // Compute price directly from payment fields (reliable fallback)
+    const price    = cash+transfer+insurance+company || parseInt(document.getElementById("f-price").value)||0;
     const cash     = parseInt(document.getElementById("f-cash").value)||0;
     const transfer = parseInt(document.getElementById("f-transfer").value)||0;
     const insurance= parseInt(document.getElementById("f-insurance").value)||0;
@@ -1238,7 +1239,7 @@ function submitRecord(){
     const treatment= document.getElementById("f-treatment").value||"ขูดหินปูน";
 
     if(!patient){ alert("กรุณากรอกชื่อผู้ป่วย"); return; }
-    if(!price)  { alert("กรุณากรอกยอดชำระด้านล่างก่อน"); return; }
+    if(!price)  { alert("กรุณากรอกยอดชำระ (เงินสด/โอน/ประกัน/เบิก) ก่อน"); return; }
     // price is auto-synced from paid — no need to validate mismatch
 
     const recId = editId||Date.now();
@@ -1260,7 +1261,8 @@ function submitRecord(){
     // Push to Google Sheet
     if(currentDoctor && !currentDoctor.isAdmin){
       const sheetName = getSheetName("records", currentDoctor.dataKey);
-      const row = [recId, date, hn, patient, treatment, price, cash, transfer, insurance, company];
+      const finalPrice = cash+transfer+insurance+company;
+      const row = [recId, date, hn, patient, treatment, finalPrice, cash, transfer, insurance, company];
       const action = savedEditId ? "update" : "add";
       pushToSheet(sheetName, action, row, savedEditId||recId)
         .then(ok=>{ if(ok) showToast("☁️ "+(action==="add"?"บันทึก":"อัปเดต")+" Sheet แล้ว"); });
@@ -2041,22 +2043,29 @@ function getSheetName(type, dataKey){
 async function fetchSheet(sheetName){
   if(!SCRIPT_URL) return null;
   try {
-    const res  = await fetch(SCRIPT_URL+"?sheet="+encodeURIComponent(sheetName));
+    const res  = await fetch(SCRIPT_URL+"?sheet="+encodeURIComponent(sheetName), {mode:"cors"});
     const json = await res.json();
     return json.status==="ok" ? json.data : null;
   } catch(e){ return null; }
 }
 
 async function pushToSheet(sheetName, action, row, id){
-  if(!SCRIPT_URL) return false;
+  if(!SCRIPT_URL){ console.warn("pushToSheet: no SCRIPT_URL"); return false; }
+  console.log("📤 pushing to sheet:", sheetName, action, row);
   try {
+    // No Content-Type header - avoids CORS preflight with Apps Script
     const res = await fetch(SCRIPT_URL, {
       method:"POST",
       body: JSON.stringify({sheet:sheetName, action, row, id}),
     });
     const json = await res.json();
+    console.log("📥 sheet response:", json);
     return json.status==="ok";
-  } catch(e){ return false; }
+  } catch(e){
+    console.error("pushToSheet error:", e);
+    showToast("⚠️ ส่ง Sheet ไม่ได้: "+e.message, "#FF6B8A");
+    return false;
+  }
 }
 
 function setSyncStatus(msg, color="#00C9A7"){ console.log("Sync:", msg); }
@@ -2084,8 +2093,12 @@ async function syncFromSheet(){
     // Lab: push-only direction (local → Sheet), don't pull from Sheet to prevent data loss
     // Lab data is always kept in localStorage as source of truth
     setSyncStatus("✅ Sync สำเร็จ "+new Date().toLocaleTimeString("th-TH"), "#00C9A7");
-    // Re-render ALL tabs after sync
-    renderCurrentTab();
+    // Re-render current tab after sync
+    if(currentTab==="home") renderHome();
+    else if(currentTab==="records") renderRecordsTable();
+    else if(currentTab==="summary") { try{renderSummaryData();}catch(e){} }
+    else if(currentTab==="lab") { renderLabTable(); renderLabMonthlySummary(); }
+    else if(currentTab==="admin") { try{renderAdmin();}catch(e){} }
   } catch(e){
     setSyncStatus("❌ Sync ล้มเหลว: "+e.message, "#FF6B8A");
   }
@@ -2249,6 +2262,7 @@ function renderLabMonthlySummary(){
 // Version check — clear old data if seed version changed
 const DATA_VERSION = "v4-labfix";
 if(load("dn_data_version","") !== DATA_VERSION){
+  console.log("🔄 Clearing old cache for version", DATA_VERSION);
   ["dn_koy_appts","dn_koy_records","dn_mind_appts","dn_mind_records",
    "dn_toy_appts","dn_toy_records","dn_pong_appts","dn_pong_records",
    "dn_chut_appts","dn_chut_records","dn_nuch_appts","dn_nuch_records",
