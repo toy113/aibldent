@@ -1705,6 +1705,7 @@ function loginSuccess(doc){
   document.getElementById("main").style.display   = "";
   const fs=document.getElementById("floating-sync"); if(fs) fs.classList.remove("hidden");
 
+  _labKey = currentDoctor ? "dn_"+currentDoctor.dataKey+"_lab" : "dn_lab";
   updateSidebar();
   renderHome();
   startAutoSync();
@@ -1741,6 +1742,7 @@ document.head.appendChild(shakeStyle);
 let labEditId = null;
 let labFilterDate = '';
 let labFormInit = false;
+let _labKey = "dn_lab"; // snapshot of lab key, set on login
 
 function initLabForm(){
   if(labFormInit) return;
@@ -1781,6 +1783,8 @@ function resetLabForm(){
 }
 
 function labKey(){
+  // Use snapshot to prevent async race condition
+  if(_labKey && _labKey !== "dn_lab") return _labKey;
   return currentDoctor && !currentDoctor.isAdmin ? "dn_"+currentDoctor.dataKey+"_lab" : "dn_lab";
 }
 function submitLab(){
@@ -2062,9 +2066,9 @@ async function syncFromSheet(){
   const key = currentDoctor.dataKey;
   setSyncStatus("⏳ กำลัง sync...", "#38BDF8");
   try {
-    // Sync appointments
+    // Sync appointments - Sheet is master for appointments
     const aptData = await fetchSheet(getSheetName("appts", key));
-    if(aptData){
+    if(aptData && aptData.length > 0){
       appts = aptData.map(r=>({
         id:        +r.id||Date.now(),
         time:      r.time||"",
@@ -2075,48 +2079,10 @@ async function syncFromSheet(){
       }));
       save("dn_"+key+"_appts", appts);
     }
-    // Sync records
-    const recData = await fetchSheet(getSheetName("records", key));
-    if(recData && recData.length >= records.length){
-      // Only overwrite if Sheet has same or more records (prevent data loss)
-      records = recData.map(r=>({
-        id:        +r.id||Date.now(),
-        date:      r.date||todayStr(),
-        hn:        r.hn||"",
-        patient:   r.patient||"",
-        treatment: r.treatment||"",
-        price:     +r.price||0,
-        cash:      +r.cash||0,
-        transfer:  +r.transfer||0,
-        insurance: +r.insurance||0,
-        company:   +r.company||0,
-      }));
-      save("dn_"+key+"_records", records);
-    } else if(recData && recData.length < records.length){
-      // Sheet has fewer records - merge: push local records not in Sheet
-      const sheetIds = new Set(recData.map(r=>String(r.id)));
-      const missing  = records.filter(r=>!sheetIds.has(String(r.id)));
-      const sheetName = getSheetName("records", key);
-      missing.forEach(r=>{
-        const row = [r.id,r.date,r.hn||"",r.patient,r.treatment,r.price,r.cash,r.transfer,r.insurance,r.company];
-        pushToSheet(sheetName,"add",row,r.id);
-      });
-    }
-    // Sync lab
-    const labData = await fetchSheet(getSheetName("lab", key));
-    if(labData){
-      const labRecs = labData.map(r=>({
-        id:        +r.id||Date.now(),
-        date:      r.date||todayStr(),
-        hn:        r.hn||"",
-        patient:   r.patient||"",
-        procedure: r.procedure||"",
-        lab:       r.lab||"",
-        price:     +r.price||0,
-        note:      r.note||"",
-      }));
-      save("dn_"+key+"_lab", labRecs);
-    }
+    // Records: push-only (local → Sheet), localStorage is source of truth
+    // This prevents sync from overwriting newly saved records
+    // Lab: push-only direction (local → Sheet), don't pull from Sheet to prevent data loss
+    // Lab data is always kept in localStorage as source of truth
     setSyncStatus("✅ Sync สำเร็จ "+new Date().toLocaleTimeString("th-TH"), "#00C9A7");
     // Re-render ALL tabs after sync
     renderCurrentTab();
@@ -2281,14 +2247,16 @@ function renderLabMonthlySummary(){
 
 /* INIT */
 // Version check — clear old data if seed version changed
-const DATA_VERSION = "v3-hn";
+const DATA_VERSION = "v4-labfix";
 if(load("dn_data_version","") !== DATA_VERSION){
   ["dn_koy_appts","dn_koy_records","dn_mind_appts","dn_mind_records",
    "dn_toy_appts","dn_toy_records","dn_pong_appts","dn_pong_records",
    "dn_chut_appts","dn_chut_records","dn_nuch_appts","dn_nuch_records",
    "dn_aim_appts","dn_aim_records","dn_part_appts","dn_part_records",
    "dn_khao_appts","dn_khao_records",
-   "dn_appts","dn_records"
+   "dn_appts","dn_records",
+   "dn_toy_lab","dn_mind_lab","dn_koy_lab","dn_pong_lab",
+   "dn_chut_lab","dn_nuch_lab","dn_aim_lab","dn_part_lab","dn_khao_lab","dn_lab"
   ].forEach(k=>localStorage.removeItem(k));
   save("dn_data_version", DATA_VERSION);
 }
