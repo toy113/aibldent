@@ -592,8 +592,9 @@ tfoot td{font-weight:700;padding:12px 15px;color:var(--teal);font-size:13px}
       <div style="font-weight:700;font-size:15px;color:var(--teal);margin-bottom:18px" id="form-title">➕ รายการใหม่</div>
       <div class="form-grid">
         <div class="form-field"><label class="form-label">วันที่</label><input class="form-input" type="date" id="f-date"/></div>
+        <div class="form-field"><label class="form-label" style="color:#38BDF8">เลขที่ผู้ป่วย</label><input class="form-input" type="text" id="f-hn" placeholder="เช่น 001, 002" style="border-color:rgba(56,189,248,.3)"/></div>
         <div class="form-field"><label class="form-label">ชื่อผู้ป่วย</label><input class="form-input" type="text" id="f-patient" placeholder="กรอกแค่ชื่อ"/></div>
-        <div class="form-field"><label class="form-label">ราคารวม (฿)</label><input class="form-input" type="number" id="f-price" placeholder="0" min="0" oninput="updateBalance('price')"/></div>
+        <div class="form-field"><label class="form-label">ราคารวม (฿)</label><input class="form-input" type="number" id="f-price" placeholder="= ยอดรวมอัตโนมัติ" min="0" readonly style="background:rgba(0,201,167,.08);border-color:rgba(0,201,167,.4);color:var(--teal);font-weight:700;cursor:default" oninput="updateBalance('price')"/></div>
         <div class="form-field">
           <label class="form-label">การรักษา</label>
           <select class="form-input" id="f-treatment">
@@ -1196,10 +1197,11 @@ function updateBalance(changedField){
   const paid    = PAYMENT_KEYS.reduce((s,k)=>s+(+document.getElementById("f-"+k).value||0),0);
   const el      = document.getElementById("balance-indicator");
 
-  // Auto-fill price ONLY if price is empty or 0
-  if(changedField !== "price" && paid > 0){
-    const currentPrice = +priceEl.value||0;
-    if(currentPrice === 0) priceEl.value = paid;
+  // Always sync price = paid total (price is readonly, driven by payment fields)
+  if(paid > 0){
+    priceEl.value = paid;
+  } else if(paid === 0){
+    priceEl.value = "";
   }
 
   const price = +priceEl.value||0;
@@ -1236,8 +1238,8 @@ function submitRecord(){
     const treatment= document.getElementById("f-treatment").value||"ขูดหินปูน";
 
     if(!patient){ alert("กรุณากรอกชื่อผู้ป่วย"); return; }
-    if(!price)  { alert("กรุณากรอกราคา"); return; }
-    if(paid!==price){ alert("ยอดชำระ "+fmtTHB(paid)+" ≠ ราคา "+fmtTHB(price)); return; }
+    if(!price)  { alert("กรุณากรอกยอดชำระด้านล่างก่อน"); return; }
+    // price is auto-synced from paid — no need to validate mismatch
 
     const recId = editId||Date.now();
     const rec = {id:recId, date, hn, patient, treatment, price, cash, transfer, insurance, company};
@@ -1778,6 +1780,9 @@ function resetLabForm(){
   document.getElementById("submit-lab-btn").textContent = "➕ บันทึกรายการแลป";
 }
 
+function labKey(){
+  return currentDoctor && !currentDoctor.isAdmin ? "dn_"+currentDoctor.dataKey+"_lab" : "dn_lab";
+}
 function submitLab(){
   const patient = document.getElementById("lf-patient").value.trim();
   const hn      = document.getElementById("lf-hn").value.trim();
@@ -1793,11 +1798,12 @@ function submitLab(){
     price,
     note:      document.getElementById("lf-note").value.trim(),
   };
-  const labRecs = load("dn_lab", []);
-  if(labEditId){ save("dn_lab", labRecs.map(r=>r.id===labEditId?rec:r)); }
-  else          { save("dn_lab", [...labRecs, rec]); }
+  const labRecs = load(labKey(), []);
+  if(labEditId){ save(labKey(), labRecs.map(r=>r.id===labEditId?rec:r)); }
+  else          { save(labKey(), [...labRecs, rec]); }
   toggleLabForm(false); resetLabForm();
   renderLabTable();
+  renderLabMonthlySummary();
   showToast("✅ บันทึกรายการแลปแล้ว");
   // Push to Google Sheet
   if(currentDoctor && !currentDoctor.isAdmin){
@@ -1813,7 +1819,7 @@ function submitLab(){
 }
 
 function editLab(id){
-  const recs = load("dn_lab",[]);
+  const recs = load(labKey(),[]);
   const r = recs.find(x=>x.id===id); if(!r) return;
   labEditId = id;
   document.getElementById("lf-date").value      = r.date;
@@ -1831,8 +1837,9 @@ function editLab(id){
 
 function deleteLab(id){
   if(!confirm("ลบรายการแลปนี้?")) return;
-  save("dn_lab", load("dn_lab",[]).filter(r=>r.id!==id));
+  save(labKey(), load(labKey(),[]).filter(r=>r.id!==id));
   renderLabTable();
+  renderLabMonthlySummary();
   showToast("🗑 ลบรายการแลปแล้ว");
   if(currentDoctor && !currentDoctor.isAdmin){
     pushToSheet(getSheetName("lab", currentDoctor.dataKey), "delete", [], id);
@@ -1842,11 +1849,12 @@ function deleteLab(id){
 function renderLab(){
   initLabForm();
   renderLabTable();
+  setTimeout(renderLabMonthlySummary, 100);
 }
 
 function renderLabTable(){
   const labSearch = document.getElementById("lab-filter-lab")?.value.toLowerCase()||"";
-  let recs = load("dn_lab",[]);
+  let recs = load(labKey(),[]);
   if(labFilterDate) recs = recs.filter(r=>r.date===labFilterDate);
   if(labSearch)     recs = recs.filter(r=>(r.lab||"").toLowerCase().includes(labSearch)||(r.patient||"").toLowerCase().includes(labSearch));
 
@@ -2069,7 +2077,8 @@ async function syncFromSheet(){
     }
     // Sync records
     const recData = await fetchSheet(getSheetName("records", key));
-    if(recData){
+    if(recData && recData.length >= records.length){
+      // Only overwrite if Sheet has same or more records (prevent data loss)
       records = recData.map(r=>({
         id:        +r.id||Date.now(),
         date:      r.date||todayStr(),
@@ -2083,6 +2092,15 @@ async function syncFromSheet(){
         company:   +r.company||0,
       }));
       save("dn_"+key+"_records", records);
+    } else if(recData && recData.length < records.length){
+      // Sheet has fewer records - merge: push local records not in Sheet
+      const sheetIds = new Set(recData.map(r=>String(r.id)));
+      const missing  = records.filter(r=>!sheetIds.has(String(r.id)));
+      const sheetName = getSheetName("records", key);
+      missing.forEach(r=>{
+        const row = [r.id,r.date,r.hn||"",r.patient,r.treatment,r.price,r.cash,r.transfer,r.insurance,r.company];
+        pushToSheet(sheetName,"add",row,r.id);
+      });
     }
     // Sync lab
     const labData = await fetchSheet(getSheetName("lab", key));
@@ -2188,7 +2206,7 @@ function renderLabMonthlySummary(){
   const monthEl = document.getElementById("lab-month-filter");
   if(!monthEl) return;
   const month = monthEl.value;
-  const allLab = load("dn_lab",[]);
+  const allLab = load(labKey(),[]);
   const filtered = month ? allLab.filter(r=>r.date&&r.date.startsWith(month)) : allLab;
 
   const total    = filtered.reduce((s,r)=>s+(+r.price||0),0);
