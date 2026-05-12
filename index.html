@@ -586,14 +586,14 @@ tfoot td{font-weight:700;padding:12px 15px;color:var(--teal);font-size:13px}
         <h1 class="page-title">บันทึกการรักษา</h1>
         <p class="page-sub">จัดการข้อมูลผู้ป่วยและค่ารักษา</p>
       </div>
-      <button class="btn-primary" id="toggle-form-btn" style="margin-top:6px" onclick="toggleForm(true);resetForm()">＋ เพิ่มรายการ</button>
+      <button class="btn-primary" id="toggle-form-btn" style="margin-top:6px" onclick="toggleForm(true);setTimeout(resetForm,50)">＋ เพิ่มรายการ</button>
     </div>
     <div class="card hidden" id="rec-form-card" style="margin-bottom:22px;border:1px solid rgba(0,201,167,.25)">
       <div style="font-weight:700;font-size:15px;color:var(--teal);margin-bottom:18px" id="form-title">➕ รายการใหม่</div>
       <div class="form-grid">
         <div class="form-field"><label class="form-label">วันที่</label><input class="form-input" type="date" id="f-date"/></div>
         <div class="form-field"><label class="form-label">ชื่อผู้ป่วย</label><input class="form-input" type="text" id="f-patient" placeholder="กรอกแค่ชื่อ"/></div>
-        <div class="form-field"><label class="form-label">ราคารวม (฿)</label><input class="form-input" type="number" id="f-price" placeholder="0" min="0"/></div>
+        <div class="form-field"><label class="form-label">ราคารวม (฿)</label><input class="form-input" type="number" id="f-price" placeholder="0" min="0" oninput="updateBalance('price')"/></div>
         <div class="form-field">
           <label class="form-label">การรักษา</label>
           <select class="form-input" id="f-treatment">
@@ -609,10 +609,10 @@ tfoot td{font-weight:700;padding:12px 15px;color:var(--teal);font-size:13px}
       <div style="background:rgba(255,255,255,.03);border-radius:14px;padding:16px;border:1px solid var(--border)">
         <div class="section-label" style="margin-bottom:12px">💳 แยกประเภทการชำระเงิน</div>
         <div class="pay-grid-form">
-          <div class="form-field"><label class="form-label" style="color:#00C9A7">💵 เงินสด</label><input class="form-input" type="number" id="f-cash" placeholder="0" min="0" style="border-color:rgba(0,201,167,.3)"/></div>
-          <div class="form-field"><label class="form-label" style="color:#38BDF8">📱 เงินโอน</label><input class="form-input" type="number" id="f-transfer" placeholder="0" min="0" style="border-color:rgba(56,189,248,.3)"/></div>
-          <div class="form-field"><label class="form-label" style="color:#FFBB55">🏥 ประกันสังคม</label><input class="form-input" type="number" id="f-insurance" placeholder="0" min="0" style="border-color:rgba(255,187,85,.3)"/></div>
-          <div class="form-field"><label class="form-label" style="color:#A78BFA">🏢 เบิกบริษัท</label><input class="form-input" type="number" id="f-company" placeholder="0" min="0" style="border-color:rgba(167,139,250,.3)"/></div>
+          <div class="form-field"><label class="form-label" style="color:#00C9A7">💵 เงินสด</label><input class="form-input" type="number" id="f-cash" placeholder="0" min="0" style="border-color:rgba(0,201,167,.3)" oninput="updateBalance('pay')"/></div>
+          <div class="form-field"><label class="form-label" style="color:#38BDF8">📱 เงินโอน</label><input class="form-input" type="number" id="f-transfer" placeholder="0" min="0" style="border-color:rgba(56,189,248,.3)" oninput="updateBalance('pay')"/></div>
+          <div class="form-field"><label class="form-label" style="color:#FFBB55">🏥 ประกันสังคม</label><input class="form-input" type="number" id="f-insurance" placeholder="0" min="0" style="border-color:rgba(255,187,85,.3)" oninput="updateBalance('pay')"/></div>
+          <div class="form-field"><label class="form-label" style="color:#A78BFA">🏢 เบิกบริษัท</label><input class="form-input" type="number" id="f-company" placeholder="0" min="0" style="border-color:rgba(167,139,250,.3)" oninput="updateBalance('pay')"/></div>
         </div>
         <div class="balance-indicator" id="balance-indicator" style="background:rgba(255,255,255,.04);color:var(--muted)">ยอดรวม: 0 ฿</div>
       </div>
@@ -1108,11 +1108,11 @@ function renderHome(){
   const apptList = document.getElementById("appt-list");
   if(!appts.length){ apptList.innerHTML='<div class="empty-state">🦷 ไม่มีการนัดหมายวันนี้</div>'; }
   else{
-    apptList.innerHTML = appts.map(a=>{
+    apptList.innerHTML = appts.map((a,_idx)=>{
       const sm = STATUS_META[a.status]||STATUS_META["รอ"];
       return `<div class="appt-row">
         <div class="status-badge" style="color:${sm.color};background:${sm.bg};border-color:${sm.color}30;flex-shrink:0"
-          onclick="cycleStatus('${a.id}','${a.time}','${a.patient}')">${a.status}</div>
+          onclick="cycleStatusByIndex(${_idx})">${a.status}</div>
         <div class="appt-time">${a.time}</div>
         <div class="appt-info">
           <div class="appt-name">${a.hn?'<span style="color:#38BDF8;font-size:12px;font-weight:700;background:rgba(56,189,248,.15);padding:1px 7px;border-radius:5px;margin-right:6px">'+(a.hn)+'</span>':''}${a.patient}</div>
@@ -1141,27 +1141,19 @@ function renderHome(){
   }
 }
 
-function cycleStatus(id, time, patient){
-  // Match by time+patient as unique key (most reliable)
-  let matched = false;
-  appts = appts.map(a=>{
-    if(matched) return a;
-    const isMatch = (String(a.id)===String(id)) ||
-                    (a.time===time && a.patient===patient);
-    if(!isMatch) return a;
-    matched = true;
-    return {...a, status: STATUS_ORDER[(STATUS_ORDER.indexOf(a.status)+1)%STATUS_ORDER.length]};
-  });
+function cycleStatusByIndex(idx){
+  if(idx < 0 || idx >= appts.length) return;
+  const a = appts[idx];
+  const nextStatus = STATUS_ORDER[(STATUS_ORDER.indexOf(a.status)+1) % STATUS_ORDER.length];
+  appts[idx] = {...a, status: nextStatus};
   save(currentDoctor?'dn_'+currentDoctor.dataKey+'_appts':'dn_appts', appts);
   renderHome();
-  // Push status update to Sheet
+  // Push to Sheet
   if(currentDoctor && !currentDoctor.isAdmin){
-    const updated = appts.find(a=>a.time===time && a.patient===patient);
-    if(updated){
-      const apptRow = [updated.id, updated.time, updated.hn||"",
-                       updated.patient, updated.treatment, updated.status];
-      pushToSheet(getSheetName("appts", currentDoctor.dataKey), "update", apptRow, updated.id);
-    }
+    const updated = appts[idx];
+    const row = [updated.id, updated.time, updated.hn||"",
+                 updated.patient, updated.treatment, updated.status];
+    pushToSheet(getSheetName("appts", currentDoctor.dataKey), "update", row, updated.id);
   }
 }
 
@@ -1172,13 +1164,11 @@ let recFormInit = false;
 function initRecordsForm(){
   if(recFormInit) return;
   recFormInit = true;
-  document.getElementById("f-date").value = todayStr();
-  document.getElementById("filter-date").value = todayStr();
-  document.getElementById("f-price").addEventListener("input", ()=>updateBalance("price"));
-  ["f-cash","f-transfer","f-insurance","f-company"].forEach(id=>{
-    document.getElementById(id).addEventListener("input", ()=>updateBalance("pay"));
-  });
-  document.getElementById("toggle-form-btn").addEventListener("click",()=>{ resetForm(); toggleForm(true); });
+  try{
+    document.getElementById("f-date").value = todayStr();
+    const fd = document.getElementById("filter-date");
+    if(fd) fd.value = todayStr();
+  }catch(e){}
 }
 
 function toggleForm(show){
@@ -1206,9 +1196,10 @@ function updateBalance(changedField){
   const paid    = PAYMENT_KEYS.reduce((s,k)=>s+(+document.getElementById("f-"+k).value||0),0);
   const el      = document.getElementById("balance-indicator");
 
-  // Always sync price from payment total whenever payment fields change
+  // Auto-fill price ONLY if price is empty or 0
   if(changedField !== "price" && paid > 0){
-    priceEl.value = paid;
+    const currentPrice = +priceEl.value||0;
+    if(currentPrice === 0) priceEl.value = paid;
   }
 
   const price = +priceEl.value||0;
@@ -1232,37 +1223,53 @@ function updateBalance(changedField){
   }
 }
 function submitRecord(){
-  const patient  = document.getElementById("f-patient").value.trim();
-  const price    = Math.round(+document.getElementById("f-price").value||0);
-  const cash     = +document.getElementById("f-cash").value||0;
-  const transfer = +document.getElementById("f-transfer").value||0;
-  const insurance= +document.getElementById("f-insurance").value||0;
-  const company  = +document.getElementById("f-company").value||0;
-  const paid     = Math.round(cash+transfer+insurance+company);
-  if(!patient){ alert("กรุณากรอกชื่อผู้ป่วย"); return; }
-  if(!price)  { alert("กรุณากรอกราคา"); return; }
-  if(Math.abs(paid-price)>0){ alert(`ยอดชำระ ${fmtTHB(paid)} ≠ ราคา ${fmtTHB(price)}`); return; }
-  const hn  = document.getElementById("f-hn").value.trim();
-  const rec = {id:editId||Date.now(), date:document.getElementById("f-date").value, hn, patient, price,
-    treatment:document.getElementById("f-treatment").value, cash,transfer,insurance,company};
-  if(editId){ records=records.map(r=>r.id===editId?rec:r); }
-  else       { records=[...records,rec]; }
-  save(currentDoctor?"dn_"+currentDoctor.dataKey+"_records":"dn_records",records);
-  const savedEditId = editId; // capture before reset
-  toggleForm(false); resetForm();
-  renderRecordsTable();
-  showToast("✅ บันทึกรายการแล้ว");
-  // Push to Google Sheet
-  if(currentDoctor && !currentDoctor.isAdmin){
-    const sheetName = getSheetName("records", currentDoctor.dataKey);
-    const row = [rec.id, rec.date, rec.hn||"", rec.patient, rec.treatment,
-                 rec.price, rec.cash, rec.transfer, rec.insurance, rec.company];
-    const action = savedEditId ? "update" : "add";
-    const pushId = savedEditId || rec.id;
-    pushToSheet(sheetName, action, row, pushId)
-      .then(ok=>{ if(ok) showToast("☁️ "+(action==="add"?"บันทึก":"อัปเดต")+" Sheet แล้ว"); });
+  try{
+    const hn       = (document.getElementById("f-hn")||{value:""}).value.trim();
+    const patient  = (document.getElementById("f-patient")||{value:""}).value.trim();
+    const price    = parseInt(document.getElementById("f-price").value)||0;
+    const cash     = parseInt(document.getElementById("f-cash").value)||0;
+    const transfer = parseInt(document.getElementById("f-transfer").value)||0;
+    const insurance= parseInt(document.getElementById("f-insurance").value)||0;
+    const company  = parseInt(document.getElementById("f-company").value)||0;
+    const paid     = cash+transfer+insurance+company;
+    const date     = document.getElementById("f-date").value||todayStr();
+    const treatment= document.getElementById("f-treatment").value||"ขูดหินปูน";
+
+    if(!patient){ alert("กรุณากรอกชื่อผู้ป่วย"); return; }
+    if(!price)  { alert("กรุณากรอกราคา"); return; }
+    if(paid!==price){ alert("ยอดชำระ "+fmtTHB(paid)+" ≠ ราคา "+fmtTHB(price)); return; }
+
+    const recId = editId||Date.now();
+    const rec = {id:recId, date, hn, patient, treatment, price, cash, transfer, insurance, company};
+
+    if(editId){ records=records.map(r=>r.id===editId?rec:r); }
+    else       { records=[...records, rec]; }
+
+    const key = currentDoctor ? "dn_"+currentDoctor.dataKey+"_records" : "dn_records";
+    save(key, records);
+
+    const savedEditId = editId;
+    toggleForm(false);
+    editId=null;
+    try{ resetForm(); }catch(e){}
+    renderRecordsTable();
+    showToast("✅ บันทึกรายการแล้ว");
+
+    // Push to Google Sheet
+    if(currentDoctor && !currentDoctor.isAdmin){
+      const sheetName = getSheetName("records", currentDoctor.dataKey);
+      const row = [recId, date, hn, patient, treatment, price, cash, transfer, insurance, company];
+      const action = savedEditId ? "update" : "add";
+      pushToSheet(sheetName, action, row, savedEditId||recId)
+        .then(ok=>{ if(ok) showToast("☁️ "+(action==="add"?"บันทึก":"อัปเดต")+" Sheet แล้ว"); });
+    }
+  }catch(err){
+    alert("เกิดข้อผิดพลาด: "+err.message);
+    console.error("submitRecord error:", err);
   }
 }
+
+
 function editRecord(id){
   const r=records.find(x=>x.id===id); if(!r) return;
   editId=id;
