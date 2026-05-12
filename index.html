@@ -398,6 +398,32 @@ tfoot td{font-weight:700;padding:12px 15px;color:var(--teal);font-size:13px}
 .doc-income-bar{height:6px;border-radius:4px;background:rgba(255,255,255,.07);margin-top:8px;overflow:hidden}
 .doc-income-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#6B2580,#A855F7);transition:width .6s}
 @media(max-width:900px){.admin-kpi-grid{grid-template-columns:repeat(2,1fr)}}
+
+/* ═══════ FLOATING SYNC BUTTON ═══════ */
+#floating-sync{
+  position:fixed;bottom:70px;right:20px;z-index:500;
+  display:flex;flex-direction:column;align-items:flex-end;gap:8px;
+}
+#sync-fab{
+  width:54px;height:54px;border-radius:50%;border:none;cursor:pointer;
+  background:linear-gradient(135deg,#00C9A7,#009E86);
+  color:white;font-size:22px;
+  box-shadow:0 4px 20px rgba(0,201,167,.5);
+  transition:all .2s;display:flex;align-items:center;justify-content:center;
+}
+#sync-fab:hover{transform:scale(1.1);box-shadow:0 6px 28px rgba(0,201,167,.6)}
+#sync-fab.syncing{animation:spinSync 1s linear infinite}
+#sync-fab.no-url{background:linear-gradient(135deg,#5E7A99,#4A6070);box-shadow:none}
+@keyframes spinSync{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+#sync-toast-float{
+  background:rgba(15,29,53,.95);border:1px solid var(--border);
+  border-radius:12px;padding:8px 14px;font-size:12px;font-weight:600;
+  white-space:nowrap;backdrop-filter:blur(10px);
+  opacity:0;transform:translateX(10px);
+  transition:all .3s;pointer-events:none;
+  max-width:220px;text-align:right;
+}
+#sync-toast-float.show{opacity:1;transform:translateX(0)}
 /* RESPONSIVE */
 @media(max-width:1200px){
   .tb-logo-sub,.tb-doc-spec{display:none}
@@ -511,7 +537,7 @@ tfoot td{font-weight:700;padding:12px 15px;color:var(--teal);font-size:13px}
       <div class="tb-clock-date" id="dateStr"></div>
       <div class="tb-live">
         <div class="tb-live-dot"></div>
-        <span class="tb-live-text">Live · รีเฟรชทุก 1 นาที</span>
+        <span class="tb-live-text">Live · sync Sheet ทุก 10 วินาที</span>
       </div>
     </div>
   </div>
@@ -758,13 +784,7 @@ tfoot td{font-weight:700;padding:12px 15px;color:var(--teal);font-size:13px}
       </div>
     </div>
 
-    <!-- Sheet connection note -->
-    <div class="info-box" style="margin-top:16px">
-      <strong>🔗 Google Sheet · ค่าแลป</strong><br/>
-      ข้อมูลจัดเก็บใน <strong>localStorage</strong> บนเครื่องของคุณ<br/>
-      เชื่อมต่อ Google Sheet ชื่อ <strong>"ค่าแลป"</strong> ผ่าน Google Apps Script<br/>
-      <span style="font-size:11px;color:var(--muted)">คอลัมน์: วันที่ | HN | ชื่อผู้ป่วย | ขั้นตอน | ชื่อแลป | ราคา | หมายเหตุ</span>
-    </div>
+
   </div>
 
   <!-- SETTINGS -->
@@ -841,41 +861,7 @@ tfoot td{font-weight:700;padding:12px 15px;color:var(--teal);font-size:13px}
           🔐 เปลี่ยน PIN
         </button
       </div>
-      <!-- Google Sheet Sync Card -->
-      <div class="card" style="margin-bottom:16px;border:1px solid rgba(0,201,167,.25)">
-        <div class="section-label">🔗 เชื่อมต่อ Google Sheet</div>
-        <div style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.7">
-          วาง <strong style="color:var(--teal)">Apps Script URL</strong> ที่ได้จาก Deploy แล้วกดบันทึก<br/>
-          ระบบจะ sync ข้อมูลทุก <strong style="color:var(--teal)">10 วินาที</strong> อัตโนมัติ
-        </div>
-        <div class="form-field" style="margin-bottom:14px">
-          <label class="form-label">Apps Script URL</label>
-          <input class="form-input" type="url" id="s-script-url"
-            placeholder="https://script.google.com/macros/s/.../exec"/>
-        </div>
-        <div style="display:flex;gap:10px;margin-bottom:12px">
-          <button class="btn-primary" id="save-url-btn" style="flex:1">💾 บันทึก URL</button>
-          <button class="btn-ghost" id="test-url-btn">🔍 ทดสอบ</button>
-          <button class="btn-ghost" id="sync-now-btn" style="color:var(--teal);border-color:rgba(0,201,167,.3)">⚡ Sync ตอนนี้</button>
-        </div>
-        <div id="sync-status" style="font-size:12px;min-height:18px"></div>
 
-        <!-- Sheet name guide -->
-        <div style="margin-top:14px;padding:12px;background:rgba(255,255,255,.03);border-radius:10px;border:1px solid var(--border)">
-          <div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:8px">📋 ชื่อ Tab ใน Google Sheet ที่ต้องสร้าง</div>
-          <div style="font-size:11px;color:var(--muted);line-height:2;font-family:monospace">
-            ตารางนัด_toy &nbsp;|&nbsp; บันทึก_toy &nbsp;|&nbsp; แลป_toy<br/>
-            ตารางนัด_mind &nbsp;|&nbsp; บันทึก_mind &nbsp;|&nbsp; แลป_mind<br/>
-            ตารางนัด_koy &nbsp;|&nbsp; บันทึก_koy &nbsp;|&nbsp; แลป_koy<br/>
-            ตารางนัด_pong &nbsp;|&nbsp; บันทึก_pong &nbsp;|&nbsp; แลป_pong<br/>
-            ตารางนัด_chut &nbsp;|&nbsp; บันทึก_chut &nbsp;|&nbsp; แลป_chut<br/>
-            ตารางนัด_nuch &nbsp;|&nbsp; บันทึก_nuch &nbsp;|&nbsp; แลป_nuch<br/>
-            ตารางนัด_aim &nbsp;|&nbsp; บันทึก_aim &nbsp;|&nbsp; แลป_aim<br/>
-            ตารางนัด_part &nbsp;|&nbsp; บันทึก_part &nbsp;|&nbsp; แลป_part<br/>
-            ตารางนัด_khao &nbsp;|&nbsp; บันทึก_khao &nbsp;|&nbsp; แลป_khao
-          </div>
-        </div>
-      </div>
     </div>
   </div>
 
@@ -1010,7 +996,7 @@ function updateClock(){
   if(sub) sub.textContent = "ข้อมูล ณ วันที่ "+now.toLocaleDateString("th-TH",{year:"numeric",month:"long",day:"numeric"});
 }
 setInterval(updateClock, 1000);
-setInterval(()=>{ if(currentTab==="home") renderHome(); }, 60000);
+setInterval(()=>{ renderCurrentTab(); }, 60000); // UI refresh every 1 min (backup)
 updateClock();
 
 /* NAV */
@@ -1028,7 +1014,7 @@ document.querySelectorAll(".nav-btn").forEach(btn=>{
     if(tab==="summary")  renderSummary();
     if(tab==="lab")      renderLab();
     if(tab==="admin")    renderAdmin();
-    if(tab==="settings"){ renderSettings(); initSyncButtons(); }
+    if(tab==="settings") renderSettings();
   });
 });
 
@@ -1118,6 +1104,15 @@ function cycleStatus(id){
   });
   save(currentDoctor?'dn_'+currentDoctor.dataKey+'_appts':'dn_appts', appts);
   renderHome();
+  // Push status update to Sheet
+  if(currentDoctor && !currentDoctor.isAdmin){
+    const updated = appts.find(a=>a.id===id);
+    if(updated){
+      const apptRow = [updated.id, updated.time, updated.hn||"",
+                       updated.patient, updated.treatment, updated.status];
+      pushToSheet(getSheetName("appts", currentDoctor.dataKey), "update", apptRow, id);
+    }
+  }
 }
 
 /* RECORDS */
@@ -1205,6 +1200,16 @@ function submitRecord(){
   toggleForm(false); resetForm();
   renderRecordsTable();
   showToast("✅ บันทึกรายการแล้ว");
+  // Push to Google Sheet
+  if(currentDoctor && !currentDoctor.isAdmin){
+    const sheetName = getSheetName("records", currentDoctor.dataKey);
+    const row = [rec.id, rec.date, rec.hn||"", rec.patient, rec.treatment,
+                 rec.price, rec.cash, rec.transfer, rec.insurance, rec.company];
+    const action = editId ? "update" : "add";
+    const pushId = editId || rec.id;
+    pushToSheet(sheetName, action, row, pushId)
+      .then(ok=>{ if(ok) showToast("☁️ "+(action==="add"?"บันทึก":"อัปเดต")+" Sheet แล้ว"); });
+  }
 }
 function editRecord(id){
   const r=records.find(x=>x.id===id); if(!r) return;
@@ -1224,6 +1229,9 @@ function deleteRecord(id){
   save(currentDoctor?'dn_'+currentDoctor.dataKey+'_records':'dn_records',records);
   renderRecordsTable();
   showToast("🗑 ลบรายการแล้ว");
+  if(currentDoctor && !currentDoctor.isAdmin){
+    pushToSheet(getSheetName("records", currentDoctor.dataKey), "delete", [], id);
+  }
 }
 function renderRecords(){
   initRecordsForm();
@@ -1610,6 +1618,7 @@ function loginAdmin(){
   document.getElementById("logout-btn").classList.remove("hidden");
   document.getElementById("topbar").style.display = "";
   document.getElementById("main").style.display   = "";
+  document.getElementById("floating-sync").classList.remove("hidden");
   // Show admin tab
   document.querySelectorAll(".nav-btn").forEach(b=>b.classList.remove("active"));
   document.querySelectorAll("#main > div[id^='page-']").forEach(p=>p.classList.add("hidden"));
@@ -1633,10 +1642,12 @@ function loginSuccess(doc){
   document.getElementById("logout-btn").classList.remove("hidden");
   document.getElementById("topbar").style.display = "";
   document.getElementById("main").style.display   = "";
+  const fs=document.getElementById("floating-sync"); if(fs) fs.classList.remove("hidden");
 
   updateSidebar();
   renderHome();
   startAutoSync();
+  setTimeout(initFloatingSync,100);
 }
 
 function doLogout(){
@@ -1644,6 +1655,7 @@ function doLogout(){
   sessionStorage.removeItem("dn_logged");
   stopAutoSync();
   currentDoctor = null;
+  const fsEl=document.getElementById("floating-sync"); if(fsEl) fsEl.classList.add("hidden");
   pinBuffer = "";
   backToSelect();
   document.getElementById("login-page").classList.remove("hidden");
@@ -1728,6 +1740,17 @@ function submitLab(){
   toggleLabForm(false); resetLabForm();
   renderLabTable();
   showToast("✅ บันทึกรายการแลปแล้ว");
+  // Push to Google Sheet
+  if(currentDoctor && !currentDoctor.isAdmin){
+    const labSheet = getSheetName("lab", currentDoctor.dataKey);
+    const labRow   = [rec.id, rec.date, rec.hn||"", rec.patient,
+                      rec.procedure, rec.lab||"", rec.price, rec.note||""];
+    if(labEditId){
+      pushToSheet(labSheet, "update", labRow, labEditId||rec.id).then(ok=>{ if(ok) showToast("☁️ อัปเดต Sheet แล้ว"); });
+    } else {
+      pushToSheet(labSheet, "add", labRow, rec.id).then(ok=>{ if(ok) showToast("☁️ บันทึก Sheet แล้ว"); });
+    }
+  }
 }
 
 function editLab(id){
@@ -1752,6 +1775,9 @@ function deleteLab(id){
   save("dn_lab", load("dn_lab",[]).filter(r=>r.id!==id));
   renderLabTable();
   showToast("🗑 ลบรายการแลปแล้ว");
+  if(currentDoctor && !currentDoctor.isAdmin){
+    pushToSheet(getSheetName("lab", currentDoctor.dataKey), "delete", [], id);
+  }
 }
 
 function renderLab(){
@@ -1801,7 +1827,8 @@ let adminDocChart = null, adminPayChart = null;
 
 function renderAdmin(){
   // Show admin nav, hide doctor-specific navs
-  document.getElementById("admin-nav-btn").classList.remove("hidden");
+  const adminNavBtn = document.getElementById("admin-nav-btn");
+  if(adminNavBtn) adminNavBtn.classList.remove("hidden");
 
   const today = todayStr();
 
@@ -1931,7 +1958,7 @@ function renderAdmin(){
 /* ═══════════════════════════════════════
    GOOGLE SHEET SYNC
 ═══════════════════════════════════════ */
-let SCRIPT_URL = load("dn_script_url","");
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxVvGRglAgjnt1xkJ6IsVFpZfpsnkRDVCQE-jnxuJzS_JCD8gkcm7bcfvxVF50e_kDI/exec"; // ฝังตายตัว — เชื่อมกับ Google Sheet ทุก user
 let syncInterval = null;
 
 function getSheetName(type, dataKey){
@@ -1961,10 +1988,7 @@ async function pushToSheet(sheetName, action, row, id){
   } catch(e){ return false; }
 }
 
-function setSyncStatus(msg, color="#00C9A7"){
-  const el = document.getElementById("sync-status");
-  if(el){ el.style.color=color; el.textContent=msg; }
-}
+function setSyncStatus(msg, color="#00C9A7"){ console.log("Sync:", msg); }
 
 async function syncFromSheet(){
   if(!SCRIPT_URL || !currentDoctor || currentDoctor.isAdmin) return;
@@ -2017,19 +2041,27 @@ async function syncFromSheet(){
       save("dn_"+key+"_lab", labRecs);
     }
     setSyncStatus("✅ Sync สำเร็จ "+new Date().toLocaleTimeString("th-TH"), "#00C9A7");
-    // Re-render current tab
-    if(currentTab==="home")    renderHome();
-    if(currentTab==="records") renderRecordsTable();
-    if(currentTab==="lab")     renderLabTable();
+    // Re-render ALL tabs after sync
+    renderCurrentTab();
   } catch(e){
     setSyncStatus("❌ Sync ล้มเหลว: "+e.message, "#FF6B8A");
   }
 }
 
+function renderCurrentTab(){
+  try{
+    if(currentTab==="home")     renderHome();
+    if(currentTab==="records")  renderRecordsTable();
+    if(currentTab==="summary")  { if(document.getElementById("sum-day")) renderSummaryData(); }
+    if(currentTab==="lab")      { if(document.getElementById("lab-tbody")) renderLabTable(); }
+    if(currentTab==="admin")    { if(document.getElementById("admin-kpi")) renderAdmin(); }
+  } catch(e){ console.warn("renderCurrentTab:", e.message); }
+}
+
 function startAutoSync(){
   if(syncInterval) clearInterval(syncInterval);
-  if(!SCRIPT_URL) return;
-  syncInterval = setInterval(syncFromSheet, 10000); // every 10s
+  // SCRIPT_URL is always set — always sync from Sheet
+  syncInterval = setInterval(syncFromSheet, 10000);
   syncFromSheet(); // immediate first sync
 }
 
@@ -2038,34 +2070,56 @@ function stopAutoSync(){
 }
 
 // Settings URL buttons (attached after DOM ready)
-function initSyncButtons(){
-  const urlEl = document.getElementById("s-script-url");
-  if(!urlEl) return;
-  urlEl.value = SCRIPT_URL;
 
-  document.getElementById("save-url-btn").addEventListener("click",()=>{
-    const url = urlEl.value.trim();
-    if(url && !url.startsWith("https://script.google.com")){
-      setSyncStatus("⚠️ URL ไม่ถูกต้อง ต้องเป็น Apps Script URL","#FF6B8A"); return;
+
+/* ═══════ FLOATING SYNC BUTTON LOGIC ═══════ */
+function initFloatingSync(){
+  const fab   = document.getElementById("sync-fab");
+  const toast = document.getElementById("sync-toast-float");
+
+  // Update icon based on URL availability
+  function updateFabState(){
+    fab.textContent = "🔄";
+    fab.className   = "";
+    fab.title       = "Sync ข้อมูลกับ Google Sheet";
+  }
+  updateFabState();
+
+  function showFloatToast(msg, color="#00C9A7"){
+    toast.style.color = color;
+    toast.textContent = msg;
+    toast.classList.add("show");
+    clearTimeout(toast._timer);
+    toast._timer = setTimeout(()=>toast.classList.remove("show"), 3000);
+  }
+
+  fab.addEventListener("click", async()=>{
+    if(!SCRIPT_URL){
+      // Navigate to settings
+      document.querySelectorAll(".nav-btn").forEach(b=>b.classList.remove("active"));
+      document.querySelector("[data-tab='settings']").classList.add("active");
+      document.querySelectorAll("#main > div[id^='page-']").forEach(p=>p.classList.add("hidden"));
+      document.getElementById("page-settings").classList.remove("hidden");
+      renderSettings(); 
+      showFloatToast("⚙️ กรุณาตั้งค่า URL ก่อน","#FFBB55");
+      return;
     }
-    SCRIPT_URL = url;
-    save("dn_script_url", url);
-    setSyncStatus(url?"✅ บันทึก URL แล้ว — กด Sync ตอนนี้":"🗑 ลบ URL แล้ว (ออฟไลน์)", url?"#00C9A7":"#FFBB55");
-    if(url) startAutoSync(); else stopAutoSync();
+    if(!currentDoctor){ showFloatToast("⚠️ กรุณา login ก่อน","#FF6B8A"); return; }
+
+    // Syncing animation
+    fab.textContent = "🔄";
+    fab.style.animation = "spinSync 1s linear infinite";
+    showFloatToast("⏳ กำลัง sync...","#38BDF8");
+
+    await syncFromSheet();
+
+    fab.style.animation = "";
+    fab.textContent = "✅";
+    showFloatToast("✅ Sync สำเร็จ "+new Date().toLocaleTimeString("th-TH"),"#00C9A7");
+    setTimeout(()=>{ fab.textContent="🔄"; }, 2000);
   });
 
-  document.getElementById("test-url-btn").addEventListener("click", async()=>{
-    if(!SCRIPT_URL){ setSyncStatus("⚠️ ยังไม่ได้ใส่ URL","#FFBB55"); return; }
-    setSyncStatus("⏳ กำลังทดสอบ...","#38BDF8");
-    const result = await fetchSheet("ตารางนัด_koy");
-    if(result!==null){ setSyncStatus("✅ เชื่อมต่อสำเร็จ!","#00C9A7"); }
-    else { setSyncStatus("❌ เชื่อมต่อไม่ได้ ตรวจสอบ URL อีกครั้ง","#FF6B8A"); }
-  });
 
-  document.getElementById("sync-now-btn").addEventListener("click",()=>{
-    if(!SCRIPT_URL){ setSyncStatus("⚠️ ยังไม่ได้ใส่ URL","#FFBB55"); return; }
-    syncFromSheet();
-  });
 }
 
 /* INIT */
@@ -2086,5 +2140,11 @@ document.getElementById("topbar").style.display = "none";
 document.getElementById("main").style.display   = "none";
 initLogin();
 </script>
+
+<!-- ═══════ FLOATING SYNC BUTTON ═══════ -->
+<div id="floating-sync" class="hidden">
+  <div id="sync-toast-float"></div>
+  <button id="sync-fab" title="Sync ข้อมูลกับ Google Sheet">🔄</button>
+</div>
 </body>
 </html>
