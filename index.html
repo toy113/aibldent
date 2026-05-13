@@ -51,19 +51,24 @@ html, body { height: 100%; font-family: 'Sarabun', sans-serif; background: var(-
               radial-gradient(ellipse 40% 40% at 80% 80%, rgba(192,107,168,0.15) 0%, transparent 60%);
 }
 .login-card {
-  position: relative; background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.15);
-  backdrop-filter: blur(20px); border-radius: 24px;
-  padding: 32px 36px; width: 760px; max-width: 96vw; max-height: 96vh; overflow-y: auto;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+  position: relative; background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.18);
+  backdrop-filter: blur(24px); border-radius: 28px;
+  padding: 36px 40px 32px; width: 820px; max-width: 96vw;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.45);
 }
-/* Desktop 2-column layout */
 .login-body {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 28px; align-items: start;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: start; margin-top: 8px;
 }
-@media (max-width: 600px) {
-  .login-card { padding: 24px 18px; width: 100%; border-radius: 16px; }
-  .login-body { grid-template-columns: 1fr; gap: 16px; }
+.login-body-left { display: flex; flex-direction: column; gap: 0; }
+.login-body-right {
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 18px; padding: 24px 20px;
+}
+@media (max-width: 640px) {
+  .login-card { padding: 24px 18px; width: 100%; border-radius: 20px; }
+  .login-body { grid-template-columns: 1fr; gap: 0; }
+  .login-body-right { background: none; border: none; padding: 0; }
 }
 .login-logo {
   text-align: center; margin-bottom: 28px;
@@ -80,9 +85,9 @@ html, body { height: 100%; font-family: 'Sarabun', sans-serif; background: var(-
 .login-subtitle { color: rgba(255,255,255,0.6); font-size: 14px; margin-top: 4px; }
 
 .doctor-grid {
-  display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 16px;
+  display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 14px;
 }
-@media (max-width: 600px) {
+@media (max-width: 640px) {
   .doctor-grid { grid-template-columns: 1fr 1fr; }
 }
 .doctor-btn {
@@ -127,7 +132,7 @@ html, body { height: 100%; font-family: 'Sarabun', sans-serif; background: var(-
 .login-error { color: #ff8888; font-size: 13px; text-align: center; margin-top: 8px; min-height: 18px; }
 
 /* ======= APP SHELL ======= */
-#appShell { display: none; height: 100vh; flex-direction: row; }
+#appShell { display: none; height: 100vh; height: 100dvh; flex-direction: row; }
 #appShell.visible { display: flex; }
 
 /* SIDEBAR */
@@ -193,7 +198,7 @@ html, body { height: 100%; font-family: 'Sarabun', sans-serif; background: var(-
 .logout-btn:hover { background: rgba(231,76,90,0.2); }
 
 /* MAIN */
-.main-content { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
+.main-content { flex: 1; overflow-y: auto; display: flex; flex-direction: column; min-width: 0; }
 .topbar {
   background: #fff; border-bottom: 1px solid var(--border);
   padding: 0 28px; height: 56px; display: flex; align-items: center;
@@ -411,27 +416,29 @@ select.form-control { cursor: pointer; }
 
 /* ======= TOP TAB BAR (always shows on mobile / small screens) ======= */
 .top-tab-bar {
-  display: none;
+  display: none; /* hidden on desktop */
   background: var(--wine-deeper);
   border-bottom: 2px solid rgba(212,168,71,0.3);
   overflow-x: auto; -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
+  scrollbar-width: none; flex-shrink: 0;
 }
 .top-tab-bar::-webkit-scrollbar { display: none; }
-.top-tab-bar { display: none; justify-content: space-around; }
 .top-tab {
-  flex: 1; min-width: 60px; padding: 8px 4px 6px;
+  flex: 1; min-width: 58px; padding: 9px 4px 7px;
   border: none; background: none; cursor: pointer;
-  color: rgba(255,255,255,0.5); font-size: 10px; font-weight: 600;
+  color: rgba(255,255,255,0.55); font-size: 10px; font-weight: 600;
   font-family: 'Sarabun',sans-serif; text-align: center; line-height: 1.4;
-  white-space: nowrap; transition: color 0.15s; border-bottom: 2px solid transparent;
+  white-space: nowrap; transition: all 0.15s;
+  border-bottom: 3px solid transparent;
+  -webkit-tap-highlight-color: transparent;
 }
-.top-tab span { display: block; margin-top: 2px; }
-.top-tab.active { color: var(--gold-light); border-bottom-color: var(--gold); }
+.top-tab .mn-icon { font-size: 18px; display: block; margin-bottom: 2px; }
+.top-tab.active { color: var(--gold-light); border-bottom-color: var(--gold); background: rgba(255,255,255,0.05); }
 
-@media (max-width: 768px) {
-  .top-tab-bar { display: flex; }
-  .mobile-nav { display: none !important; } /* use top bar instead, avoid double nav */
+@media (max-width: 900px) {
+  .top-tab-bar { display: flex !important; }
+  .mobile-nav { display: none !important; }
+  .sidebar { display: none !important; }
 }
 
 /* ======= MOBILE NAV BAR ======= */
@@ -590,8 +597,9 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
     </div>
 
     <div class="login-body">
+    <div class="login-body-left">
     <div id="selectPhase">
-      <div style="color:rgba(255,255,255,0.6);font-size:12px;text-align:center;margin-bottom:10px;">เลือกทันตแพทย์</div>
+      <div style="color:rgba(255,255,255,0.6);font-size:12px;text-align:center;margin-bottom:10px;font-weight:600;letter-spacing:0.5px;">เลือกทันตแพทย์</div>
       <div class="doctor-grid" id="doctorGrid"></div>
       <div class="manager-row">
         <div class="manager-label">— หรือ —</div>
@@ -600,7 +608,9 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
         </button>
       </div>
     </div>
+    </div><!-- end login-body-left -->
 
+    <div class="login-body-right">
     <div id="pinPhase" style="display:none;">
       <div style="text-align:center;margin-bottom:14px;">
         <div style="font-size:16px;font-weight:700;color:#fff;" id="pinForName"></div>
@@ -630,7 +640,8 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
         </div>
         <div class="login-error" id="loginError"></div>
       </div>
-    </div>
+    </div><!-- end pinPhase -->
+    </div><!-- end login-body-right -->
     </div><!-- end login-body -->
   </div>
 </div>
@@ -684,13 +695,13 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
         </div>
       </div>
     </div>
-    <!-- TOP TAB BAR (always visible on mobile) -->
-    <div class="top-tab-bar">
-      <button class="top-tab active" id="ttab-home" onclick="showPage('home');setMobileNav('home')">🏠<br><span>หน้าหลัก</span></button>
-      <button class="top-tab" id="ttab-treatment" onclick="showPage('treatment');setMobileNav('treatment')">📋<br><span>รักษา</span></button>
-      <button class="top-tab" id="ttab-income" onclick="showPage('income');setMobileNav('income')">📊<br><span>รายได้</span></button>
-      <button class="top-tab" id="ttab-lab" onclick="showPage('lab');setMobileNav('lab')">🧪<br><span>แลป</span></button>
-      <button class="top-tab" id="ttab-settings" onclick="showPage('settings');setMobileNav('settings')">⚙️<br><span>ตั้งค่า</span></button>
+    <!-- TOP TAB BAR (mobile navigation) -->
+    <div class="top-tab-bar" id="topTabBar">
+      <button class="top-tab active" id="ttab-home" onclick="showPage('home');setMobileNav('home')"><span class="mn-icon">🏠</span>หน้าหลัก</button>
+      <button class="top-tab" id="ttab-treatment" onclick="showPage('treatment');setMobileNav('treatment')"><span class="mn-icon">📋</span>รักษา</button>
+      <button class="top-tab" id="ttab-income" onclick="showPage('income');setMobileNav('income')"><span class="mn-icon">📊</span>รายได้</button>
+      <button class="top-tab" id="ttab-lab" onclick="showPage('lab');setMobileNav('lab')"><span class="mn-icon">🧪</span>แลป</button>
+      <button class="top-tab" id="ttab-settings" onclick="showPage('settings');setMobileNav('settings')"><span class="mn-icon">⚙️</span>ตั้งค่า</button>
     </div>
 
     <!-- ===== HOME PAGE ===== -->
@@ -826,6 +837,13 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
           <input type="number" id="income-filter-year" class="form-control" style="height:36px;width:100px;display:none;" placeholder="ปี พ.ศ." min="2560" max="2600" onchange="renderIncome()">
         </div>
       </div>
+      <div class="card-box" style="margin-bottom:20px;">
+        <div class="card-box-hdr" style="padding:18px 24px;">
+          <div class="card-box-title" style="font-size:17px;">👨‍⚕️ ส่วนแบ่งรายได้ตามหมอ</div>
+          <div id="shareTotalBadge" style="font-size:13px;font-weight:700;color:var(--wine-mid);"></div>
+        </div>
+        <div style="padding:20px 24px;"><div class="share-grid" id="shareGrid"></div></div>
+      </div>
       <div class="stat-grid" style="grid-template-columns:repeat(5,1fr);">
         <div class="stat-card purple"><div class="stat-icon">💰</div><div class="stat-label">รายได้รวม</div><div class="stat-value" id="i-total">0</div><div class="stat-sub">บาท</div></div>
         <div class="stat-card green"><div class="stat-icon">💵</div><div class="stat-label">เงินสด</div><div class="stat-value" id="i-cash">0</div><div class="stat-sub">บาท</div></div>
@@ -843,13 +861,7 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
           <div class="chart-wrap"><canvas id="pieChart"></canvas></div>
         </div>
       </div>
-      <div class="card-box" style="margin-top:20px;">
-        <div class="card-box-hdr" style="padding:18px 24px;">
-          <div class="card-box-title" style="font-size:17px;">👨‍⚕️ ส่วนแบ่งรายได้ตามหมอ</div>
-          <div id="shareTotalBadge" style="font-size:13px;font-weight:700;color:var(--wine-mid);"></div>
-        </div>
-        <div style="padding:20px 24px;"><div class="share-grid" id="shareGrid"></div></div>
-      </div>
+
     </div>
 
     <!-- ===== LAB PAGE ===== -->
@@ -1107,7 +1119,7 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
 //  GOOGLE SHEETS CONFIG
 // ============================================================
 // วาง Apps Script Web App URL ที่นี่
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwTlL-C3En6qmq9g2kt3pBJToCIHtOqs6UYC95DzA4Xm9DYRmcMejsn6L8YAV7cYltG/exec';
 
 // ============================================================
 //  DOCTORS & AUTH
@@ -1185,23 +1197,26 @@ function selectDoctor(id){
   currentPin=''; updatePinDots();
   document.getElementById('loginError').textContent='';
   const pp = document.getElementById('pinPhase');
+  const rightPanel = pp.closest('.login-body-right');
   if(isDesktopLogin()){
-    // Desktop: side-by-side, show pin panel fully
     document.getElementById('selectPhase').style.display = 'block';
-    pp.style.cssText = 'display:block;opacity:1;pointer-events:auto;';
+    pp.style.cssText = 'display:block;';
+    if(rightPanel){ rightPanel.style.opacity='1'; rightPanel.style.pointerEvents='auto'; }
   } else {
-    // Mobile: switch to pin screen
     document.getElementById('selectPhase').style.display = 'none';
-    pp.style.cssText = 'display:block;opacity:1;pointer-events:auto;';
+    pp.style.cssText = 'display:block;';
   }
 }
 function backToSelect(){
   const pp = document.getElementById('pinPhase');
+  const rightPanel = pp.closest('.login-body-right');
   document.getElementById('selectPhase').style.display = 'block';
   if(isDesktopLogin()){
-    pp.style.cssText = 'display:block;opacity:0.3;pointer-events:none;';
+    pp.style.cssText = 'display:block;';
+    if(rightPanel){ rightPanel.style.opacity='0.35'; rightPanel.style.pointerEvents='none'; }
   } else {
     pp.style.cssText = 'display:none;';
+    if(rightPanel){ rightPanel.style.opacity='1'; rightPanel.style.pointerEvents='auto'; }
   }
   currentPin=''; selectedLoginDoc=null;
   document.querySelectorAll('.doctor-btn').forEach(b=>b.classList.remove('selected'));
@@ -1517,6 +1532,7 @@ function deleteTreat(id){
   treatments=treatments.filter(t=>t.id!==id);
   saveLocal(); renderTreatPage(); renderHome();
   showToast('ลบรายการสำเร็จ');
+  syncToSheet('delete',{type:'treatments',id});
 }
 
 let treatMode = 'day';
@@ -1693,26 +1709,44 @@ function buildCharts(rows, period, today, month, year){
   const periodLabel = period==='day'?'7 วันล่าสุด':period==='month'?'รายวันในเดือนนี้':'รายเดือนในปีนี้';
 
   const barCtx=document.getElementById('barChart');
+  // Combine to total per label
+  const barTotal = barLabels.map((_,i)=>(barCash[i]||0)+(barTransfer[i]||0)+(barSSO[i]||0)+(barCompany[i]||0));
+  const maxVal = Math.max(...barTotal,1);
+
   barChartInst=new Chart(barCtx,{
     type:'bar',
     data:{
       labels: barLabels,
-      datasets:[
-        { label:'เงินสด', data:barCash, backgroundColor:'rgba(46,204,144,0.8)', borderRadius:3, stack:'s' },
-        { label:'โอน', data:barTransfer, backgroundColor:'rgba(52,152,219,0.8)', borderRadius:3, stack:'s' },
-        { label:'ปสค.', data:barSSO, backgroundColor:'rgba(243,156,18,0.8)', borderRadius:3, stack:'s' },
-        { label:'เบิก', data:barCompany, backgroundColor:'rgba(212,86,122,0.8)', borderRadius:3, stack:'s' },
-      ]
+      datasets:[{
+        label:'รายได้รวม (บาท)',
+        data: barTotal,
+        backgroundColor: barTotal.map(v=>{
+          const ratio = v/maxVal;
+          return `rgba(107,45,94,${0.4+ratio*0.55})`;
+        }),
+        borderColor: 'rgba(107,45,94,0.9)',
+        borderWidth: 1,
+        borderRadius: 5,
+        borderSkipped: false,
+      }]
     },
     options:{
       responsive:true, maintainAspectRatio:false,
       plugins:{
-        legend:{ display:true, position:'top', labels:{font:{size:11}, boxWidth:12} },
-        title:{ display:true, text:'เปรียบเทียบรายได้ — '+periodLabel, font:{size:12}, color:'#6B2D5E' }
+        legend:{ display:false },
+        title:{ display:true, text:'📊 เปรียบเทียบรายได้รวม — '+periodLabel, font:{size:13,weight:'bold'}, color:'#4A1E42', padding:{bottom:10} },
+        tooltip:{
+          callbacks:{
+            label: ctx => '฿'+ctx.parsed.y.toLocaleString('th-TH')
+          }
+        }
       },
       scales:{
-        x:{ stacked:true, ticks:{font:{size:10}} },
-        y:{ stacked:true, ticks:{callback:v=>v>=1000?'฿'+(v/1000).toFixed(0)+'k':'฿'+v} }
+        x:{ grid:{display:false}, ticks:{font:{size:10}, color:'#9B7A94'} },
+        y:{
+          grid:{ color:'rgba(107,45,94,0.08)' },
+          ticks:{ callback:v=>v>=1000?'฿'+(v/1000).toFixed(0)+'k':'฿'+v, font:{size:10}, color:'#9B7A94' }
+        }
       }
     }
   });
@@ -1814,6 +1848,7 @@ function deleteLab(id){
   if(!confirm('ยืนยันลบ?')) return;
   labs=labs.filter(l=>l.id!==id);
   saveLocal(); renderLabPage(); showToast('ลบสำเร็จ');
+  syncToSheet('delete',{type:'labs',id});
 }
 function renderLabPage(){
   const month=document.getElementById('labFilterMonth')?.value||todayStr().slice(0,7);
@@ -1915,6 +1950,7 @@ function saveDocSettings(docId){
     if(pinEl&&pinEl.value.length===4) doc.pin=pinEl.value;
   }
   saveLocal();
+  syncToSheet('settings', doc);
   showToast('บันทึกการตั้งค่าสำเร็จ');
   buildSettingsPage();
 }
@@ -1924,6 +1960,8 @@ function saveDocSettings(docId){
 // ============================================================
 async function syncToSheet(type, data){
   if(!APPS_SCRIPT_URL||APPS_SCRIPT_URL.includes('YOUR_SCRIPT_ID')) return;
+  const syncDotEl = document.getElementById('syncDot');
+  if(syncDotEl) syncDotEl.style.background='var(--gold)';
   try {
     await fetch(APPS_SCRIPT_URL,{
       method:'POST',
@@ -1931,23 +1969,57 @@ async function syncToSheet(type, data){
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({type,data}),
     });
-    document.getElementById('syncText').textContent='ซิงค์แล้ว '+new Date().toLocaleTimeString('th-TH');
-  } catch(e){ console.warn('Sync error',e); }
+    const t = new Date().toLocaleTimeString('th-TH');
+    const el = document.getElementById('syncText');
+    if(el) el.textContent='ซิงค์แล้ว '+t;
+    if(syncDotEl) syncDotEl.style.background='var(--green)';
+  } catch(e){
+    console.warn('Sync error',e);
+    if(syncDotEl) syncDotEl.style.background='var(--red)';
+    const el = document.getElementById('syncText');
+    if(el) el.textContent='⚠️ sync ไม่สำเร็จ';
+  }
 }
 async function syncAll(){
   if(!APPS_SCRIPT_URL||APPS_SCRIPT_URL.includes('YOUR_SCRIPT_ID')) return;
   try {
-    const res=await fetch(APPS_SCRIPT_URL+'?action=getAll');
+    const res=await fetch(APPS_SCRIPT_URL+'?action=getAll',{cache:'no-store'});
     if(res.ok){
       const d=await res.json();
-      if(d.appointments) appointments=[...appointments,...d.appointments.filter(r=>!appointments.find(a=>a.id===r.id))];
-      if(d.treatments) treatments=[...treatments,...d.treatments.filter(r=>!treatments.find(t=>t.id===r.id))];
-      if(d.labs) labs=[...labs,...d.labs.filter(r=>!labs.find(l=>l.id===r.id))];
-      saveLocal();
-      const p=document.querySelector('.page.active')?.id?.replace('page-','');
-      if(p) showPage(p);
+      let changed=false;
+      if(d.appointments){
+        const newItems=d.appointments.filter(r=>r.id&&!appointments.find(a=>a.id===r.id));
+        const updated=d.appointments.filter(r=>r.id&&appointments.find(a=>a.id===r.id&&a.status!==r.status));
+        newItems.forEach(r=>appointments.push(r));
+        updated.forEach(r=>{const i=appointments.findIndex(a=>a.id===r.id);if(i>-1)appointments[i]=r;});
+        if(newItems.length||updated.length) changed=true;
+      }
+      if(d.treatments){
+        const newItems=d.treatments.filter(r=>r.id&&!treatments.find(t=>t.id===r.id));
+        newItems.forEach(r=>treatments.push(r));
+        if(newItems.length) changed=true;
+      }
+      if(d.labs){
+        const newItems=d.labs.filter(r=>r.id&&!labs.find(l=>l.id===r.id));
+        newItems.forEach(r=>labs.push(r));
+        if(newItems.length) changed=true;
+      }
+      if(changed){
+        saveLocal();
+        const p=document.querySelector('.page.active')?.id?.replace('page-','');
+        if(p) showPage(p);
+      }
+      const t=new Date().toLocaleTimeString('th-TH');
+      const el=document.getElementById('syncText');
+      if(el) el.textContent='ซิงค์แล้ว '+t;
+      const dot=document.getElementById('syncDot');
+      if(dot) dot.style.background='var(--green)';
     }
-  } catch(e){ }
+  } catch(e){
+    const dot=document.getElementById('syncDot');
+    if(dot) dot.style.background='var(--red)';
+    console.warn('syncAll error:',e);
+  }
 }
 async function manualSync(){
   const btn = document.getElementById('syncBtn');
@@ -2012,6 +2084,11 @@ function setMobileNav(page){
 //  INIT
 // ============================================================
 buildDoctorGrid();
+// Desktop: start with right panel dimmed
+if(window.innerWidth > 640){
+  const rp = document.querySelector('.login-body-right');
+  if(rp){ rp.style.opacity='0.35'; rp.style.pointerEvents='none'; rp.style.transition='opacity 0.25s'; }
+}
 </script>
 
 <!-- ======== GOOGLE APPS SCRIPT TEMPLATE ======== -->
@@ -2027,15 +2104,36 @@ buildDoctorGrid();
 // function doPost(e) {
 //   const data = JSON.parse(e.postData.contents);
 //   const ss = SpreadsheetApp.getActiveSpreadsheet();
+//   // Handle delete
+//   if(data.type==='delete'){
+//     const sheetMap={'treatments':'บันทึกการรักษา','labs':'แลป','appointments':'ตารางนัด'};
+//     const sheet=ss.getSheetByName(sheetMap[data.data.type]);
+//     if(sheet){
+//       const ids=sheet.getDataRange().getValues().map(r=>String(r[0]));
+//       const idx=ids.indexOf(String(data.data.id));
+//       if(idx>0) sheet.deleteRow(idx+1);
+//     }
+//     return ContentService.createTextOutput('ok');
+//   }
+//   // Handle settings
+//   if(data.type==='settings'){
+//     const sheet=ss.getSheetByName('settings');
+//     if(sheet){
+//       const r=data.data; const ids=sheet.getDataRange().getValues().map(row=>String(row[0]));
+//       const idx=ids.indexOf(String(r.id));
+//       const row=[r.id,r.name,r.gender||'',r.specialty||'',r.share||50,r.pin||''];
+//       if(idx<1) sheet.appendRow(row); else sheet.getRange(idx+1,1,1,row.length).setValues([row]);
+//     }
+//     return ContentService.createTextOutput('ok');
+//   }
 //   let sheet;
 //   if(data.type==='appointments') sheet = ss.getSheetByName('ตารางนัด');
 //   else if(data.type==='treatments') sheet = ss.getSheetByName('บันทึกการรักษา');
 //   else if(data.type==='labs') sheet = ss.getSheetByName('แลป');
 //   if(!sheet) return ContentService.createTextOutput('error');
 //   const r = data.data;
-//   // Append or update row by id
-//   const ids = sheet.getDataRange().getValues().map(row=>row[0]);
-//   const idx = ids.indexOf(r.id);
+//   const ids = sheet.getDataRange().getValues().map(row=>String(row[0]));
+//   const idx = ids.indexOf(String(r.id));
 //   const row = Object.values(r);
 //   if(idx<1) sheet.appendRow(row); else sheet.getRange(idx+1,1,1,row.length).setValues([row]);
 //   return ContentService.createTextOutput('ok');
