@@ -159,21 +159,23 @@ nav{display:flex;flex-direction:column;justify-content:center;padding:0 14px;fle
 
 /* APPT ROW */
 .appt-row{
-  display:flex;align-items:center;gap:12px;padding:11px 12px;
-  border-radius:10px;transition:background .15s;cursor:default;margin-bottom:3px;
+  display:flex;align-items:center;gap:10px;padding:10px 12px;
+  border-radius:10px;transition:background .15s;cursor:default;margin-bottom:2px;
 }
 .appt-row:hover{background:rgba(0,201,167,.05)}
 .appt-time{
-  width:48px;height:46px;border-radius:11px;flex-shrink:0;
+  width:56px;height:40px;border-radius:10px;flex-shrink:0;
   background:rgba(255,255,255,.04);
   display:flex;align-items:center;justify-content:center;
-  font-size:12px;font-weight:700;color:var(--teal);
+  font-size:13px;font-weight:700;color:var(--teal);
+  text-align:center;
 }
 .appt-info{flex:1;min-width:0}
 .appt-name{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:1px}
 .appt-treat{font-size:11px;color:#FF6B8A;font-weight:500}
 .status-badge{
-  padding:4px 11px;border-radius:8px;font-size:11px;font-weight:600;
+  width:80px;text-align:center;
+  padding:6px 0;border-radius:8px;font-size:11px;font-weight:600;
   cursor:pointer;white-space:nowrap;flex-shrink:0;border:1px solid transparent;transition:all .2s;
 }
 .status-badge:hover{filter:brightness(1.2)}
@@ -562,7 +564,7 @@ tfoot td{font-weight:700;padding:12px 15px;color:var(--teal);font-size:13px}
         </div>
       </div>
       <div>
-        <div class="section-label">💊 รายการรักษาวันนี้</div>
+        <div class="section-label" style="display:flex;align-items:center;justify-content:space-between">💊 รายการรักษาวันนี้<span id="today-rec-count" style="background:rgba(0,201,167,.15);color:var(--teal);font-size:12px;font-weight:700;padding:3px 10px;border-radius:8px;border:1px solid rgba(0,201,167,.3)"></span></div>
         <div class="card">
           <div id="today-rec-list"></div>
           <div id="today-total-bar" class="hidden" style="margin-top:8px;padding:10px 13px;border-radius:10px;background:linear-gradient(90deg,rgba(0,201,167,.1),rgba(56,189,248,.05));border:1px solid rgba(0,201,167,.2);display:flex;justify-content:space-between;align-items:center">
@@ -653,7 +655,6 @@ tfoot td{font-weight:700;padding:12px 15px;color:var(--teal);font-size:13px}
       <button class="btn-primary" id="mode-day">รายวัน</button>
       <button class="btn-ghost" id="mode-month">รายเดือน</button>
       <button class="btn-ghost" id="mode-year">รายปี</button>
-      <button class="btn-ghost" id="mode-all">ทั้งหมด</button>
       <input class="form-input" type="date" id="sum-day" style="width:auto"/>
       <input class="form-input hidden" type="month" id="sum-month" style="width:auto"/>
       <input class="form-input hidden" type="number" id="sum-year" min="2020" max="2099" style="width:110px" placeholder="ปี"/>
@@ -719,7 +720,7 @@ tfoot td{font-weight:700;padding:12px 15px;color:var(--teal);font-size:13px}
           <label class="form-label">งาน</label>
           <select class="form-input" id="lf-procedure">
             <option>Crown</option>
-            <option>Bridge</option>
+            <option>Denture (TP)</option>
             <option>Denture (RPD)</option>
             <option>Denture (Valplast)</option>
             <option>Denture (Full)</option>
@@ -863,8 +864,8 @@ tfoot td{font-weight:700;padding:12px 15px;color:var(--teal);font-size:13px}
             </div>
           </div>
         </div>
-        <div class="section-label" id="share-section-label" style="display:none">💰 เปอร์เซ็นต์ส่วนแบ่งรายได้</div>
-        <div id="share-section-box" style="display:none;background:rgba(255,255,255,.03);border-radius:14px;padding:20px;border:1px solid var(--border);margin-bottom:18px">
+        <div class="section-label" id="share-section-label">💰 เปอร์เซ็นต์ส่วนแบ่งรายได้</div>
+        <div id="share-section-box" style="background:rgba(255,255,255,.03);border-radius:14px;padding:20px;border:1px solid var(--border);margin-bottom:18px">
           <div class="range-display">
             <div class="range-val">
               <span id="s-doc-pct" style="color:var(--teal)">40</span><span style="font-size:18px;color:var(--teal)">%</span>
@@ -1007,19 +1008,8 @@ function showToast(msg="✅ บันทึกแล้ว!"){
   setTimeout(()=>t.classList.remove("show"),2200);
 }
 
-const SEED_APPTS = [
-  {id:1,time:"09:00",hn:"001",patient:"คุณสมชาย ใจดี",treatment:"ขูดหินปูน",status:"เสร็จแล้ว"},
-  {id:2,time:"10:00",hn:"002",patient:"คุณมาลี สวยงาม",treatment:"อุดฟัน",status:"เสร็จแล้ว"},
-  {id:3,time:"11:00",hn:"003",patient:"คุณวิชัย รักษาดี",treatment:"ถอนฟัน",status:"กำลังรักษา"},
-  {id:4,time:"13:00",hn:"004",patient:"คุณนภา สดใส",treatment:"จัดฟัน",status:"รอ"},
-  {id:5,time:"14:30",hn:"005",patient:"คุณประพันธ์ มั่นคง",treatment:"รากฟันเทียม",status:"รอ"},
-  {id:6,time:"15:30",hn:"006",patient:"คุณอรุณ แจ่มใส",treatment:"ฟอกสีฟัน",status:"ยกเลิก"},
-];
-const SEED_RECORDS = [
-  {id:1,date:todayStr(),hn:"001",patient:"คุณสมชาย ใจดี",treatment:"ขูดหินปูน",price:800,cash:800,transfer:0,insurance:0,company:0},
-  {id:2,date:todayStr(),hn:"002",patient:"คุณมาลี สวยงาม",treatment:"อุดฟัน 2 ซี่",price:1200,cash:0,transfer:1200,insurance:0,company:0},
-  {id:3,date:todayStr(),hn:"003",patient:"คุณวิชัย รักษาดี",treatment:"ถอนฟัน",price:500,cash:0,transfer:0,insurance:500,company:0},
-];
+const SEED_APPTS = [];
+const SEED_RECORDS = [];
 const SEED_DOCTOR = {name:"ทพ.ก้อย",specialty:"ทันตกรรมทั่วไป",share:40,gender:"female",dataKey:"koy"};
 
 let appts   = load("dn_appts",   SEED_APPTS);
@@ -1084,8 +1074,6 @@ function renderHome(){
   const stats = [
     {label:"รายได้รวมวันนี้", val:fmtTHB(total), icon:"💰", sub:`${todayRecs.length} รายการ`, color:"#00C9A7"},
     {label:`ส่วนแบ่งหมอ ${doctor.share}%`, val:fmtTHB(docShare), icon:"👨‍⚕️", sub:"สุทธิ", color:"#FFBB55"},
-    {label:"ส่วนคลินิก", val:fmtTHB(clinicShare), icon:"🏥", sub:`${100-doctor.share}%`, color:"#38BDF8"},
-    {label:"นัดวันนี้", val:appts.length+" ราย", icon:"📅", sub:`เสร็จ ${done} ราย`, color:"#A78BFA"},
   ];
   document.getElementById("stat-grid").innerHTML = stats.map(s=>`
     <div class="stat-card" style="border:1px solid ${s.color}22">
@@ -1125,6 +1113,8 @@ function renderHome(){
   const todayList = document.getElementById("today-rec-list");
   const totalBar  = document.getElementById("today-total-bar");
   document.getElementById("today-total-val").textContent = fmtTHB(total);
+  const countEl = document.getElementById("today-rec-count");
+  if(countEl) countEl.textContent = todayRecs.length + " รายการ";
   if(!todayRecs.length){
     todayList.innerHTML='<div class="empty-state">🦷 ยังไม่มีรายการ</div>';
     totalBar.classList.add("hidden");
@@ -1227,13 +1217,12 @@ function submitRecord(){
   try{
     const hn       = (document.getElementById("f-hn")||{value:""}).value.trim();
     const patient  = (document.getElementById("f-patient")||{value:""}).value.trim();
-    // Compute price directly from payment fields (reliable fallback)
-    const price    = cash+transfer+insurance+company || parseInt(document.getElementById("f-price").value)||0;
     const cash     = parseInt(document.getElementById("f-cash").value)||0;
     const transfer = parseInt(document.getElementById("f-transfer").value)||0;
     const insurance= parseInt(document.getElementById("f-insurance").value)||0;
     const company  = parseInt(document.getElementById("f-company").value)||0;
     const paid     = cash+transfer+insurance+company;
+    const price    = paid || parseInt(document.getElementById("f-price").value)||0;
     const date     = document.getElementById("f-date").value||todayStr();
     const treatment= document.getElementById("f-treatment").value||"ขูดหินปูน";
 
@@ -1340,10 +1329,10 @@ function initSummary(){
   document.getElementById("sum-day").value   = todayStr();
   document.getElementById("sum-month").value = todayStr().slice(0,7);
   document.getElementById("sum-year").value  = new Date().getFullYear();
-  ["mode-day","mode-month","mode-year","mode-all"].forEach(id=>{
+  ["mode-day","mode-month","mode-year"].forEach(id=>{
     document.getElementById(id).addEventListener("click",()=>{
       sumMode = id.replace("mode-","");
-      ["day","month","year","all"].forEach(m=>{
+      ["day","month","year"].forEach(m=>{
         document.getElementById("mode-"+m).className = m===sumMode ? "btn-primary" : "btn-ghost";
       });
       document.getElementById("sum-day").classList.toggle("hidden",   sumMode!=="day");
@@ -1371,9 +1360,11 @@ function renderSummaryData(){
   const docInc    = Math.round(total*doctor.share/100);
   const payTotals = PAYMENT_KEYS.map(k=>filtered.reduce((s,r)=>s+r[k],0));
 
+  const clinicInc = total - docInc;
   document.getElementById("sum-kpi").innerHTML = [
     {label:"รายได้รวม",icon:"💰",val:fmtTHB(total),color:"#00C9A7"},
     {label:`ส่วนแบ่งหมอ ${doctor.share}%`,icon:"👨‍⚕️",val:fmtTHB(docInc),color:"#FFBB55"},
+    {label:`ส่วนแบ่งร้าน ${100-doctor.share}%`,icon:"🏥",val:fmtTHB(clinicInc),color:"#A78BFA"},
     {label:"จำนวนรายการ",icon:"📋",val:`${filtered.length} รายการ`,color:"#38BDF8"},
   ].map(k=>`
     <div class="kpi-card" style="border-color:${k.color}22">
@@ -1558,11 +1549,7 @@ function renderSettings(){
   document.getElementById("s-specialty").value = doctor.specialty;
   document.getElementById("s-share").value     = doctor.share;
   updateShareDisplay(doctor.share);
-  // Hide share % section from regular doctors
-  const shareLabel = document.getElementById("share-section-label");
-  const shareBox   = document.getElementById("share-section-box");
-  if(shareLabel) shareLabel.style.display = "none";
-  if(shareBox)   shareBox.style.display   = "none";
+
   // gender UI
   const g = doctor.gender||"male";
   document.querySelectorAll("input[name='s-gender']").forEach(r=>{ r.checked=(r.value===g); });
@@ -1804,8 +1791,8 @@ function initLabForm(){
   if(labFormInit) return;
   labFormInit = true;
   document.getElementById("lf-date").value = todayStr();
-  document.getElementById("lab-filter-date").value = todayStr();
-  labFilterDate = todayStr();
+  document.getElementById("lab-filter-date").value = "";
+  labFilterDate = "";
 
   document.getElementById("toggle-lab-form-btn").addEventListener("click",()=>{ resetLabForm(); toggleLabForm(true); });
   document.getElementById("cancel-lab-btn").addEventListener("click",()=>{ toggleLabForm(false); labEditId=null; });
@@ -1908,6 +1895,10 @@ function deleteLab(id){
 
 function renderLab(){
   initLabForm();
+  // Reset filter to show all on each visit
+  labFilterDate = "";
+  const lfd = document.getElementById("lab-filter-date");
+  if(lfd) lfd.value = "";
   renderLabTable();
   setTimeout(renderLabMonthlySummary, 100);
 }
@@ -2360,7 +2351,7 @@ function renderLabMonthlySummary(){
 
 /* INIT */
 // Version check — clear old data if seed version changed
-const DATA_VERSION = "v4-labfix";
+const DATA_VERSION = "v5-noseed";
 if(load("dn_data_version","") !== DATA_VERSION){
   console.log("🔄 Clearing old cache for version", DATA_VERSION);
   ["dn_koy_appts","dn_koy_records","dn_mind_appts","dn_mind_records",
