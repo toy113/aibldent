@@ -523,7 +523,6 @@ tfoot td{font-weight:700;padding:12px 15px;color:var(--teal);font-size:13px}
       <button class="nav-btn" data-tab="summary"><span class="nav-icon">◉</span> สรุปรายได้</button>
       <button class="nav-btn" data-tab="lab"><span class="nav-icon">🧪</span> ค่าแลป</button>
       <button class="nav-btn" data-tab="settings"><span class="nav-icon">◎</span> ตั้งค่า</button>
-      <button class="nav-btn hidden" data-tab="admin" id="admin-nav-btn"><span class="nav-icon">👑</span> Admin</button>
     </div>
   </nav>
 
@@ -1059,7 +1058,6 @@ document.querySelectorAll(".nav-btn").forEach(btn=>{
     if(tab==="records")  renderRecords();
     if(tab==="summary")  renderSummary();
     if(tab==="lab"){ renderLab(); setTimeout(()=>{ const m=document.getElementById('lab-month-filter'); if(m&&!m.value){m.value=todayStr().slice(0,7); renderLabMonthlySummary();} },100); }
-    if(tab==="admin")    renderAdmin();
     if(tab==="settings") renderSettings();
   });
 });
@@ -1470,11 +1468,90 @@ function renderComparisonCharts(){
 }
 
 /* SETTINGS */
+function renderAdminShareList(){
+  const list = document.getElementById("admin-share-list");
+  if(!list) return;
+  const pins = load("dn_pins",{});
+  list.innerHTML = DOCTORS.map(d=>{
+    const share = load("dn_share_"+d.dataKey, d.share);
+    return `
+      <div style="display:flex;align-items:center;gap:14px;padding:14px;background:rgba(255,255,255,.03);border-radius:12px;border:1px solid var(--border)">
+        <div style="font-size:24px">${d.gender==="female"?"👩‍⚕️":"👨‍⚕️"}</div>
+        <div style="flex:1">
+          <div style="font-size:14px;font-weight:700;margin-bottom:6px">${d.fullName}</div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <input type="range" min="0" max="100" value="${share}"
+              id="share-slider-${d.dataKey}"
+              oninput="document.getElementById('share-val-${d.dataKey}').textContent=this.value+'%'"
+              style="flex:1;accent-color:#6B2580"/>
+            <span id="share-val-${d.dataKey}" style="font-size:14px;font-weight:700;color:#B06EC0;min-width:42px">${share}%</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:2px">
+            <span>หมอได้ <span id="share-pct-${d.dataKey}">${share}</span>%</span>
+            <span>คลินิกได้ <span id="clinic-pct-${d.dataKey}">${100-share}</span>%</span>
+          </div>
+        </div>
+      </div>`;
+  }).join("");
+
+  // Live update clinic % on slider change
+  DOCTORS.forEach(d=>{
+    const sl = document.getElementById("share-slider-"+d.dataKey);
+    if(sl) sl.addEventListener("input",()=>{
+      const v = +sl.value;
+      document.getElementById("share-pct-"+d.dataKey).textContent = v;
+      document.getElementById("clinic-pct-"+d.dataKey).textContent = 100-v;
+    });
+  });
+}
+
+function saveAdminShares(){
+  DOCTORS.forEach(d=>{
+    const sl = document.getElementById("share-slider-"+d.dataKey);
+    if(sl){
+      save("dn_share_"+d.dataKey, +sl.value);
+      // Update doctor object if currently logged in as that doctor
+      if(currentDoctor && currentDoctor.dataKey===d.dataKey){
+        doctor.share = +sl.value;
+        updateSidebar();
+      }
+    }
+  });
+  showToast("✅ บันทึกส่วนแบ่งทั้งหมดแล้ว");
+}
+
 function renderSettings(){
-  // Admin has no personal settings to show
-  if(currentDoctor && currentDoctor.isAdmin){
+  if(false && currentDoctor && currentDoctor.isAdmin){
     const wrap = document.querySelector(".settings-wrap");
     if(wrap) wrap.innerHTML = '<div class="card" style="text-align:center;padding:40px"><div style="font-size:48px;margin-bottom:16px">👑</div><div style="font-size:18px;font-weight:700;color:var(--white);margin-bottom:8px">Admin ไม่มีการตั้งค่าส่วนตัว</div><div style="font-size:13px;color:var(--muted)">การตั้งค่าของแต่ละแพทย์จัดการโดยแพทย์เอง</div></div>';
+    wrap.innerHTML = `
+      <div class="card" style="margin-bottom:16px">
+        <div class="section-label">👑 ตั้งค่าส่วนแบ่งรายได้แพทย์ทุกคน</div>
+        <div id="admin-share-list" style="display:flex;flex-direction:column;gap:12px"></div>
+        <button onclick="saveAdminShares()" class="btn-primary" style="width:100%;margin-top:18px;justify-content:center;font-size:15px;padding:13px">💾 บันทึกส่วนแบ่งทั้งหมด</button>
+      </div>
+      <div class="card" style="margin-bottom:16px">
+        <div class="section-label">🔐 เปลี่ยน PIN Admin</div>
+        <div style="display:flex;flex-direction:column;gap:14px;margin-bottom:14px">
+          <div class="form-field"><label class="form-label">PIN ปัจจุบัน</label><input class="form-input" type="password" id="s-pin-old" placeholder="PIN เดิม 4 หลัก" maxlength="4" inputmode="numeric"/></div>
+          <div class="form-field"><label class="form-label">PIN ใหม่</label><input class="form-input" type="password" id="s-pin-new" placeholder="PIN ใหม่ 4 หลัก" maxlength="4" inputmode="numeric"/></div>
+          <div class="form-field"><label class="form-label">ยืนยัน PIN ใหม่</label><input class="form-input" type="password" id="s-pin-confirm" placeholder="กรอกซ้ำ" maxlength="4" inputmode="numeric"/></div>
+        </div>
+        <div id="pin-change-msg" style="font-size:13px;font-weight:600;min-height:20px;margin-bottom:12px"></div>
+        <button onclick="document.getElementById('change-pin-btn').click()" class="btn-primary" style="width:100%;justify-content:center;background:linear-gradient(135deg,#6B2580,#8B3DAB)">🔐 เปลี่ยน PIN Admin</button>
+        <button id="change-pin-btn" style="display:none" onclick="(()=>{
+          const o=document.getElementById('s-pin-old').value,n=document.getElementById('s-pin-new').value,c=document.getElementById('s-pin-confirm').value,m=document.getElementById('pin-change-msg');
+          if(o.length!==4||n.length!==4){m.style.color='#FF6B8A';m.textContent='⚠️ PIN ต้องมี 4 หลัก';return;}
+          if(n!==c){m.style.color='#FF6B8A';m.textContent='⚠️ PIN ใหม่ไม่ตรงกัน';return;}
+          const pins=load('dn_pins',{});
+          if(o!==(pins['admin']||'0000'){m.style.color='#FF6B8A';m.textContent='❌ PIN ปัจจุบันผิด';return;}
+          pins['admin']=n;save('dn_pins',pins);
+          m.style.color='#00C9A7';m.textContent='✅ เปลี่ยน PIN สำเร็จ';
+          setTimeout(()=>m.textContent='',3000);
+        })()"></button>
+      </div>`;
+    // Render doctor share list
+    renderAdminShareList();
     return;
   }
   document.getElementById("s-name").value      = doctor.name;
@@ -1532,7 +1609,7 @@ document.getElementById("change-pin-btn").addEventListener("click",()=>{
   // Get current effective PIN (custom or default)
   const savedPins = load("dn_pins",{});
   const currentPin = currentDoctor.isAdmin
-    ? (savedPins["admin"] || ADMIN_PIN)
+    ? (savedPins["admin"] || "0000")
     : (savedPins[currentDoctor.id] || currentDoctor.pin);
 
   if(oldPin !== currentPin){
@@ -1576,15 +1653,12 @@ document.getElementById("save-settings-btn").addEventListener("click",()=>{
 ═══════════════════════════════════════ */
 
 // Doctor registry — แก้ไขเพิ่มหมอได้ที่นี่
-const ADMIN_PIN = "0000"; // เปลี่ยน PIN Admin ได้ที่นี่
-
 const DOCTORS = [
   { id:"toy",   name:"หมอทอย",  fullName:"ทพ.ทอย",    specialty:"ทันตกรรมทั่วไป", gender:"female", pin:"1111", share:40, dataKey:"toy"  },
   { id:"mind",  name:"หมอมายด์",fullName:"ทพ.มายด์",  specialty:"ทันตกรรมทั่วไป", gender:"female", pin:"2222", share:40, dataKey:"mind" },
   { id:"koy",   name:"หมอก้อย", fullName:"ทพ.ก้อย",   specialty:"ทันตกรรมทั่วไป", gender:"female", pin:"3333", share:40, dataKey:"koy"  },
   { id:"pong",  name:"หมอป้อง", fullName:"ทพ.ป้อง",   specialty:"ทันตกรรมทั่วไป", gender:"male",   pin:"4444", share:40, dataKey:"pong" },
-  { id:"chut",  name:"หมอชัช",  fullName:"ทพ.ชัช",    specialty:"ทันตกรรมทั่วไป", gender:"male",   pin:"5555", share:40, dataKey:"chut" },
-  { id:"nuch",  name:"หมอนุช",  fullName:"ทพ.นุช",    specialty:"ทันตกรรมทั่วไป", gender:"female", pin:"6666", share:40, dataKey:"nuch" },
+
   { id:"aim",   name:"หมอเอม",  fullName:"ทพ.เอม",    specialty:"ทันตกรรมทั่วไป", gender:"female", pin:"7777", share:40, dataKey:"aim"  },
   { id:"part",  name:"หมอพาร์ท",fullName:"ทพ.พาร์ท",  specialty:"ทันตกรรมทั่วไป", gender:"male",   pin:"8888", share:40, dataKey:"part" },
   { id:"khao",  name:"หมอข้าว", fullName:"ทพ.ข้าว",   specialty:"ทันตกรรมทั่วไป", gender:"female", pin:"9999", share:40, dataKey:"khao" },
@@ -1596,7 +1670,6 @@ let pinBuffer = "";
 function initLogin(){
   // Check if already logged in this session
   const saved = sessionStorage.getItem("dn_logged");
-  if(saved==="admin"){ currentDoctor={id:"admin",isAdmin:true}; loginAdmin(); return; }
   if(saved){
     const doc = DOCTORS.find(d=>d.id===saved);
     if(doc){ loginSuccess(doc); return; }
@@ -1612,13 +1685,7 @@ function renderDoctorGrid(){
       <div class="doctor-card-name">${d.name}</div>
       <div class="doctor-card-spec">${d.specialty}</div>
     </div>`).join("");
-  const adminCard = `
-    <div class="doctor-card" onclick="selectAdmin()" style="border-color:rgba(107,37,128,.4);background:rgba(107,37,128,.08);grid-column:1/-1">
-      <div class="doctor-card-avatar">👑</div>
-      <div class="doctor-card-name">Admin</div>
-      <div class="doctor-card-spec">ดูภาพรวมทั้งคลินิก</div>
-    </div>`;
-  grid.innerHTML = docCards + adminCard;
+  grid.innerHTML = docCards;
 }
 
 function selectDoctor(id){
@@ -1634,17 +1701,6 @@ function selectDoctor(id){
   document.getElementById("login-step2").classList.remove("hidden");
 }
 
-function selectAdmin(){
-  currentDoctor = {id:"admin", name:"Admin", isAdmin:true};
-  pinBuffer = "";
-  updatePinDots();
-  document.getElementById("login-avatar").textContent = "👑";
-  document.getElementById("login-name").textContent   = "Admin";
-  document.getElementById("login-spec").textContent   = "ดูภาพรวมทั้งคลินิก";
-  document.getElementById("pin-error").textContent    = "";
-  document.getElementById("login-step1").classList.add("hidden");
-  document.getElementById("login-step2").classList.remove("hidden");
-}
 
 function backToSelect(){
   pinBuffer = "";
@@ -1672,9 +1728,8 @@ function updatePinDots(){
 function checkPin(){
   const savedPins  = load("dn_pins",{});
   const key        = currentDoctor.isAdmin ? "admin" : currentDoctor.id;
-  const correctPin = savedPins[key] || (currentDoctor.isAdmin ? ADMIN_PIN : currentDoctor.pin);
+  const correctPin = savedPins[key] || (currentDoctor.pin);
   if(pinBuffer === correctPin){
-    if(currentDoctor.isAdmin){ loginAdmin(); return; }
     loginSuccess(currentDoctor);
   } else {
     document.getElementById("pin-error").textContent = "PIN ไม่ถูกต้อง กรุณาลองใหม่";
@@ -1687,20 +1742,6 @@ function checkPin(){
   }
 }
 
-function loginAdmin(){
-  sessionStorage.setItem("dn_logged","admin");
-  document.getElementById("login-page").classList.add("hidden");
-  document.getElementById("logout-btn").classList.remove("hidden");
-  document.getElementById("topbar").style.display = "";
-  document.getElementById("main").style.display   = "";
-  document.getElementById("floating-sync").classList.remove("hidden");
-  // Show admin tab
-  document.querySelectorAll(".nav-btn").forEach(b=>b.classList.remove("active"));
-  document.querySelectorAll("#main > div[id^='page-']").forEach(p=>p.classList.add("hidden"));
-  document.querySelector("[data-tab='admin']").classList.add("active");
-  document.getElementById("page-admin").classList.remove("hidden");
-  renderAdmin();
-}
 
 function loginSuccess(doc){
   currentDoctor = doc;
@@ -1710,7 +1751,8 @@ function loginSuccess(doc){
   const prefix = "dn_"+doc.dataKey+"_";
   appts   = load(prefix+"appts",   SEED_APPTS);
   records = load(prefix+"records", SEED_RECORDS);
-  doctor  = { name:doc.fullName, specialty:doc.specialty, share:doc.share, gender:doc.gender };
+  const savedShare = load("dn_share_"+doc.dataKey, doc.share);
+  doctor  = { name:doc.fullName, specialty:doc.specialty, share:savedShare, gender:doc.gender };
 
   // Hide login, show app
   document.getElementById("login-page").classList.add("hidden");
@@ -1950,9 +1992,6 @@ async function syncAdminFromSheet(){
 
 function renderAdmin(){
   // Show admin nav, hide doctor-specific navs
-  const adminNavBtn = document.getElementById("admin-nav-btn");
-  if(adminNavBtn) adminNavBtn.classList.remove("hidden");
-
   const today = todayStr();
 
   // Gather all doctors data from localStorage
