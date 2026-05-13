@@ -462,6 +462,17 @@ tfoot td{font-weight:700;padding:12px 15px;color:var(--teal);font-size:13px}
     <div id="login-step1">
       <div class="login-step-title">เลือกแพทย์</div>
       <div class="doctor-grid" id="doctor-grid"></div>
+      <!-- Manager password -->
+      <div style="margin-top:18px;padding-top:16px;border-top:1px solid var(--border)">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:8px;text-align:center">🔑 ผู้จัดการ — ใส่รหัสผ่านเพื่อเข้า</div>
+        <div style="display:flex;gap:8px">
+          <input type="password" id="manager-pass-input" placeholder="รหัสผ่านผู้จัดการ"
+            class="form-input" style="flex:1"
+            onkeydown="if(event.key==='Enter') checkManagerPass()"/>
+          <button onclick="checkManagerPass()" class="btn-primary" style="padding:10px 16px;white-space:nowrap">เข้าระบบ</button>
+        </div>
+        <div id="manager-pass-error" style="font-size:12px;color:#FF6B8A;margin-top:6px;min-height:16px"></div>
+      </div>
     </div>
     <!-- Step 2: กรอก PIN -->
     <div id="login-step2" class="hidden">
@@ -554,15 +565,17 @@ tfoot td{font-weight:700;padding:12px 15px;color:var(--teal);font-size:13px}
 
   <!-- HOME -->
   <div id="page-home" class="page">
-    <!-- 1+2. ตารางนัด + รายการรักษา side-by-side -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:22px;align-items:start" id="home-grid">
-      <div>
-        <div class="section-label">📅 ตารางนัดวันนี้</div>
-        <div class="card">
-          <div id="appt-list"></div>
-          <div style="margin-top:8px;padding:8px 12px;border-top:1px solid var(--border);font-size:11px;color:var(--muted);text-align:right">คลิกสถานะเพื่อเปลี่ยน</div>
-        </div>
+    <!-- 1. ตารางนัด (full width top) -->
+    <div style="margin-bottom:20px">
+      <div class="section-label">📅 ตารางนัดวันนี้</div>
+      <div class="card">
+        <div id="appt-list"></div>
+        <div style="margin-top:8px;padding:8px 12px;border-top:1px solid var(--border);font-size:11px;color:var(--muted);text-align:right">คลิกสถานะเพื่อเปลี่ยน</div>
       </div>
+    </div>
+
+    <!-- 2+3. รายการรักษา + Stat cards side by side -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start" id="home-grid">
       <div>
         <div class="section-label" style="display:flex;align-items:center;justify-content:space-between">💊 รายการรักษาวันนี้<span id="today-rec-count" style="background:rgba(0,201,167,.15);color:var(--teal);font-size:12px;font-weight:700;padding:3px 10px;border-radius:8px;border:1px solid rgba(0,201,167,.3)"></span></div>
         <div class="card">
@@ -573,11 +586,12 @@ tfoot td{font-weight:700;padding:12px 15px;color:var(--teal);font-size:13px}
           </div>
         </div>
       </div>
+      <div>
+        <div class="section-label">📊 สรุปรายได้วันนี้</div>
+        <div class="stat-grid" id="stat-grid" style="grid-template-columns:1fr 1fr;margin-bottom:14px"></div>
+        <div class="pay-grid" id="pay-grid" style="grid-template-columns:1fr 1fr"></div>
+      </div>
     </div>
-
-    <!-- 3. Stats & pay summary -->
-    <div class="stat-grid" id="stat-grid"></div>
-    <div class="pay-grid" id="pay-grid"></div>
   </div>
 
   <!-- RECORDS -->
@@ -887,6 +901,13 @@ tfoot td{font-weight:700;padding:12px 15px;color:var(--teal);font-size:13px}
       <!-- PIN Change Card -->
       <div class="card" style="margin-bottom:16px;border:1px solid rgba(107,37,128,.3)">
         <div class="section-label">🔐 เปลี่ยน PIN</div>
+        <div id="manager-pass-change" style="margin-bottom:14px;padding:12px;background:rgba(107,37,128,.08);border-radius:10px;border:1px solid rgba(107,37,128,.2)">
+          <div style="font-size:12px;font-weight:600;color:#B06EC0;margin-bottom:8px">🔑 เปลี่ยนรหัสผ่านผู้จัดการ</div>
+          <div style="display:flex;gap:8px">
+            <input type="password" id="new-manager-pass" class="form-input" placeholder="รหัสใหม่" style="flex:1"/>
+            <button onclick="(()=>{const v=document.getElementById('new-manager-pass').value.trim();if(!v){return;}const p=load('dn_pins',{});p['manager']=v;save('dn_pins',p);document.getElementById('new-manager-pass').value='';showToast('✅ เปลี่ยนรหัสผู้จัดการแล้ว');})()" class="btn-primary" style="background:linear-gradient(135deg,#6B2580,#8B3DAB);padding:10px 14px;white-space:nowrap">บันทึก</button>
+          </div>
+        </div>
         <div style="display:flex;flex-direction:column;gap:14px;margin-bottom:18px">
           <div class="form-field">
             <label class="form-label">PIN ปัจจุบัน</label>
@@ -1045,7 +1066,7 @@ document.querySelectorAll(".nav-btn").forEach(btn=>{
     const pg = document.getElementById("page-"+tab);
     if(pg){ pg.classList.remove("hidden"); pg.style.animation="none"; void pg.offsetWidth; pg.style.animation=""; }
     if(tab==="home")     renderHome();
-    if(tab==="records")  renderRecords();
+    if(tab==="records")  { renderRecords(); if(currentDoctor&&currentDoctor.isManager) setTimeout(renderManagerView,100); }
     if(tab==="summary")  renderSummary();
     if(tab==="lab"){ renderLab(); setTimeout(()=>{ const m=document.getElementById('lab-month-filter'); if(m&&!m.value){m.value=todayStr().slice(0,7); renderLabMonthlySummary();} },100); }
     if(tab==="settings") renderSettings();
@@ -1631,6 +1652,18 @@ document.getElementById("save-settings-btn").addEventListener("click",()=>{
     gender:    genderChecked ? genderChecked.value : (doctor.gender||"male"),
   };
   save("dn_doctor",doctor);
+  // Save to doctor-specific key
+  if(currentDoctor){
+    save("dn_"+currentDoctor.dataKey+"_settings", {
+      name:doctor.name, specialty:doctor.specialty,
+      gender:doctor.gender, share:doctor.share
+    });
+    // Push to Sheet
+    const pins = load("dn_pins",{});
+    pushSettingsToSheet(currentDoctor.dataKey, {
+      ...doctor, pin: pins[currentDoctor.id]||currentDoctor.pin||""
+    });
+  }
   updateSidebar();
   showToast("✅ บันทึกการตั้งค่าแล้ว");
 });
@@ -1640,6 +1673,8 @@ document.getElementById("save-settings-btn").addEventListener("click",()=>{
 ═══════════════════════════════════════ */
 
 // Doctor registry — แก้ไขเพิ่มหมอได้ที่นี่
+const MANAGER_PASS = "1234"; // เปลี่ยนรหัสผ่านผู้จัดการได้ที่นี่
+
 const DOCTORS = [
   { id:"toy",   name:"หมอทอย",  fullName:"ทพ.ทอย",    specialty:"ทันตกรรมทั่วไป", gender:"female", pin:"1111", share:40, dataKey:"toy"  },
   { id:"mind",  name:"หมอมายด์",fullName:"ทพ.มายด์",  specialty:"ทันตกรรมทั่วไป", gender:"female", pin:"2222", share:40, dataKey:"mind" },
@@ -1647,8 +1682,8 @@ const DOCTORS = [
   { id:"pong",  name:"หมอป้อง", fullName:"ทพ.ป้อง",   specialty:"ทันตกรรมทั่วไป", gender:"male",   pin:"4444", share:40, dataKey:"pong" },
 
   { id:"aim",   name:"หมอเอม",  fullName:"ทพ.เอม",    specialty:"ทันตกรรมทั่วไป", gender:"female", pin:"7777", share:40, dataKey:"aim"  },
-  { id:"part",  name:"หมอพาร์ท",fullName:"ทพ.พาร์ท",  specialty:"ทันตกรรมทั่วไป", gender:"male",   pin:"8888", share:40, dataKey:"part" },
   { id:"khao",  name:"หมอข้าว", fullName:"ทพ.ข้าว",   specialty:"ทันตกรรมทั่วไป", gender:"female", pin:"9999", share:40, dataKey:"khao" },
+  { id:"part",  name:"หมอพาร์ท",fullName:"ทพ.พาร์ท",  specialty:"ทันตกรรมทั่วไป", gender:"male",   pin:"8888", share:40, dataKey:"part" },
 ];
 
 let currentDoctor = null;
@@ -1657,6 +1692,7 @@ let pinBuffer = "";
 function initLogin(){
   // Check if already logged in this session
   const saved = sessionStorage.getItem("dn_logged");
+  if(saved==="manager"){ loginManager(); return; }
   if(saved){
     const doc = DOCTORS.find(d=>d.id===saved);
     if(doc){ loginSuccess(doc); return; }
@@ -1738,8 +1774,15 @@ function loginSuccess(doc){
   const prefix = "dn_"+doc.dataKey+"_";
   appts   = load(prefix+"appts",   SEED_APPTS);
   records = load(prefix+"records", SEED_RECORDS);
-  const savedShare = load("dn_share_"+doc.dataKey, doc.share);
-  doctor  = { name:doc.fullName, specialty:doc.specialty, share:savedShare, gender:doc.gender };
+  // Load locally saved settings first (fast)
+  const localSettings = load("dn_"+doc.dataKey+"_settings", null);
+  const savedShare    = localSettings ? localSettings.share : load("dn_share_"+doc.dataKey, doc.share);
+  doctor = {
+    name:      localSettings ? localSettings.name      : doc.fullName,
+    specialty: localSettings ? localSettings.specialty : doc.specialty,
+    gender:    localSettings ? localSettings.gender    : doc.gender,
+    share:     savedShare,
+  };
 
   // Hide login, show app
   document.getElementById("login-page").classList.add("hidden");
@@ -1753,6 +1796,10 @@ function loginSuccess(doc){
   renderHome();
   startAutoSync();
   setTimeout(initFloatingSync,100);
+  // Async: sync settings from Sheet
+  applySettingsFromSheet(doc).then(updated=>{
+    if(updated){ updateSidebar(); renderHome(); }
+  });
 }
 
 function doLogout(){
@@ -2347,6 +2394,214 @@ function renderLabMonthlySummary(){
         <td style="color:var(--muted)">${v.count} รายการ</td>
         <td style="font-weight:700;color:var(--teal)">${fmtTHB(v.total)}</td>
       </tr>`).join("");
+}
+
+/* ═══════════════════════════════════════
+   SETTINGS SYNC WITH GOOGLE SHEET
+═══════════════════════════════════════ */
+
+async function loadSettingsFromSheet(dataKey){
+  if(!SCRIPT_URL) return null;
+  try{
+    const data = await fetchSheet("settings");
+    if(!data) return null;
+    const row = data.find(r=>String(r.dataKey)===String(dataKey));
+    return row || null;
+  }catch(e){ console.warn("loadSettings error:", e); return null; }
+}
+
+async function pushSettingsToSheet(dataKey, settings){
+  if(!SCRIPT_URL) return;
+  try{
+    // Check if row exists
+    const data = await fetchSheet("settings");
+    const exists = data && data.some(r=>String(r.dataKey)===String(dataKey));
+    const row = [dataKey, settings.name, settings.specialty, settings.gender,
+                 settings.share, settings.pin||""];
+    if(exists){
+      pushToSheet("settings","update",row,dataKey);
+    } else {
+      pushToSheet("settings","add",row,dataKey);
+    }
+  }catch(e){ console.warn("pushSettings error:", e); }
+}
+
+async function applySettingsFromSheet(doc){
+  const s = await loadSettingsFromSheet(doc.dataKey);
+  if(!s) return false;
+  // Apply to doctor object
+  if(s.name)      doctor.name      = s.name;
+  if(s.specialty) doctor.specialty = s.specialty;
+  if(s.gender)    doctor.gender    = s.gender;
+  if(s.share)     doctor.share     = +s.share || doctor.share;
+  // Apply PIN override
+  if(s.pin){
+    const pins = load("dn_pins",{});
+    pins[doc.id] = s.pin;
+    save("dn_pins", pins);
+  }
+  // Save locally too
+  save("dn_"+doc.dataKey+"_settings", {
+    name: doctor.name, specialty: doctor.specialty,
+    gender: doctor.gender, share: doctor.share
+  });
+  return true;
+}
+
+function checkManagerPass(){
+  const input = document.getElementById("manager-pass-input");
+  const errEl = document.getElementById("manager-pass-error");
+  const val   = input.value.trim();
+  const savedPins = load("dn_pins",{});
+  const correctPass = savedPins["manager"] || MANAGER_PASS;
+
+  if(val === correctPass){
+    errEl.textContent = "";
+    input.value = "";
+    loginManager();
+  } else {
+    errEl.textContent = "❌ รหัสผ่านไม่ถูกต้อง";
+    input.value = "";
+  }
+}
+
+function loginManager(){
+  currentDoctor = {id:"manager", name:"ผู้จัดการ", isManager:true, dataKey:"manager"};
+  sessionStorage.setItem("dn_logged","manager");
+
+  // Load first doctor's data as default view
+  appts   = [];
+  records = [];
+  doctor  = {name:"ผู้จัดการ", specialty:"ดูข้อมูลทุกหมอ", share:0, gender:"male"};
+
+  document.getElementById("login-page").classList.add("hidden");
+  document.getElementById("logout-btn").classList.remove("hidden");
+  document.getElementById("topbar").style.display = "";
+  document.getElementById("main").style.display   = "";
+  const fs = document.getElementById("floating-sync");
+  if(fs) fs.classList.remove("hidden");
+
+  updateSidebar();
+  // Show manager view — go to manager overview tab
+  renderManagerView();
+  setTimeout(initFloatingSync, 100);
+}
+
+function renderManagerView(){
+  // Show all doctors' data in records tab with doctor selector
+  document.querySelectorAll(".nav-btn").forEach(b=>b.classList.remove("active"));
+  document.querySelectorAll("#main > div[id^='page-']").forEach(p=>p.classList.add("hidden"));
+
+  // Navigate to records tab and add doctor selector
+  document.querySelector("[data-tab='records']").classList.add("active");
+  document.getElementById("page-records").classList.remove("hidden");
+
+  // Add doctor selector to records page if not exists
+  if(!document.getElementById("manager-doc-selector")){
+    const filterRow = document.querySelector(".filter-row");
+    if(filterRow){
+      const sel = document.createElement("select");
+      sel.id = "manager-doc-selector";
+      sel.className = "form-input";
+      sel.style.width = "auto";
+      sel.innerHTML = DOCTORS.map(d=>`<option value="${d.dataKey}">${d.name}</option>`).join("");
+      sel.addEventListener("change", ()=>{
+        const d = DOCTORS.find(x=>x.dataKey===sel.value);
+        if(d){
+          currentDoctor = {...d, isManager:true};
+          _labKey = "dn_"+d.dataKey+"_lab";
+          records = load("dn_"+d.dataKey+"_records",[]);
+          appts   = load("dn_"+d.dataKey+"_appts",[]);
+          doctor  = {name:d.fullName, specialty:d.specialty, share:d.share, gender:d.gender};
+          updateSidebar();
+          renderRecordsTable();
+        }
+      });
+      filterRow.insertBefore(sel, filterRow.firstChild);
+      // Trigger first doctor load
+      sel.dispatchEvent(new Event("change"));
+    }
+  } else {
+    document.getElementById("manager-doc-selector").dispatchEvent(new Event("change"));
+  }
+}
+
+function checkManagerPass(){
+  const input = document.getElementById("manager-pass-input");
+  const errEl = document.getElementById("manager-pass-error");
+  const val   = input.value.trim();
+  const savedPins = load("dn_pins",{});
+  const correctPass = savedPins["manager"] || MANAGER_PASS;
+
+  if(val === correctPass){
+    errEl.textContent = "";
+    input.value = "";
+    loginManager();
+  } else {
+    errEl.textContent = "❌ รหัสผ่านไม่ถูกต้อง";
+    input.value = "";
+  }
+}
+
+function loginManager(){
+  currentDoctor = {id:"manager", name:"ผู้จัดการ", isManager:true, dataKey:"manager"};
+  sessionStorage.setItem("dn_logged","manager");
+
+  // Load first doctor's data as default view
+  appts   = [];
+  records = [];
+  doctor  = {name:"ผู้จัดการ", specialty:"ดูข้อมูลทุกหมอ", share:0, gender:"male"};
+
+  document.getElementById("login-page").classList.add("hidden");
+  document.getElementById("logout-btn").classList.remove("hidden");
+  document.getElementById("topbar").style.display = "";
+  document.getElementById("main").style.display   = "";
+  const fs = document.getElementById("floating-sync");
+  if(fs) fs.classList.remove("hidden");
+
+  updateSidebar();
+  // Show manager view — go to manager overview tab
+  renderManagerView();
+  setTimeout(initFloatingSync, 100);
+}
+
+function renderManagerView(){
+  // Show all doctors' data in records tab with doctor selector
+  document.querySelectorAll(".nav-btn").forEach(b=>b.classList.remove("active"));
+  document.querySelectorAll("#main > div[id^='page-']").forEach(p=>p.classList.add("hidden"));
+
+  // Navigate to records tab and add doctor selector
+  document.querySelector("[data-tab='records']").classList.add("active");
+  document.getElementById("page-records").classList.remove("hidden");
+
+  // Add doctor selector to records page if not exists
+  if(!document.getElementById("manager-doc-selector")){
+    const filterRow = document.querySelector(".filter-row");
+    if(filterRow){
+      const sel = document.createElement("select");
+      sel.id = "manager-doc-selector";
+      sel.className = "form-input";
+      sel.style.width = "auto";
+      sel.innerHTML = DOCTORS.map(d=>`<option value="${d.dataKey}">${d.name}</option>`).join("");
+      sel.addEventListener("change", ()=>{
+        const d = DOCTORS.find(x=>x.dataKey===sel.value);
+        if(d){
+          currentDoctor = {...d, isManager:true};
+          _labKey = "dn_"+d.dataKey+"_lab";
+          records = load("dn_"+d.dataKey+"_records",[]);
+          appts   = load("dn_"+d.dataKey+"_appts",[]);
+          doctor  = {name:d.fullName, specialty:d.specialty, share:d.share, gender:d.gender};
+          updateSidebar();
+          renderRecordsTable();
+        }
+      });
+      filterRow.insertBefore(sel, filterRow.firstChild);
+      // Trigger first doctor load
+      sel.dispatchEvent(new Event("change"));
+    }
+  } else {
+    document.getElementById("manager-doc-selector").dispatchEvent(new Event("change"));
+  }
 }
 
 /* INIT */
