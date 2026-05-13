@@ -1431,7 +1431,7 @@ let _aptSaving = false;
 function saveApt(){
   if(_aptSaving) return;
   _aptSaving = true;
-  setTimeout(()=>_aptSaving=false, 800);
+  setTimeout(()=>_aptSaving=false, 2000);
   const apt = {
     id: Date.now().toString(),
     date: document.getElementById('apt-date').value||todayStr(),
@@ -1502,7 +1502,7 @@ let _treatSaving = false;
 function saveTreat(){
   if(_treatSaving) return;
   _treatSaving = true;
-  setTimeout(()=>_treatSaving=false, 800);
+  setTimeout(()=>_treatSaving=false, 2000);
   const id = document.getElementById('treat-id').value || Date.now().toString();
   const t = {
     id, date:document.getElementById('treat-date').value,
@@ -1824,7 +1824,7 @@ let _labSaving = false;
 function saveLab(){
   if(_labSaving) return;
   _labSaving = true;
-  setTimeout(()=>_labSaving=false, 800);
+  setTimeout(()=>_labSaving=false, 2000);
   const id=document.getElementById('lab-id').value||Date.now().toString();
   const priceEl = document.getElementById('lab-price'); const rawPrice = priceEl.value || priceEl.dataset.val || '';
   const l={
@@ -1982,39 +1982,53 @@ async function syncToSheet(type, data){
 }
 async function syncAll(){
   if(!APPS_SCRIPT_URL||APPS_SCRIPT_URL.includes('YOUR_SCRIPT_ID')) return;
+  // ไม่ sync ถ้ามี modal เปิดอยู่
+  if(document.querySelector('.modal-overlay.open')) return;
   try {
     const res=await fetch(APPS_SCRIPT_URL+'?action=getAll',{cache:'no-store'});
-    if(res.ok){
-      const d=await res.json();
-      let changed=false;
-      if(d.appointments){
-        const newItems=d.appointments.filter(r=>r.id&&!appointments.find(a=>a.id===r.id));
-        const updated=d.appointments.filter(r=>r.id&&appointments.find(a=>a.id===r.id&&a.status!==r.status));
-        newItems.forEach(r=>appointments.push(r));
-        updated.forEach(r=>{const i=appointments.findIndex(a=>a.id===r.id);if(i>-1)appointments[i]=r;});
-        if(newItems.length||updated.length) changed=true;
-      }
-      if(d.treatments){
-        const newItems=d.treatments.filter(r=>r.id&&!treatments.find(t=>t.id===r.id));
-        newItems.forEach(r=>treatments.push(r));
-        if(newItems.length) changed=true;
-      }
-      if(d.labs){
-        const newItems=d.labs.filter(r=>r.id&&!labs.find(l=>l.id===r.id));
-        newItems.forEach(r=>labs.push(r));
-        if(newItems.length) changed=true;
-      }
-      if(changed){
-        saveLocal();
-        const p=document.querySelector('.page.active')?.id?.replace('page-','');
-        if(p) showPage(p);
-      }
-      const t=new Date().toLocaleTimeString('th-TH');
-      const el=document.getElementById('syncText');
-      if(el) el.textContent='ซิงค์แล้ว '+t;
-      const dot=document.getElementById('syncDot');
-      if(dot) dot.style.background='var(--green)';
+    if(!res.ok) return;
+    const d=await res.json();
+    let changed=false;
+    const sid = r => String(r.id||'').trim();
+
+    if(d.appointments){
+      d.appointments.forEach(r=>{
+        if(!sid(r)) return;
+        const i=appointments.findIndex(a=>sid(a)===sid(r));
+        if(i===-1){ appointments.push(r); changed=true; }
+        else if(appointments[i].status!==r.status){ appointments[i].status=r.status; changed=true; }
+      });
     }
+    if(d.treatments){
+      d.treatments.forEach(r=>{
+        if(!sid(r)) return;
+        const exists=treatments.find(t=>sid(t)===sid(r));
+        if(!exists){ treatments.push(r); changed=true; }
+      });
+    }
+    if(d.labs){
+      d.labs.forEach(r=>{
+        if(!sid(r)) return;
+        const exists=labs.find(l=>sid(l)===sid(r));
+        if(!exists){ labs.push(r); changed=true; }
+      });
+    }
+
+    if(changed){
+      saveLocal();
+      // re-render เฉพาะหน้าที่เปิดอยู่ และไม่ใช่ income (ป้องกันกราฟ flicker)
+      const p=document.querySelector('.page.active')?.id?.replace('page-','');
+      if(p==='home') renderHome();
+      else if(p==='treatment') renderTreatPage();
+      else if(p==='lab') renderLabPage();
+      // income และ settings ไม่ auto-render เพื่อป้องกันการซ้ำ
+    }
+
+    const t=new Date().toLocaleTimeString('th-TH');
+    const el=document.getElementById('syncText');
+    if(el) el.textContent='ซิงค์แล้ว '+t;
+    const dot=document.getElementById('syncDot');
+    if(dot) dot.style.background='var(--green)';
   } catch(e){
     const dot=document.getElementById('syncDot');
     if(dot) dot.style.background='var(--red)';
@@ -2052,7 +2066,13 @@ function fmtDate(s){
 function statusClass(s){
   return {'เสร็จ':'badge badge-done','รอ':'badge badge-wait','ยกเลิก':'badge badge-cancel','walk-in':'badge badge-walkin','confirm':'badge badge-confirm','ไม่คอนเฟิร์ม':'badge badge-unconfirm'}[s]||'badge badge-wait';
 }
-function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+function closeModal(id){
+  document.getElementById(id).classList.remove('open');
+  // reset save guards when modal closed
+  if(id==='modalLab') _labSaving=false;
+  if(id==='modalTreat') _treatSaving=false;
+  if(id==='modalApt') _aptSaving=false;
+}
 function showToast(msg,type='success'){
   const el=document.getElementById('toast');
   el.textContent=(type==='success'?'✅ ':'❌ ')+msg;
