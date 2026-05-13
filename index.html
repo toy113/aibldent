@@ -565,8 +565,8 @@ tfoot td{font-weight:700;padding:12px 15px;color:var(--teal);font-size:13px}
 
   <!-- HOME -->
   <div id="page-home" class="page">
-    <!-- 1. ตารางนัด (full width top) -->
-    <div style="margin-bottom:20px">
+    <!-- 1. ตารางนัด (half width on desktop) -->
+    <div style="margin-bottom:20px;max-width:600px">
       <div class="section-label">📅 ตารางนัดวันนี้</div>
       <div class="card">
         <div id="appt-list"></div>
@@ -2505,16 +2505,43 @@ function renderManagerView(){
       sel.className = "form-input";
       sel.style.width = "auto";
       sel.innerHTML = DOCTORS.map(d=>`<option value="${d.dataKey}">${d.name}</option>`).join("");
-      sel.addEventListener("change", ()=>{
+      sel.addEventListener("change", async ()=>{
         const d = DOCTORS.find(x=>x.dataKey===sel.value);
-        if(d){
-          currentDoctor = {...d, isManager:true};
-          _labKey = "dn_"+d.dataKey+"_lab";
-          records = load("dn_"+d.dataKey+"_records",[]);
-          appts   = load("dn_"+d.dataKey+"_appts",[]);
-          doctor  = {name:d.fullName, specialty:d.specialty, share:d.share, gender:d.gender};
-          updateSidebar();
-          renderRecordsTable();
+        if(!d) return;
+        currentDoctor = {...d, isManager:true};
+        _labKey = "dn_"+d.dataKey+"_lab";
+        doctor  = {name:d.fullName, specialty:d.specialty, share:d.share, gender:d.gender};
+        updateSidebar();
+
+        // Load from localStorage first (fast)
+        records = load("dn_"+d.dataKey+"_records",[]);
+        appts   = load("dn_"+d.dataKey+"_appts",[]);
+        renderRecordsTable();
+
+        // Then sync from Sheet (async)
+        if(SCRIPT_URL){
+          try{
+            const recData = await fetchSheet(getSheetName("records", d.dataKey));
+            if(recData && recData.length > 0){
+              records = recData.map(r=>({
+                id:+r.id||Date.now(), date:r.date||todayStr(), hn:r.hn||"",
+                patient:r.patient||"", treatment:r.treatment||"",
+                price:+r.price||0, cash:+r.cash||0, transfer:+r.transfer||0,
+                insurance:+r.insurance||0, company:+r.company||0,
+              }));
+              save("dn_"+d.dataKey+"_records", records);
+              renderRecordsTable();
+            }
+            const aptData = await fetchSheet(getSheetName("appts", d.dataKey));
+            if(aptData && aptData.length > 0){
+              appts = aptData.map(r=>({
+                id:+r.id||Date.now(), time:r.time||"", hn:r.hn||"",
+                patient:r.patient||"", treatment:r.treatment||"", status:r.status||"รอ",
+              }));
+              save("dn_"+d.dataKey+"_appts", appts);
+            }
+            showToast("✅ โหลดข้อมูล "+d.name+" แล้ว");
+          }catch(e){ console.warn("manager sync error:", e); }
         }
       });
       filterRow.insertBefore(sel, filterRow.firstChild);
@@ -2583,16 +2610,43 @@ function renderManagerView(){
       sel.className = "form-input";
       sel.style.width = "auto";
       sel.innerHTML = DOCTORS.map(d=>`<option value="${d.dataKey}">${d.name}</option>`).join("");
-      sel.addEventListener("change", ()=>{
+      sel.addEventListener("change", async ()=>{
         const d = DOCTORS.find(x=>x.dataKey===sel.value);
-        if(d){
-          currentDoctor = {...d, isManager:true};
-          _labKey = "dn_"+d.dataKey+"_lab";
-          records = load("dn_"+d.dataKey+"_records",[]);
-          appts   = load("dn_"+d.dataKey+"_appts",[]);
-          doctor  = {name:d.fullName, specialty:d.specialty, share:d.share, gender:d.gender};
-          updateSidebar();
-          renderRecordsTable();
+        if(!d) return;
+        currentDoctor = {...d, isManager:true};
+        _labKey = "dn_"+d.dataKey+"_lab";
+        doctor  = {name:d.fullName, specialty:d.specialty, share:d.share, gender:d.gender};
+        updateSidebar();
+
+        // Load from localStorage first (fast)
+        records = load("dn_"+d.dataKey+"_records",[]);
+        appts   = load("dn_"+d.dataKey+"_appts",[]);
+        renderRecordsTable();
+
+        // Then sync from Sheet (async)
+        if(SCRIPT_URL){
+          try{
+            const recData = await fetchSheet(getSheetName("records", d.dataKey));
+            if(recData && recData.length > 0){
+              records = recData.map(r=>({
+                id:+r.id||Date.now(), date:r.date||todayStr(), hn:r.hn||"",
+                patient:r.patient||"", treatment:r.treatment||"",
+                price:+r.price||0, cash:+r.cash||0, transfer:+r.transfer||0,
+                insurance:+r.insurance||0, company:+r.company||0,
+              }));
+              save("dn_"+d.dataKey+"_records", records);
+              renderRecordsTable();
+            }
+            const aptData = await fetchSheet(getSheetName("appts", d.dataKey));
+            if(aptData && aptData.length > 0){
+              appts = aptData.map(r=>({
+                id:+r.id||Date.now(), time:r.time||"", hn:r.hn||"",
+                patient:r.patient||"", treatment:r.treatment||"", status:r.status||"รอ",
+              }));
+              save("dn_"+d.dataKey+"_appts", appts);
+            }
+            showToast("✅ โหลดข้อมูล "+d.name+" แล้ว");
+          }catch(e){ console.warn("manager sync error:", e); }
         }
       });
       filterRow.insertBefore(sel, filterRow.firstChild);
