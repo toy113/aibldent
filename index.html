@@ -561,6 +561,16 @@ select.form-control { cursor: pointer; }
 .search-box input { padding-left: 32px; }
 .search-box::before { content: '🔍'; position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 13px; z-index: 1; pointer-events: none; }
 
+/* FORCE 24HR TIME INPUT */
+input[type="time"] {
+  -webkit-appearance: none;
+  appearance: none;
+}
+input[type="time"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+}
+/* Override AM/PM via locale hint */
+
 /* SCROLLBAR */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
@@ -721,7 +731,7 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
       <button class="nav-item" onclick="showPage('treatment')" id="nav-treatment"><span class="nav-icon">📋</span>บันทึกการรักษา</button>
       <button class="nav-item" onclick="showPage('income')" id="nav-income"><span class="nav-icon">📊</span>สรุปรายได้</button>
       <button class="nav-item" onclick="showPage('lab')" id="nav-lab"><span class="nav-icon">🧪</span>ค่าแลป</button>
-      <button class="nav-item" onclick="showPage('settings')" id="nav-settings"><span class="nav-icon">⚙️</span>ตั้งค่า</button>
+      <button class="nav-item" onclick="showPage('settings')" id="nav-settings" style="display:none;"><span class="nav-icon">⚙️</span>ตั้งค่า</button>
       <button class="nav-item" id="nav-schedule" style="display:none;" onclick="showPage('schedule')"><span class="nav-icon">📅</span>ตารางนัด</button>
     </div>
     <div class="sidebar-footer">
@@ -756,7 +766,7 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
       <button class="top-tab" id="ttab-treatment" onclick="showPage('treatment');setMobileNav('treatment')"><span class="mn-icon">📋</span>รักษา</button>
       <button class="top-tab" id="ttab-income" onclick="showPage('income');setMobileNav('income')"><span class="mn-icon">📊</span>รายได้</button>
       <button class="top-tab" id="ttab-lab" onclick="showPage('lab');setMobileNav('lab')"><span class="mn-icon">🧪</span>แลป</button>
-      <button class="top-tab" id="ttab-settings" onclick="showPage('settings');setMobileNav('settings')"><span class="mn-icon">⚙️</span>ตั้งค่า</button>
+      <button class="top-tab" id="ttab-settings" style="display:none;" onclick="showPage('settings');setMobileNav('settings')"><span class="mn-icon">⚙️</span>ตั้งค่า</button>
       <button class="top-tab" id="ttab-schedule" style="display:none;" onclick="showPage('schedule');setMobileNav('schedule')"><span class="mn-icon">📅</span>ตารางนัด</button>
     </div>
 
@@ -1008,7 +1018,9 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
       </div>
       <div class="form-group">
         <label>เวลา</label>
-        <input type="time" class="form-control" id="apt-time" required min="10:00" max="18:30" step="1800">
+        <input type="text" class="form-control" id="apt-time" placeholder="10:00" maxlength="5"
+          oninput="this.value=this.value.replace(/[^0-9:]/g,'');if(this.value.length===2&&!this.value.includes(':'))this.value+=':';"
+          style="font-size:16px;font-weight:600;letter-spacing:2px;">
       </div>
       <div class="form-group">
         <label>หมอ</label>
@@ -1062,7 +1074,9 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
       </div>
       <div class="form-group">
         <label>เวลา</label>
-        <input type="time" class="form-control" id="treat-time">
+        <input type="text" class="form-control" id="treat-time" placeholder="10:00" maxlength="5"
+          oninput="this.value=this.value.replace(/[^0-9:]/g,'');if(this.value.length===2&&!this.value.includes(':'))this.value+=':';"
+          style="font-size:16px;font-weight:600;letter-spacing:2px;">
       </div>
       <div class="form-group">
         <label>HN</label>
@@ -1368,8 +1382,8 @@ function startApp(){
   const iyr = document.getElementById('income-filter-year');
   if(iyr) iyr.value = now.getFullYear()+543;
 
-  // Show schedule tab for manager only
-  ['nav-schedule','ttab-schedule'].forEach(id=>{
+  // Show schedule + settings tab for manager only
+  ['nav-schedule','ttab-schedule','nav-settings','ttab-settings'].forEach(id=>{
     const el=document.getElementById(id);
     if(el) el.style.display = isManager ? '' : 'none';
   });
@@ -1379,6 +1393,8 @@ function startApp(){
     showLoadingOverlay(false);
     const lastPage = localStorage.getItem('bl_lastPage') || 'home';
     showPage(lastPage);
+    // If manager, also pre-render schedule
+    if(isManager) setTimeout(renderSchedulePage, 500);
   }).catch(()=>{
     showLoadingOverlay(false);
     showPage('home');
@@ -1546,7 +1562,9 @@ function openAddApt(){
   const nowH=new Date(); 
   let hh=nowH.getHours(), mm=nowH.getMinutes()>=30?30:0;
   if(hh<10){hh=10;mm=0;} if(hh>18||(hh===18&&mm>30)){hh=18;mm=30;}
-  document.getElementById('apt-time').value=`${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}`;
+  const hhStr=String(hh).padStart(2,'0');
+  const mmStr=String(mm).padStart(2,'0');
+  document.getElementById('apt-time').value=`${hhStr}:${mmStr}`;
   document.getElementById('apt-status').value='ไม่คอนเฟิร์ม';
   document.getElementById('apt-note').value='';
   if(!isManager){ document.getElementById('apt-doc').value=currentUser.name; }
@@ -1606,7 +1624,7 @@ function openAddTreat(t=null){
   const today=todayStr();
   document.getElementById('treat-id').value = t?.id||'';
   document.getElementById('treat-date').value = t?.date||today;
-  document.getElementById('treat-time').value = t?.time||'10:00';
+  document.getElementById('treat-time').value=t?.time||'10:00';
   document.getElementById('treat-hn').value = t?.hn||'';
   document.getElementById('treat-name').value = t?.patName||'';
   document.getElementById('treat-doc').value = t?.docName||(isManager?doctors[0]?.name:currentUser.name);
@@ -1918,11 +1936,11 @@ function buildShareGrid(rows){
       <div style="display:flex;justify-content:space-between;margin-top:8px;padding-top:8px;border-top:1px solid var(--border);">
         <div>
           <div style="font-size:10px;color:var(--text-light);font-weight:700;">ส่วนแบ่งหมอ</div>
-          <div style="font-size:14px;font-weight:800;color:var(--wine);">฿${fmt(share)}</div>
+          <div style="font-size:14px;font-weight:800;color:var(--gold);">฿${fmt(share)}</div>
         </div>
         <div style="text-align:right;">
           <div style="font-size:10px;color:var(--text-light);font-weight:700;">ส่วนแบ่งคลินิก</div>
-          <div style="font-size:14px;font-weight:800;color:var(--gold);">฿${fmt(clinicShare)}</div>
+          <div style="font-size:14px;font-weight:800;color:var(--wine);">฿${fmt(clinicShare)}</div>
         </div>
       </div>
     </div>`;
@@ -2213,14 +2231,8 @@ function renderSchedulePage(){
     if(prev) df.value = prev;
   }
 
-  // Show loading if no data yet
   const calEl = document.getElementById('scheduleCalendar');
   if(!calEl) return;
-  if(appointments.length===0){
-    calEl.innerHTML='<div style="text-align:center;padding:40px;color:var(--text-light);font-size:14px;">🔄 กำลังโหลดข้อมูลจาก Sheet...</div>';
-    setTimeout(renderSchedulePage, 2000);
-    return;
-  }
   // Filter appointments
   let apts = appointments.filter(a=>a.date&&a.date.startsWith(month));
   if(docFilter) apts = apts.filter(a=>a.docName===docFilter);
