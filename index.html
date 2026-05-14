@@ -653,13 +653,6 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
 <!-- ======== LOGIN ======== -->
 <div id="loginScreen">
 
-  <!-- FIXED BACK BAR - shows only on PIN step -->
-  <div id="loginBackBar" style="display:none;position:fixed;top:0;left:0;right:0;z-index:10000;padding:12px 16px;background:rgba(50,10,40,0.95);">
-    <button type="button" onclick="goBackToSelect()" style="background:rgba(255,255,255,0.15);border:1.5px solid rgba(255,255,255,0.35);border-radius:10px;color:#fff;font-size:15px;font-weight:700;padding:10px 20px;cursor:pointer;font-family:'Sarabun',sans-serif;-webkit-tap-highlight-color:transparent;">
-      ← เลือกหมอใหม่
-    </button>
-  </div>
-
   <!-- STEP 1: เลือกหมอ -->
   <div id="step-select" class="login-step">
     <div class="login-logo-wrap">
@@ -693,7 +686,7 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
 
   <!-- STEP 2: กรอก PIN -->
   <div id="step-pin" class="login-step" style="display:none;">
-    <button class="login-back-btn" type="button" id="loginBackBtn">← เลือกใหม่</button>
+    <button type="button" onclick="goBackToSelect()" style="width:100%;margin-bottom:20px;padding:12px 16px;background:rgba(255,255,255,0.1);border:1.5px solid rgba(255,255,255,0.3);border-radius:12px;color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:'Sarabun',sans-serif;text-align:left;-webkit-tap-highlight-color:transparent;">← เลือกหมอใหม่</button>
     <div class="login-pin-avatar" id="loginPinAvatar">🦷</div>
     <div class="login-pin-name" id="pinForName">หมอทอย</div>
     <div class="login-pin-label">กรอกรหัส PIN 4 หลัก</div>
@@ -1310,9 +1303,7 @@ function doSelectDoctor(id){
   currentPin = ''; updatePinDots2();
   document.getElementById('step-select').style.display = 'none';
   document.getElementById('step-pin').style.display = 'flex';
-  // Show fixed back bar
-  var bar = document.getElementById('loginBackBar');
-  if(bar) bar.style.display = 'block';
+
 }
 
 function goBackToSelect(){
@@ -1320,9 +1311,7 @@ function goBackToSelect(){
   document.getElementById('step-pin').style.display = 'none';
   document.getElementById('step-select').style.display = 'flex';
   document.getElementById('loginError').textContent = '';
-  // Hide fixed back bar
-  var bar = document.getElementById('loginBackBar');
-  if(bar) bar.style.display = 'none';
+
 }
 
 function doNum(n){
