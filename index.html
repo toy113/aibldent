@@ -1027,6 +1027,10 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
         <label>ชื่อ-สกุล</label>
         <input class="form-control" id="apt-name" placeholder="ชื่อผู้ป่วย">
       </div>
+      <div class="form-group">
+        <label>เบอร์โทรศัพท์</label>
+        <input class="form-control" id="apt-phone" placeholder="08X-XXX-XXXX" type="tel" inputmode="numeric" maxlength="10">
+      </div>
 
       <div class="form-group form-control-full">
         <label>รายการรักษา <span style="color:var(--text-light);font-weight:400;font-size:11px;">(เลือกได้หลายรายการ)</span></label>
@@ -1215,7 +1219,7 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
 //  GOOGLE SHEETS CONFIG
 // ============================================================
 // วาง Apps Script Web App URL ที่นี่
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzMYDDGYKgL8mAYykGeA-4JrCL02MnmtuKgLHtPUoZIMdOk_0jNWa_LHqyUfz1Ofj9d/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbziGhaq1nUYtOTGz7ZF2HfxfzZ0SBXby50ZjjwH535Ljp5H9Utdzk4Pne_2GPGLmj8/exec';
 
 // ============================================================
 //  DOCTORS & AUTH
@@ -1594,6 +1598,7 @@ function openAddApt(){
   document.getElementById('apt-date').value=todayStr();
   document.getElementById('apt-hn').value='';
   document.getElementById('apt-name').value='';
+  document.getElementById('apt-phone').value='';
   // Default time = now rounded to nearest 30min, clamped 10:00-18:30
   const nowH=new Date(); 
   let hh=nowH.getHours(), mm=nowH.getMinutes()>=30?30:0;
@@ -1619,6 +1624,7 @@ function saveApt(){
     time: document.getElementById('apt-time').value,
     docName: document.getElementById('apt-doc').value,
     hn: document.getElementById('apt-hn').value,
+    phone: document.getElementById('apt-phone')?.value||'',
     patName: document.getElementById('apt-name').value,
     proc: document.getElementById('apt-proc').value,
     status: document.getElementById('apt-status').value,
