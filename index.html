@@ -119,13 +119,17 @@ html, body { height: 100%; font-family: 'Sarabun', sans-serif; background: var(-
 
 /* PIN PHASE */
 .login-back-btn {
-  align-self: flex-start;
-  background: rgba(255,255,255,0.12);
-  border: 1px solid rgba(255,255,255,0.25);
-  border-radius: 20px;
-  color: rgba(255,255,255,0.9); font-size: 14px; font-weight: 600; cursor: pointer;
-  padding: 7px 16px; margin-bottom: 20px; font-family: 'Sarabun', sans-serif;
+  width: 100%;
+  background: rgba(255,255,255,0.1);
+  border: 1.5px solid rgba(255,255,255,0.25);
+  border-radius: 12px;
+  color: #fff; font-size: 15px; font-weight: 700; cursor: pointer;
+  padding: 12px 20px; margin-bottom: 24px;
+  font-family: 'Sarabun', sans-serif;
+  text-align: left;
+  -webkit-tap-highlight-color: transparent;
 }
+.login-back-btn:active { background: rgba(255,255,255,0.2); }
 .login-pin-avatar { font-size: 48px; margin-bottom: 10px; }
 .login-pin-name {
   font-size: 22px; font-weight: 700; color: #fff;
@@ -1023,10 +1027,7 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
         <label>ชื่อ-สกุล</label>
         <input class="form-control" id="apt-name" placeholder="ชื่อผู้ป่วย">
       </div>
-      <div class="form-group">
-        <label>เบอร์โทรศัพท์</label>
-        <input class="form-control" id="apt-phone" placeholder="08X-XXX-XXXX" type="tel" inputmode="numeric" maxlength="10">
-      </div>
+
       <div class="form-group form-control-full">
         <label>รายการรักษา <span style="color:var(--text-light);font-weight:400;font-size:11px;">(เลือกได้หลายรายการ)</span></label>
         <div id="apt-proc-box" style="border:1.5px solid var(--border);border-radius:8px;background:var(--cream);padding:8px 12px;cursor:pointer;min-height:40px;position:relative;" onclick="toggleProcDropdown()">
@@ -1590,7 +1591,6 @@ function openAddApt(){
   document.getElementById('aptModalTitle').textContent='เพิ่มนัด';
   document.getElementById('apt-date').value=todayStr();
   document.getElementById('apt-hn').value='';
-  document.getElementById('apt-phone').value='';
   document.getElementById('apt-name').value='';
   // Default time = now rounded to nearest 30min, clamped 10:00-18:30
   const nowH=new Date(); 
@@ -1617,7 +1617,6 @@ function saveApt(){
     time: document.getElementById('apt-time').value,
     docName: document.getElementById('apt-doc').value,
     hn: document.getElementById('apt-hn').value,
-    phone: document.getElementById('apt-phone').value||'',
     patName: document.getElementById('apt-name').value,
     proc: document.getElementById('apt-proc').value,
     status: document.getElementById('apt-status').value,
@@ -1629,7 +1628,12 @@ function saveApt(){
   closeModal('modalApt');
   renderHome();
   showToast('เพิ่มนัดสำเร็จ');
-  syncToSheet('appointments',apt);
+  syncToSheet('appointments', apt).then(()=>{
+    // After 2s, sync from Sheet to verify
+    setTimeout(syncAll, 2000);
+  }).catch(err => {
+    showToast('⚠️ บันทึกไม่สำเร็จ กรุณาตรวจสอบการเชื่อมต่อ', 'error');
+  });
 }
 
 // ============================================================
@@ -1705,7 +1709,11 @@ function saveTreat(){
   closeModal('modalTreat');
   renderHome(); renderTreatPage();
   showToast('บันทึกการรักษาสำเร็จ');
-  syncToSheet('treatments',t);
+  syncToSheet('treatments', t).then(()=>{
+    setTimeout(syncAll, 2000);
+  }).catch(err => {
+    showToast('⚠️ บันทึกไม่สำเร็จ กรุณาตรวจสอบการเชื่อมต่อ', 'error');
+  });
 }
 function deleteTreat(id){
   if(!confirm('ยืนยันลบรายการนี้?')) return;
@@ -2189,7 +2197,7 @@ function saveDocSettings(docId){
 //  GOOGLE SHEETS SYNC
 // ============================================================
 async function syncToSheet(type, data){
-  if(!APPS_SCRIPT_URL||APPS_SCRIPT_URL.includes('YOUR_SCRIPT_ID')) return;
+  if(!APPS_SCRIPT_URL||APPS_SCRIPT_URL.includes('YOUR_SCRIPT_ID')) return Promise.resolve();
   const dot = document.getElementById('syncDot');
   const txt = document.getElementById('syncText');
   if(dot) dot.style.background='var(--gold)';
@@ -2202,12 +2210,12 @@ async function syncToSheet(type, data){
     });
     if(dot) dot.style.background='var(--green)';
     if(txt) txt.textContent='ซิงค์แล้ว '+new Date().toLocaleTimeString('th-TH');
-    // Refresh data from Sheet after 1.5s (give Sheet time to write)
-    setTimeout(syncAll, 1500);
+    return Promise.resolve();
   } catch(e){
     console.warn('Sync error',e);
     if(dot) dot.style.background='var(--red)';
     if(txt) txt.textContent='⚠️ sync ไม่สำเร็จ';
+    return Promise.reject(e);
   }
 }
 async function syncAll(){
