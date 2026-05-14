@@ -2,6 +2,8 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Bangluang Dental | คลินิกทันตกรรมบางหลวง</title>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&family=Prompt:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1422,9 +1424,8 @@ function startApp(){
       setTimeout(()=>{
         const p=document.querySelector('.page.active')?.id?.replace('page-','');
         if(p==='schedule'){
-    const pageEl = document.getElementById('page-schedule');
-    if(pageEl) pageEl.dataset.dirty = '0';
-    setTimeout(renderSchedulePage, 50);
+    // Force render after page becomes visible
+    requestAnimationFrame(()=>requestAnimationFrame(renderSchedulePage));
   }
       }, 500);
     }
@@ -1502,9 +1503,8 @@ function showPage(p){
   if(p==='lab') renderLabPage();
   if(p==='settings') buildSettingsPage();
   if(p==='schedule'){
-    const pageEl = document.getElementById('page-schedule');
-    if(pageEl) pageEl.dataset.dirty = '0';
-    setTimeout(renderSchedulePage, 50);
+    // Force render after page becomes visible
+    requestAnimationFrame(()=>requestAnimationFrame(renderSchedulePage));
   }
   setMobileNav(p);
 }
@@ -2297,13 +2297,7 @@ async function manualSync(){
 //  SCHEDULE PAGE (Manager only)
 // ============================================================
 function renderSchedulePage(){
-  // Only render if page is active or being called directly
-  const pageEl = document.getElementById('page-schedule');
-  if(pageEl && !pageEl.classList.contains('active')) {
-    // Page not visible - mark as dirty to re-render when shown
-    pageEl.dataset.dirty = '1';
-    return;
-  }
+  // Always render when called
   try {
   const monthEl = document.getElementById('scheduleMonth');
   if(!monthEl){ console.warn('scheduleMonth not found'); return; }
