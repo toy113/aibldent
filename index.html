@@ -56,23 +56,8 @@ html, body { height: 100%; font-family: 'Sarabun', sans-serif; background: var(-
   position: relative; background: rgba(255,255,255,0.07);
   border: 1px solid rgba(255,255,255,0.18);
   backdrop-filter: blur(24px); border-radius: 24px;
-  padding: 24px 32px 20px; width: 820px; max-width: 96vw;
-  max-height: 96vh; overflow-y: auto;
+  padding: 32px 32px 28px; width: 420px; max-width: 95vw;
   box-shadow: 0 24px 64px rgba(0,0,0,0.45);
-}
-.login-body {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; margin-top: 6px;
-}
-.login-body-left { display: flex; flex-direction: column; gap: 0; }
-.login-body-right {
-  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 16px; padding: 16px 14px;
-}
-@media (max-width: 640px) {
-  .login-card { padding: 24px 18px; width: 100%; border-radius: 20px; }
-  .login-body { grid-template-columns: 1fr; gap: 0; }
-  .login-body-right { background: none; border: none; padding: 0; }
-  .login-body-left { display: block; }
 }
 .login-logo {
   text-align: center; margin-bottom: 14px;
@@ -87,16 +72,16 @@ html, body { height: 100%; font-family: 'Sarabun', sans-serif; background: var(-
 .login-subtitle { color: rgba(255,255,255,0.6); font-size: 13px; margin-top: 2px; }
 
 .doctor-grid {
-  display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 14px;
-}
-@media (max-width: 640px) {
-  .doctor-grid { grid-template-columns: 1fr 1fr; }
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; min-height: 60px;
 }
 .doctor-btn {
-  background: rgba(255,255,255,0.08); border: 1.5px solid rgba(255,255,255,0.15);
-  border-radius: 10px; padding: 8px 6px; cursor: pointer;
+  background: rgba(255,255,255,0.1); border: 1.5px solid rgba(255,255,255,0.2);
+  border-radius: 10px; padding: 12px 8px; cursor: pointer;
   transition: all 0.2s; text-align: center; color: #fff;
   font-family: 'Sarabun', sans-serif; font-size: 13px; font-weight: 600;
+  min-height: 64px; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 4px;
+  width: 100%; box-sizing: border-box;
 }
 .doctor-btn:hover { background: rgba(255,255,255,0.16); border-color: var(--gold-light); transform: translateY(-1px); }
 .doctor-btn.selected { background: rgba(212,168,71,0.25); border-color: var(--gold); color: var(--gold-light); }
@@ -616,56 +601,30 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
 <div id="loginScreen">
   <div class="login-card">
     <div class="login-logo">
-      <div class="logo-circle" style="background:#6B2D5E;padding:6px;width:96px;height:96px;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 175">
-  <!-- LARGE TOOTH: outline only, white stroke -->
-  <path d="
-    M 28,148
-    L 28,62
-    L 55,22
-    L 82,58
-    L 102,18
-    L 148,62
-    L 148,112
-    L 130,148
-    L 112,118
-    L 92,148
-    L 72,118
-    L 52,148
-    Z"
-    fill="none"
-    stroke="white"
-    stroke-width="9"
-    stroke-linejoin="round"
-    stroke-linecap="round"
-  />
-  <!-- SMALL TOOTH: solid white, bottom-right overlapping -->
-  <path d="
-    M 118,108
-    L 118,70
-    L 133,48
-    L 152,28
-    L 172,62
-    L 172,108
-    L 158,135
-    L 145,108
-    L 133,135
-    L 120,108
-    Z"
-    fill="white"
-    stroke="white"
-    stroke-width="2"
-    stroke-linejoin="round"
-  />
-</svg></div>
+      <div class="logo-circle" style="padding:6px;background:var(--wine);">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 160" width="58" height="46">
+          <path d="M 28,148 L 28,62 L 55,22 L 82,58 L 102,18 L 148,62 L 148,112 L 130,148 L 112,118 L 92,148 L 72,118 L 52,148 Z"
+            fill="none" stroke="white" stroke-width="9" stroke-linejoin="round" stroke-linecap="round"/>
+          <path d="M 118,108 L 118,70 L 133,48 L 152,28 L 172,62 L 172,108 L 158,135 L 145,108 L 133,135 L 120,108 Z"
+            fill="white" stroke="white" stroke-width="2" stroke-linejoin="round"/>
+        </svg>
+      </div>
       <div class="login-title" style="font-family:'Prompt',sans-serif;letter-spacing:2px;font-size:24px;">Bangluang</div>
       <div class="login-subtitle">คลินิกทันตกรรมบางหลวง</div>
     </div>
 
-    <div class="login-body">
-    <div class="login-body-left">
+    <!-- SELECT DOCTOR PHASE -->
     <div id="selectPhase">
-      <div style="color:rgba(255,255,255,0.6);font-size:12px;text-align:center;margin-bottom:10px;font-weight:600;letter-spacing:0.5px;">เลือกทันตแพทย์</div>
-      <div class="doctor-grid" id="doctorGrid"></div>
+      <div style="color:rgba(255,255,255,0.6);font-size:12px;text-align:center;margin-bottom:10px;font-weight:600;">เลือกทันตแพทย์</div>
+      <div class="doctor-grid" id="doctorGrid">
+    <button class="doctor-btn" id="dbtn-toy" onclick="selectDoctor('toy')"><span class="doc-icon">🦷</span>หมอทอย</button>
+    <button class="doctor-btn" id="dbtn-mind" onclick="selectDoctor('mind')"><span class="doc-icon">👩‍⚕️</span>หมอมายด์</button>
+    <button class="doctor-btn" id="dbtn-koi" onclick="selectDoctor('koi')"><span class="doc-icon">🌸</span>หมอก้อย</button>
+    <button class="doctor-btn" id="dbtn-pong" onclick="selectDoctor('pong')"><span class="doc-icon">👨‍⚕️</span>หมอป้อง</button>
+    <button class="doctor-btn" id="dbtn-aim" onclick="selectDoctor('aim')"><span class="doc-icon">💫</span>หมอเอม</button>
+    <button class="doctor-btn" id="dbtn-khao" onclick="selectDoctor('khao')"><span class="doc-icon">⭐</span>หมอข้าว</button>
+    <button class="doctor-btn" id="dbtn-part" onclick="selectDoctor('part')"><span class="doc-icon">🔬</span>หมอพาร์ท</button>
+      </div>
       <div class="manager-row">
         <div class="manager-label">— หรือ —</div>
         <button class="doctor-btn" id="managerBtn" onclick="selectDoctor('manager')" style="width:100%">
@@ -673,9 +632,8 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
         </button>
       </div>
     </div>
-    </div><!-- end login-body-left -->
 
-    <div class="login-body-right">
+    <!-- PIN PHASE -->
     <div id="pinPhase" style="display:none;">
       <div style="text-align:center;margin-bottom:14px;">
         <div style="font-size:16px;font-weight:700;color:#fff;" id="pinForName"></div>
@@ -705,9 +663,7 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
         </div>
         <div class="login-error" id="loginError"></div>
       </div>
-    </div><!-- end pinPhase -->
-    </div><!-- end login-body-right -->
-    </div><!-- end login-body -->
+    </div>
   </div>
 </div>
 
@@ -1266,43 +1222,31 @@ function loadLocal(){ /* data loaded via syncAll from Sheet */ }
 //  LOGIN
 // ============================================================
 function buildDoctorGrid(){
+  // Buttons are pre-rendered in HTML - just verify they exist
   const grid = document.getElementById('doctorGrid');
-  grid.innerHTML = DOCTORS_DATA.map(d=>`
-    <button class="doctor-btn" id="dbtn-${d.id}" onclick="selectDoctor('${d.id}')">
-      <span class="doc-icon">${d.emoji}</span>${d.name}
-    </button>`).join('');
+  if(grid && grid.children.length === 0){
+    // Fallback: render dynamically if HTML was somehow empty
+    grid.innerHTML = DOCTORS_DATA.map(d=>`
+      <button class="doctor-btn" id="dbtn-${d.id}" onclick="selectDoctor('${d.id}')">
+        <span class="doc-icon">${d.emoji}</span>${d.name}
+      </button>`).join('');
+  }
 }
-function isDesktopLogin(){ return window.innerWidth > 600; }
 function selectDoctor(id){
   selectedLoginDoc = id;
   document.querySelectorAll('.doctor-btn').forEach(b=>b.classList.remove('selected'));
   const btn = document.getElementById('dbtn-'+id) || document.getElementById('managerBtn');
   if(btn) btn.classList.add('selected');
-  document.getElementById('pinForName').textContent = id==='manager' ? '🔐 ผู้จัดการ' : DOCTORS_DATA.find(d=>d.id===id)?.name||'';
+  const docName = id==='manager' ? '🔐 ผู้จัดการ' : (doctors.find(d=>d.id===id)||DOCTORS_DATA.find(d=>d.id===id))?.name||'';
+  document.getElementById('pinForName').textContent = docName;
   currentPin=''; updatePinDots();
   document.getElementById('loginError').textContent='';
-  const pp = document.getElementById('pinPhase');
-  const rightPanel = pp.closest('.login-body-right');
-  if(isDesktopLogin()){
-    document.getElementById('selectPhase').style.display = 'block';
-    pp.style.cssText = 'display:block;';
-    if(rightPanel){ rightPanel.style.opacity='1'; rightPanel.style.pointerEvents='auto'; }
-  } else {
-    document.getElementById('selectPhase').style.display = 'none';
-    pp.style.cssText = 'display:block;';
-  }
+  document.getElementById('selectPhase').style.display='none';
+  document.getElementById('pinPhase').style.display='block';
 }
 function backToSelect(){
-  const pp = document.getElementById('pinPhase');
-  const rightPanel = pp.closest('.login-body-right');
-  document.getElementById('selectPhase').style.display = 'block';
-  if(isDesktopLogin()){
-    pp.style.cssText = 'display:block;';
-    if(rightPanel){ rightPanel.style.opacity='0.35'; rightPanel.style.pointerEvents='none'; }
-  } else {
-    pp.style.cssText = 'display:none;';
-    if(rightPanel){ rightPanel.style.opacity='1'; rightPanel.style.pointerEvents='auto'; }
-  }
+  document.getElementById('selectPhase').style.display='block';
+  document.getElementById('pinPhase').style.display='none';
   currentPin=''; selectedLoginDoc=null;
   document.querySelectorAll('.doctor-btn').forEach(b=>b.classList.remove('selected'));
 }
@@ -2161,15 +2105,9 @@ function saveDocSettings(docId){
     if(doc.pin) origDoc.pin = doc.pin;
   }
   // Save PIN to localStorage for persistence across refresh
+  // Save only PIN and share to localStorage (names stay in DOCTORS_DATA)
   localStorage.setItem('bl_doctors_pins', JSON.stringify(
-    doctors.map(d=>({
-      id:d.id, 
-      pin:d.pin||'', 
-      share:d.share||50, 
-      name:d.name||DOCTORS_DATA.find(x=>x.id===d.id)?.name||'',
-      specialty:d.specialty||'', 
-      gender:d.gender||'female'
-    }))
+    doctors.map(d=>({id:d.id, pin:d.pin||'', share:d.share||50}))
   ));
   saveLocal();
   syncToSheet('settings', doc);
@@ -2529,48 +2467,35 @@ function setMobileNav(page){
 // ============================================================
 //  INIT
 // ============================================================
-// Restore saved doctor settings (PIN, share, etc.)
-(function restoreDoctorSettings(){
+// Restore only PIN and share from localStorage (not names - those are in DOCTORS_DATA)
+(function restorePinsOnly(){
   try {
     const saved = localStorage.getItem('bl_doctors_pins');
     if(!saved) return;
     const pins = JSON.parse(saved);
+    if(!Array.isArray(pins)) return;
+    // If old format has names, clear it (corrupted data)
+    if(pins[0] && pins[0].name !== undefined){
+      localStorage.removeItem('bl_doctors_pins');
+      return;
+    }
     pins.forEach(p=>{
+      if(!p || !p.id) return;
       const d = doctors.find(x=>x.id===p.id);
       const orig = DOCTORS_DATA.find(x=>x.id===p.id);
-      if(d){
-        if(p.pin && p.pin.length===4) d.pin=p.pin;
-        if(p.share) d.share=p.share;
-        if(p.name && p.name.trim()) d.name=p.name;
-        if(p.specialty) d.specialty=p.specialty;
-        if(p.gender) d.gender=p.gender;
-      }
-      if(orig){
-        if(p.pin && p.pin.length===4) orig.pin=p.pin;
-        if(p.share) orig.share=p.share;
-        if(p.name && p.name.trim()) orig.name=p.name;
-      }
+      // Only restore PIN and share - never touch names
+      if(d && p.pin && String(p.pin).length===4){ d.pin=String(p.pin); }
+      if(d && p.share && +p.share>0){ d.share=+p.share; }
+      if(orig && p.pin && String(p.pin).length===4){ orig.pin=String(p.pin); }
+      if(orig && p.share && +p.share>0){ orig.share=+p.share; }
     });
-  } catch(e){}
+  } catch(e){ console.warn('restorePins error:',e); }
 })();
 
 buildDoctorGrid();
-// Desktop: show both columns, dim right panel
-if(window.innerWidth > 640){
-  // Ensure select phase is always visible on desktop
-  const sp = document.getElementById('selectPhase');
-  if(sp) sp.style.display = 'block';
-  const pp = document.getElementById('pinPhase');
-  if(pp){ pp.style.display='block'; }
-  const rp = document.querySelector('.login-body-right');
-  if(rp){ rp.style.opacity='0.35'; rp.style.pointerEvents='none'; rp.style.transition='opacity 0.25s'; }
-} else {
-  // Mobile: ensure selectPhase shows, pinPhase hidden
-  const sp = document.getElementById('selectPhase');
-  if(sp) sp.style.display = 'block';
-  const pp = document.getElementById('pinPhase');
-  if(pp) pp.style.display = 'none';
-}
+// Ensure correct initial state
+document.getElementById('selectPhase').style.display='block';
+document.getElementById('pinPhase').style.display='none';
 
 // Auto-restore session on page load/refresh
 (function restoreSession(){
