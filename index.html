@@ -43,7 +43,7 @@ html, body { height: 100%; font-family: 'Sarabun', sans-serif; background: var(-
   position: fixed; inset: 0; z-index: 9999;
   background: linear-gradient(145deg, var(--wine-deeper) 0%, var(--wine-dark) 40%, var(--wine) 80%, var(--wine-mid) 100%);
   display: flex; align-items: center; justify-content: center;
-  overflow: hidden;
+  overflow-y: auto; padding: 16px 0;
 }
 #loginScreen::before {
   content: ''; position: absolute; inset: 0;
@@ -53,17 +53,18 @@ html, body { height: 100%; font-family: 'Sarabun', sans-serif; background: var(-
 .login-card {
   position: relative; background: rgba(255,255,255,0.07);
   border: 1px solid rgba(255,255,255,0.18);
-  backdrop-filter: blur(24px); border-radius: 28px;
-  padding: 36px 40px 32px; width: 820px; max-width: 96vw;
+  backdrop-filter: blur(24px); border-radius: 24px;
+  padding: 24px 32px 20px; width: 820px; max-width: 96vw;
+  max-height: 96vh; overflow-y: auto;
   box-shadow: 0 24px 64px rgba(0,0,0,0.45);
 }
 .login-body {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: start; margin-top: 8px;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; margin-top: 6px;
 }
 .login-body-left { display: flex; flex-direction: column; gap: 0; }
 .login-body-right {
   background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 18px; padding: 24px 20px;
+  border-radius: 16px; padding: 16px 14px;
 }
 @media (max-width: 640px) {
   .login-card { padding: 24px 18px; width: 100%; border-radius: 20px; }
@@ -71,16 +72,16 @@ html, body { height: 100%; font-family: 'Sarabun', sans-serif; background: var(-
   .login-body-right { background: none; border: none; padding: 0; }
 }
 .login-logo {
-  text-align: center; margin-bottom: 28px;
+  text-align: center; margin-bottom: 14px;
 }
 .logo-circle {
-  width: 96px; height: 96px; border-radius: 50%;
+  width: 72px; height: 72px; border-radius: 50%;
   background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
-  margin: 0 auto 14px; display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 6px 24px rgba(212,168,71,0.45);
+  margin: 0 auto 10px; display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 16px rgba(212,168,71,0.45);
 }
-.login-title { color: #fff; font-size: 22px; font-weight: 700; font-family: 'Prompt', sans-serif; }
-.login-subtitle { color: rgba(255,255,255,0.6); font-size: 14px; margin-top: 4px; }
+.login-title { color: #fff; font-size: 18px; font-weight: 700; font-family: 'Prompt', sans-serif; }
+.login-subtitle { color: rgba(255,255,255,0.6); font-size: 13px; margin-top: 2px; }
 
 .doctor-grid {
   display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 14px;
@@ -90,13 +91,13 @@ html, body { height: 100%; font-family: 'Sarabun', sans-serif; background: var(-
 }
 .doctor-btn {
   background: rgba(255,255,255,0.08); border: 1.5px solid rgba(255,255,255,0.15);
-  border-radius: 12px; padding: 12px 10px; cursor: pointer;
+  border-radius: 10px; padding: 8px 6px; cursor: pointer;
   transition: all 0.2s; text-align: center; color: #fff;
-  font-family: 'Sarabun', sans-serif; font-size: 14px; font-weight: 600;
+  font-family: 'Sarabun', sans-serif; font-size: 13px; font-weight: 600;
 }
 .doctor-btn:hover { background: rgba(255,255,255,0.16); border-color: var(--gold-light); transform: translateY(-1px); }
 .doctor-btn.selected { background: rgba(212,168,71,0.25); border-color: var(--gold); color: var(--gold-light); }
-.doctor-btn .doc-icon { font-size: 20px; display: block; margin-bottom: 4px; }
+.doctor-btn .doc-icon { font-size: 18px; display: block; margin-bottom: 2px; }
 
 .manager-row {
   border-top: 1px solid rgba(255,255,255,0.12); padding-top: 16px; margin-top: 4px;
@@ -118,7 +119,7 @@ html, body { height: 100%; font-family: 'Sarabun', sans-serif; background: var(-
 .numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .num-btn {
   background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.12);
-  border-radius: 10px; padding: 14px; font-size: 18px; font-weight: 700;
+  border-radius: 10px; padding: 10px; font-size: 17px; font-weight: 700;
   color: #fff; cursor: pointer; transition: all 0.15s; font-family: 'Prompt', sans-serif;
 }
 .num-btn:hover { background: rgba(255,255,255,0.2); transform: scale(1.04); }
@@ -2292,8 +2293,9 @@ function renderSchedulePage(){
   const monthEl = document.getElementById('scheduleMonth');
   if(!monthEl){ console.warn('scheduleMonth not found'); return; }
   if(!monthEl.value) monthEl.value = todayStr().slice(0,7);
-  const month = monthEl.value; // YYYY-MM
+  const month = monthEl.value;
   const docFilter = document.getElementById('scheduleDocFilter')?.value || '';
+  console.log('renderSchedulePage: month='+month+' apts='+appointments.length);
 
   // Populate doc filter
   const df = document.getElementById('scheduleDocFilter');
@@ -2412,9 +2414,11 @@ function renderSchedulePage(){
 
   html += `</tbody></table></div></div>`;
   const calEl2 = document.getElementById('scheduleCalendar');
+  console.log('scheduleCalendar el:', calEl2, 'html length:', html.length);
   if(calEl2) calEl2.innerHTML = html;
+  else console.error('scheduleCalendar NOT FOUND in DOM');
   } catch(err) {
-    console.error('renderSchedulePage error:', err);
+    console.error('renderSchedulePage error:', err.message, err.stack);
     const calEl2 = document.getElementById('scheduleCalendar');
     if(calEl2) calEl2.innerHTML = `<div style="padding:20px;color:red;font-size:13px;">Error: ${err.message}</div>`;
   }
