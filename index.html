@@ -328,6 +328,10 @@ tbody td { padding: 10px 14px; font-size: 13px; color: var(--text-mid); }
 .badge-walkin { background: rgba(52,152,219,0.15); color: #1a6ea8; border: 1px solid rgba(52,152,219,0.3); }
 .badge-confirm { background: rgba(107,45,94,0.15); color: var(--wine); border: 1px solid rgba(107,45,94,0.25); }
 .badge-unconfirm { background: rgba(150,150,150,0.12); color: #666; border: 1px solid rgba(150,150,150,0.25); }
+.badge-today { background: rgba(107,45,94,0.15); color: var(--wine); border: 1px solid rgba(107,45,94,0.3); }
+.badge-waiting { background: rgba(243,156,18,0.15); color: #c07800; border: 1px solid rgba(243,156,18,0.3); }
+.badge-confirmed { background: rgba(52,152,219,0.15); color: #1a6ea8; border: 1px solid rgba(52,152,219,0.3); }
+.badge-finished { background: rgba(46,204,144,0.15); color: #1a9e6a; border: 1px solid rgba(46,204,144,0.3); }
 
 /* BUTTONS */
 .btn {
@@ -803,7 +807,7 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
           <div style="font-size:14px;font-weight:700;color:var(--gold);">รวม: <span id="treatTotalBadge">฿0</span></div>
         </div>
         <table>
-          <thead><tr><th>เวลา</th><th>HN</th><th>ชื่อ</th><th>รายการรักษา</th><th>หมอ</th><th>เงินสด</th><th>โอน</th><th>ปสค.</th><th>เบิก</th><th>รวม</th></tr></thead>
+          <thead><tr><th>เวลา</th><th>HN</th><th>ชื่อ</th><th>รายการรักษา</th><th>หมอ</th><th>เงินสด</th><th>โอน</th><th>ปสค.</th><th>รวม</th></tr></thead>
           <tbody id="treatListBody"></tbody>
         </table>
       </div>
@@ -848,10 +852,7 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
             <div class="income-item-label">🏛️ ประกันสังคม</div>
             <div class="income-item-value" id="sumSSO">฿0</div>
           </div>
-          <div class="income-item" style="border-left:3px solid var(--rose)">
-            <div class="income-item-label">🏢 เบิกบริษัท</div>
-            <div class="income-item-value" id="sumCompany">฿0</div>
-          </div>
+
         </div>
       </div>
 
@@ -888,7 +889,7 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
           </div>
         </div>
         <table>
-          <thead><tr><th>วันที่</th><th>HN</th><th>ชื่อ-สกุล</th><th>รายการรักษา</th><th>หมอ</th><th>เงินสด</th><th>โอน</th><th>ปสค.</th><th>เบิก</th><th>รวม</th><th>จัดการ</th></tr></thead>
+          <thead><tr><th>วันที่</th><th>HN</th><th>ชื่อ-สกุล</th><th>รายการรักษา</th><th>หมอ</th><th>เงินสด</th><th>โอน</th><th>ปสค.</th><th>รวม</th><th>จัดการ</th></tr></thead>
           <tbody id="treatPageBody"></tbody>
         </table>
       </div>
@@ -903,11 +904,17 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
             <button class="period-tab active" id="iperiod-day" onclick="setPeriod('day',this)">รายวัน</button>
             <button class="period-tab" id="iperiod-month" onclick="setPeriod('month',this)">รายเดือน</button>
             <button class="period-tab" id="iperiod-year" onclick="setPeriod('year',this)">รายปี</button>
+            <button class="period-tab" id="iperiod-range" onclick="setPeriod('range',this)">ช่วงวันที่</button>
           </div>
           <!-- date picker shown per mode -->
           <input type="date" id="income-filter-day" class="form-control" style="height:36px;width:160px;" onchange="renderIncome()">
           <input type="month" id="income-filter-month" class="form-control" style="height:36px;width:150px;display:none;" onchange="renderIncome()">
           <input type="number" id="income-filter-year" class="form-control" style="height:36px;width:100px;display:none;" placeholder="ปี พ.ศ." min="2560" max="2600" onchange="renderIncome()">
+          <div id="income-filter-range" style="display:none;display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+            <input type="date" id="income-range-start" class="form-control" style="height:36px;width:145px;" onchange="renderIncome()">
+            <span style="color:var(--text-light);font-size:13px;">ถึง</span>
+            <input type="date" id="income-range-end" class="form-control" style="height:36px;width:145px;" onchange="renderIncome()">
+          </div>
         </div>
       </div>
       <div class="card-box" style="margin-bottom:20px;">
@@ -917,12 +924,12 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
         </div>
         <div style="padding:20px 24px;"><div class="share-grid" id="shareGrid"></div></div>
       </div>
-      <div class="stat-grid" style="grid-template-columns:repeat(5,1fr);">
+      <div class="stat-grid" style="grid-template-columns:repeat(4,1fr);">
         <div class="stat-card purple"><div class="stat-icon">💰</div><div class="stat-label">รายได้รวม</div><div class="stat-value" id="i-total">0</div><div class="stat-sub">บาท</div></div>
         <div class="stat-card green"><div class="stat-icon">💵</div><div class="stat-label">เงินสด</div><div class="stat-value" id="i-cash">0</div><div class="stat-sub">บาท</div></div>
         <div class="stat-card gold"><div class="stat-icon">📲</div><div class="stat-label">โอน</div><div class="stat-value" id="i-transfer">0</div><div class="stat-sub">บาท</div></div>
         <div class="stat-card rose"><div class="stat-icon">🏛️</div><div class="stat-label">ประกันสังคม</div><div class="stat-value" id="i-sso">0</div><div class="stat-sub">บาท</div></div>
-        <div class="stat-card purple"><div class="stat-icon">🏢</div><div class="stat-label">เบิกบริษัท</div><div class="stat-value" id="i-company">0</div><div class="stat-sub">บาท</div></div>
+
       </div>
       <div class="chart-grid">
         <div class="chart-card">
@@ -1021,7 +1028,7 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
       </div>
       <div class="form-group">
         <label>HN</label>
-        <input class="form-control" id="apt-hn" placeholder="HN-XXXX">
+        <input class="form-control" id="apt-hn" placeholder="xxxxx">
       </div>
       <div class="form-group">
         <label>ชื่อ-สกุล</label>
@@ -1029,7 +1036,7 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
       </div>
       <div class="form-group">
         <label>เบอร์โทรศัพท์</label>
-        <input class="form-control" id="apt-phone" placeholder="08X-XXX-XXXX" type="tel" inputmode="numeric" maxlength="10">
+        <input class="form-control" id="apt-phone" placeholder="08xxxxxxxx" type="tel" inputmode="numeric" maxlength="10">
       </div>
 
       <div class="form-group form-control-full">
@@ -1045,12 +1052,12 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
       <div class="form-group">
         <label>สถานะ</label>
         <select class="form-control" id="apt-status">
-          <option value="ไม่คอนเฟิร์ม">ไม่คอนเฟิร์ม</option>
-          <option value="confirm">confirm</option>
-          <option value="รอ">รอ</option>
-          <option value="walk-in">walk-in</option>
-          <option value="เสร็จ">เสร็จ</option>
+          <option value="นัดวันนี้">นัดวันนี้</option>
+          <option value="รอทำ">รอทำ</option>
+          <option value="คอนเฟิร์ม">คอนเฟิร์ม</option>
+          <option value="เสร็จสิ้น">เสร็จสิ้น</option>
           <option value="ยกเลิก">ยกเลิก</option>
+          <option value="walk-in">walk-in</option>
         </select>
       </div>
       <div class="form-group">
@@ -1084,7 +1091,7 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
       </div>
       <div class="form-group">
         <label>HN</label>
-        <input class="form-control" id="treat-hn" placeholder="HN-XXXX">
+        <input class="form-control" id="treat-hn" placeholder="xxxxx">
       </div>
       <div class="form-group">
         <label>ชื่อ-สกุล</label>
@@ -1113,10 +1120,7 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
         <div class="pay-label pay-sso">🏛️ ประกันสังคม</div>
         <input type="number" class="form-control" id="treat-sso" placeholder="0" min="0" oninput="calcTotal()">
       </div>
-      <div class="pay-field">
-        <div class="pay-label pay-company">🏢 เบิกบริษัท</div>
-        <input type="number" class="form-control" id="treat-company" placeholder="0" min="0" oninput="calcTotal()">
-      </div>
+
     </div>
     <div style="margin-top:12px;padding:12px 16px;background:var(--wine-pale);border-radius:10px;display:flex;justify-content:space-between;align-items:center;">
       <span style="font-size:14px;font-weight:700;color:var(--wine-dark);">รวมทั้งหมด</span>
@@ -1150,7 +1154,7 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
       </div>
       <div class="form-group">
         <label>HN</label>
-        <input class="form-control" id="lab-hn" placeholder="HN-XXXX">
+        <input class="form-control" id="lab-hn" placeholder="xxxxx">
       </div>
       <div class="form-group">
         <label>ชื่อ-สกุล</label>
@@ -1203,12 +1207,12 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
 <!-- STATUS CHANGE DROPDOWN -->
 <div id="statusDropdown" style="display:none;position:fixed;z-index:5000;background:#fff;border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow-lg);padding:6px;min-width:150px;">
   <div style="font-size:11px;color:var(--text-light);padding:4px 8px 6px;border-bottom:1px solid var(--border);margin-bottom:4px;font-weight:700;">เปลี่ยนสถานะ</div>
-  <div class="status-opt" onclick="setStatus('เสร็จ')"><span style="color:var(--green)">✅</span> เสร็จ</div>
-  <div class="status-opt" onclick="setStatus('รอ')"><span style="color:var(--orange)">⏳</span> รอ</div>
+  <div class="status-opt" onclick="setStatus('นัดวันนี้')"><span style="color:var(--wine)">📅</span> นัดวันนี้</div>
+  <div class="status-opt" onclick="setStatus('รอทำ')"><span style="color:var(--orange)">⏳</span> รอทำ</div>
+  <div class="status-opt" onclick="setStatus('คอนเฟิร์ม')"><span style="color:var(--blue)">✅</span> คอนเฟิร์ม</div>
+  <div class="status-opt" onclick="setStatus('เสร็จสิ้น')"><span style="color:var(--green)">🎉</span> เสร็จสิ้น</div>
   <div class="status-opt" onclick="setStatus('ยกเลิก')"><span style="color:var(--red)">❌</span> ยกเลิก</div>
   <div class="status-opt" onclick="setStatus('walk-in')"><span style="color:var(--blue)">🚶</span> walk-in</div>
-  <div class="status-opt" onclick="setStatus('confirm')"><span style="color:var(--wine)">💜</span> confirm</div>
-  <div class="status-opt" onclick="setStatus('ไม่คอนเฟิร์ม')"><span style="color:#999">❔</span> ไม่คอนเฟิร์ม</div>
 </div>
 
 <!-- TOAST -->
@@ -1528,7 +1532,6 @@ function renderHome(){
   const cash = treats.reduce((s,t)=>s+(+t.cash||0),0);
   const transfer = treats.reduce((s,t)=>s+(+t.transfer||0),0);
   const sso = treats.reduce((s,t)=>s+(+t.sso||0),0);
-  const company = treats.reduce((s,t)=>s+(+t.company||0),0);
   // calc share
   const shareDoc = treats.reduce((s,t)=>{
     const doc = doctors.find(d=>d.name===t.docName);
@@ -1542,7 +1545,6 @@ function renderHome(){
   document.getElementById('sumCash').textContent = '฿'+fmt(cash);
   document.getElementById('sumTransfer').textContent = '฿'+fmt(transfer);
   document.getElementById('sumSSO').textContent = '฿'+fmt(sso);
-  document.getElementById('sumCompany').textContent = '฿'+fmt(company);
 
   renderAptList(today);
   renderTreatList(treats);
@@ -1558,7 +1560,7 @@ function renderAptList(today){
     <div class="apt-row">
       <div style="font-weight:700;color:var(--wine)">${a.time}</div>
       <div style="font-size:12px;color:var(--text-light)">${a.hn||'—'}</div>
-      <div><div style="font-weight:600">${a.patName}</div>${a.phone?`<div style="font-size:11px;color:var(--text-light);">📞 ${a.phone}</div>`:''}</div>
+      <div style="font-weight:600">${a.patName}</div>
       <div style="font-size:12px;color:var(--text-mid)">${a.proc}</div>
       <div style="font-size:12px">${a.docName}</div>
       <div>
@@ -1584,7 +1586,6 @@ function renderTreatList(treats){
       <td style="color:var(--green);font-weight:600">${t.cash?'฿'+fmt(+t.cash):''}</td>
       <td style="color:var(--blue);font-weight:600">${t.transfer?'฿'+fmt(+t.transfer):''}</td>
       <td style="color:var(--orange);font-weight:600">${t.sso?'฿'+fmt(+t.sso):''}</td>
-      <td style="color:var(--rose);font-weight:600">${t.company?'฿'+fmt(+t.company):''}</td>
       <td style="font-weight:800;color:var(--wine-dark)">฿${fmt(totalPrice(t))}</td>
     </tr>`).join('');
 }
@@ -1606,7 +1607,7 @@ function openAddApt(){
   const hhStr=String(hh).padStart(2,'0');
   const mmStr=String(mm).padStart(2,'0');
   document.getElementById('apt-time').value=`${hhStr}:${mmStr}`;
-  document.getElementById('apt-status').value='ไม่คอนเฟิร์ม';
+  document.getElementById('apt-status').value='นัดวันนี้';
   document.getElementById('apt-note').value='';
   clearProcSelection();
   document.getElementById('apt-proc-dropdown').style.display='none';
@@ -1681,13 +1682,12 @@ function openAddTreat(t=null){
   document.getElementById('treat-cash').value = t?.cash||'';
   document.getElementById('treat-transfer').value = t?.transfer||'';
   document.getElementById('treat-sso').value = t?.sso||'';
-  document.getElementById('treat-company').value = t?.company||'';
   document.getElementById('treat-note').value = t?.note||'';
   calcTotal();
   document.getElementById('modalTreat').classList.add('open');
 }
 function calcTotal(){
-  const v = ['treat-cash','treat-transfer','treat-sso','treat-company'].reduce((s,id)=>s+(+document.getElementById(id).value||0),0);
+  const v = ['treat-cash','treat-transfer','treat-sso'].reduce((s,id)=>s+(+document.getElementById(id).value||0),0);
   document.getElementById('totalDisplay').textContent='฿'+fmt(v);
 }
 let _treatSaving = false;
@@ -1706,7 +1706,7 @@ function saveTreat(){
     cash:document.getElementById('treat-cash').value||'0',
     transfer:document.getElementById('treat-transfer').value||'0',
     sso:document.getElementById('treat-sso').value||'0',
-    company:document.getElementById('treat-company').value||'0',
+    company:'0',
     note:document.getElementById('treat-note').value,
     status:'เสร็จ',
   };
@@ -1765,7 +1765,7 @@ function renderTreatPage(){
       document.getElementById('ms-count').textContent=rows.length;
       document.getElementById('ms-cash').textContent='฿'+fmt(rows.reduce((s,r)=>s+(+r.cash||0),0));
       document.getElementById('ms-transfer').textContent='฿'+fmt(rows.reduce((s,r)=>s+(+r.transfer||0),0));
-      document.getElementById('ms-sso').textContent='฿'+fmt(rows.reduce((s,r)=>s+(+r.sso||0)+(+r.company||0),0));
+      document.getElementById('ms-sso').textContent='฿'+fmt(rows.reduce((s,r)=>s+(+r.sso||0),0));
       document.getElementById('ms-total').textContent='฿'+fmt(rows.reduce((s,r)=>s+totalPrice(r),0));
     }
   }
@@ -1784,7 +1784,6 @@ function renderTreatPage(){
       <td style="color:var(--green)">${t.cash&&+t.cash?'฿'+fmt(+t.cash):''}</td>
       <td style="color:var(--blue)">${t.transfer&&+t.transfer?'฿'+fmt(+t.transfer):''}</td>
       <td style="color:var(--orange)">${t.sso&&+t.sso?'฿'+fmt(+t.sso):''}</td>
-      <td style="color:var(--rose)">${t.company&&+t.company?'฿'+fmt(+t.company):''}</td>
       <td style="font-weight:800;color:var(--wine-dark)">฿${fmt(totalPrice(t))}</td>
       <td>
         <div style="display:flex;gap:6px;">
@@ -1826,19 +1825,23 @@ function renderIncome(){
   if(!isManager) rows=rows.filter(t=>t.docName===currentUser.name);
   if(currentPeriod==='day') rows=rows.filter(t=>t.date===selDay);
   else if(currentPeriod==='month') rows=rows.filter(t=>t.date&&t.date.startsWith(selMonth));
-  else rows=rows.filter(t=>t.date&&t.date.startsWith(selYrCE));
+  else if(currentPeriod==='year') rows=rows.filter(t=>t.date&&t.date.startsWith(selYrCE));
+  else if(currentPeriod==='range'){
+    const rs=document.getElementById('income-range-start')?.value||today;
+    const re2=document.getElementById('income-range-end')?.value||today;
+    rows=rows.filter(t=>t.date&&t.date>=rs&&t.date<=re2);
+  }
 
   const tot=rows.reduce((s,t)=>s+totalPrice(t),0);
   const cash=rows.reduce((s,t)=>s+(+t.cash||0),0);
   const transfer=rows.reduce((s,t)=>s+(+t.transfer||0),0);
   const sso=rows.reduce((s,t)=>s+(+t.sso||0),0);
-  const company=rows.reduce((s,t)=>s+(+t.company||0),0);
+  const company=0;
 
   document.getElementById('i-total').textContent=fmt(tot);
   document.getElementById('i-cash').textContent=fmt(cash);
   document.getElementById('i-transfer').textContent=fmt(transfer);
   document.getElementById('i-sso').textContent=fmt(sso);
-  document.getElementById('i-company').textContent=fmt(company);
 
   // Pass actual selected values to buildCharts
   const selDay2  = document.getElementById('income-filter-day')?.value  || today;
@@ -1866,7 +1869,7 @@ function buildCharts(rows, period, today, month, year){
       barCash.push(dayRows.reduce((s,r)=>s+(+r.cash||0),0));
       barTransfer.push(dayRows.reduce((s,r)=>s+(+r.transfer||0),0));
       barSSO.push(dayRows.reduce((s,r)=>s+(+r.sso||0),0));
-      barCompany.push(dayRows.reduce((s,r)=>s+(+r.company||0),0));
+      barCompany.push(0);
     }
   } else if(period==='month'){
     // Each day in selected month
@@ -1878,7 +1881,7 @@ function buildCharts(rows, period, today, month, year){
       barCash.push(dayRows.reduce((s,r)=>s+(+r.cash||0),0));
       barTransfer.push(dayRows.reduce((s,r)=>s+(+r.transfer||0),0));
       barSSO.push(dayRows.reduce((s,r)=>s+(+r.sso||0),0));
-      barCompany.push(dayRows.reduce((s,r)=>s+(+r.company||0),0));
+      barCompany.push(0);
     }
   } else {
     // Each month in selected year
@@ -1889,7 +1892,7 @@ function buildCharts(rows, period, today, month, year){
       barCash.push(mRows.reduce((s,r)=>s+(+r.cash||0),0));
       barTransfer.push(mRows.reduce((s,r)=>s+(+r.transfer||0),0));
       barSSO.push(mRows.reduce((s,r)=>s+(+r.sso||0),0));
-      barCompany.push(mRows.reduce((s,r)=>s+(+r.company||0),0));
+      barCompany.push(0);
     }
   }
 
@@ -1897,7 +1900,7 @@ function buildCharts(rows, period, today, month, year){
   const cash=rows.reduce((s,r)=>s+(+r.cash||0),0);
   const transfer=rows.reduce((s,r)=>s+(+r.transfer||0),0);
   const sso=rows.reduce((s,r)=>s+(+r.sso||0),0);
-  const company=rows.reduce((s,r)=>s+(+r.company||0),0);
+  const company=0;
 
   if(barChartInst) barChartInst.destroy();
   if(pieChartInst) pieChartInst.destroy();
@@ -1950,7 +1953,7 @@ function buildCharts(rows, period, today, month, year){
   const pieCtx=document.getElementById('pieChart');
   pieChartInst=new Chart(pieCtx,{
     type:'doughnut',
-    data:{ labels:['เงินสด','โอน','ประกันสังคม','เบิกบริษัท'], datasets:[{ data:[cash,transfer,sso,company], backgroundColor:['rgba(46,204,144,0.85)','rgba(52,152,219,0.85)','rgba(243,156,18,0.85)','rgba(212,86,122,0.85)'], borderWidth:0, hoverOffset:6 }] },
+    data:{ labels:['เงินสด','โอน','ประกันสังคม'], datasets:[{ data:[cash,transfer,sso], backgroundColor:['rgba(46,204,144,0.85)','rgba(52,152,219,0.85)','rgba(243,156,18,0.85)'], borderWidth:0, hoverOffset:6 }] },
     options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'bottom', labels:{ font:{size:11}, boxWidth:14, padding:10 } } } }
   });
 }
@@ -2494,7 +2497,7 @@ function startAutoSync(){
 // ============================================================
 //  HELPERS
 // ============================================================
-function totalPrice(t){ return (+t.cash||0)+(+t.transfer||0)+(+t.sso||0)+(+t.company||0); }
+function totalPrice(t){ return (+t.cash||0)+(+t.transfer||0)+(+t.sso||0); }
 function fmt(n){ return Math.round(n).toLocaleString('th-TH'); }
 function fmtDate(s){
   if(!s) return '—';
@@ -2502,7 +2505,17 @@ function fmtDate(s){
   return d.toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'2-digit'});
 }
 function statusClass(s){
-  return {'เสร็จ':'badge badge-done','รอ':'badge badge-wait','ยกเลิก':'badge badge-cancel','walk-in':'badge badge-walkin','confirm':'badge badge-confirm','ไม่คอนเฟิร์ม':'badge badge-unconfirm'}[s]||'badge badge-wait';
+  return {
+    'นัดวันนี้' :'badge badge-today',
+    'รอทำ'     :'badge badge-waiting',
+    'คอนเฟิร์ม':'badge badge-confirmed',
+    'เสร็จสิ้น':'badge badge-finished',
+    'ยกเลิก'   :'badge badge-cancel',
+    'walk-in'  :'badge badge-walkin',
+    // legacy support
+    'เสร็จ':'badge badge-finished','รอ':'badge badge-waiting',
+    'confirm':'badge badge-confirmed','ไม่คอนเฟิร์ม':'badge badge-unconfirm'
+  }[s]||'badge badge-waiting';
 }
 function closeModal(id){
   document.getElementById(id).classList.remove('open');
@@ -2592,22 +2605,26 @@ document.getElementById('pinPhase').style.display='none';
     const saved = localStorage.getItem('bl_session');
     if(!saved) return;
     const sess = JSON.parse(saved);
-    // Session expires after 12 hours
-    if(Date.now() - sess.ts > 12 * 60 * 60 * 1000){
+    // Session expires after 24 hours
+    if(Date.now() - sess.ts > 24 * 60 * 60 * 1000){
       localStorage.removeItem('bl_session'); return;
     }
-    // Find user
+    // Find user - always use fresh DOCTORS_DATA
     let user = null;
-    if(sess.isManager){ user = {...MANAGER}; isManager = true; }
-    else {
-      const doc = DOCTORS_DATA.find(d=>d.id===sess.userId);
+    if(sess.isManager){ 
+      user = {...MANAGER}; 
+      isManager = true; 
+    } else {
+      // Try doctors[] first, then DOCTORS_DATA
+      const doc = DOCTORS_DATA.find(d=>d.id===sess.userId) || doctors.find(d=>d.id===sess.userId);
       if(doc){ user = {...doc}; isManager = false; }
     }
-    if(!user) return;
+    if(!user){ 
+      // Can't find user - clear session
+      localStorage.removeItem('bl_session'); 
+      return; 
+    }
     currentUser = user;
-    // Also merge with saved doctor settings
-    const savedDocs = localStorage.getItem('bl_doctors');
-    if(savedDocs) doctors = JSON.parse(savedDocs);
     startApp();
     // Restore last active page
     const lastPage = localStorage.getItem('bl_lastPage') || 'home';
