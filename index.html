@@ -2494,9 +2494,7 @@ function showToast(msg,type='success'){
   setTimeout(()=>el.classList.remove('show'),2800);
 }
 function clearCacheAndReload(){
-  if(!confirm('ล้าง Cache และโหลดข้อมูลใหม่จาก Sheet?
-
-ข้อมูลในเครื่องจะถูกล้างและดึงใหม่จาก Google Sheet')) return;
+  if(!confirm('ล้าง Cache และโหลดข้อมูลใหม่จาก Sheet? ข้อมูลในเครื่องจะถูกล้างและดึงใหม่จาก Google Sheet')) return;
   // Keep session and doctor pins
   const session = localStorage.getItem('bl_session');
   const pins = localStorage.getItem('bl_doctors_pins');
