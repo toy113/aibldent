@@ -2269,7 +2269,7 @@ async function syncAll(){
     else if(p==='treatment') renderTreatPage();
     else if(p==='lab') renderLabPage();
     else if(p==='income') renderIncome();
-    else if(p==='schedule') renderSchedulePage();
+    // schedule renders only via showPage, not syncAll
     const t=new Date().toLocaleTimeString('th-TH');
     if(txt) txt.textContent='ซิงค์แล้ว '+t;
     if(dot) dot.style.background='var(--green)';
@@ -2320,12 +2320,6 @@ function renderSchedulePage(){
     if(prev) df.value = prev;
   }
 
-  // Filter appointments
-  if(appointments.length === 0){
-    const calEl = document.getElementById('scheduleCalendar');
-    if(calEl) calEl.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-light);"><div style="font-size:32px;margin-bottom:12px;">📅</div><div style="font-size:14px;font-weight:600;">กำลังโหลดข้อมูล...</div><div style="font-size:12px;margin-top:6px;">ระบบจะแสดงข้อมูลอัตโนมัติเมื่อเชื่อมต่อ Sheet สำเร็จ</div></div>';
-    return;
-  }
   let apts = appointments.filter(a=>a.date&&a.date.startsWith(month));
   if(docFilter) apts = apts.filter(a=>a.docName===docFilter);
 
@@ -2423,7 +2417,7 @@ function renderSchedulePage(){
 
   html += `</tbody></table></div></div>`;
   const calEl2 = document.getElementById('scheduleCalendar');
-  console.log('scheduleCalendar el:', calEl2, 'html length:', html.length);
+
   if(calEl2) calEl2.innerHTML = html;
   else console.error('scheduleCalendar NOT FOUND in DOM');
   } catch(err) {
