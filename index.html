@@ -1289,8 +1289,6 @@ function startApp(){
   document.getElementById('loginScreen').style.display='none';
   const app = document.getElementById('appShell');
   app.classList.add('visible');
-  showLoadingOverlay(true);
-
   // sidebar user info
   document.getElementById('sideUserAvatar').textContent = currentUser.emoji;
   document.getElementById('sideUserName').textContent = currentUser.name;
@@ -1327,25 +1325,10 @@ function startApp(){
   });
   buildSettingsPage();
   // Load all data from Sheet on startup
-  syncAll().then(()=>{
-    showLoadingOverlay(false);
-    const lastPage = localStorage.getItem('bl_lastPage') || 'home';
-    showPage(lastPage);
-    // If manager, also pre-render schedule
-    if(isManager){
-      setTimeout(()=>{
-        const p=document.querySelector('.page.active')?.id?.replace('page-','');
-        if(p==='schedule'){
-    // Force render after page becomes visible
-    requestAnimationFrame(()=>requestAnimationFrame(renderSchedulePage));
-  }
-      }, 500);
-    }
-  }).catch(()=>{
-    showLoadingOverlay(false);
-    showPage('home');
-    showToast('⚠️ ไม่สามารถโหลดข้อมูลจาก Sheet ได้ ตรวจสอบการเชื่อมต่อ','error');
-  });
+  // Show page immediately, sync in background
+  const lastPage = localStorage.getItem('bl_lastPage') || 'home';
+  showPage(lastPage);
+  syncAll();
   startAutoSync();
 }
 
