@@ -119,9 +119,12 @@ html, body { height: 100%; font-family: 'Sarabun', sans-serif; background: var(-
 
 /* PIN PHASE */
 .login-back-btn {
-  align-self: flex-start; background: none; border: none;
-  color: rgba(255,255,255,0.5); font-size: 13px; cursor: pointer;
-  padding: 0; margin-bottom: 24px; font-family: 'Sarabun', sans-serif;
+  align-self: flex-start;
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.25);
+  border-radius: 20px;
+  color: rgba(255,255,255,0.9); font-size: 14px; font-weight: 600; cursor: pointer;
+  padding: 7px 16px; margin-bottom: 20px; font-family: 'Sarabun', sans-serif;
 }
 .login-pin-avatar { font-size: 48px; margin-bottom: 10px; }
 .login-pin-name {
@@ -2256,6 +2259,11 @@ async function syncAll(){
     const normRow = r => { 
       if(r.date) r.date = normDate(r.date);
       if(r.time) r.time = normTime(r.time);
+      // Fix: if patName is missing but phone has name-like value, it's old data without phone col
+      if(!r.patName && r.phone && !/^[0-9+\-\s()]{6,}$/.test(String(r.phone))){
+        r.patName = r.phone;
+        r.phone = '';
+      }
       return r; 
     };
     if(Array.isArray(d.appointments)) appointments = d.appointments.filter(r=>sid(r)).map(normRow);
