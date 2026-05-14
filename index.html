@@ -386,7 +386,7 @@ select.form-control { cursor: pointer; }
 .share-card:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
 .share-card-name { font-size: 16px; font-weight: 700; color: var(--wine-dark); margin-bottom:2px; }
 .share-card-pct { font-size: 12px; color: var(--text-light); font-weight:600; }
-.share-card-amount { font-size: 28px; font-weight: 800; color: var(--wine); font-family: 'Prompt', sans-serif; margin-top: 10px; line-height:1; }
+.share-card-amount { font-size: 28px; font-weight: 800; color: var(--gold); font-family: 'Prompt', sans-serif; margin-top: 10px; line-height:1; }
 
 /* SETTINGS */
 .settings-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px,1fr)); gap: 16px; }
@@ -468,6 +468,9 @@ select.form-control { cursor: pointer; }
 .mobile-nav-btn.active .mn-icon { filter: drop-shadow(0 0 4px rgba(212,168,71,0.5)); }
 
 /* ======= RESPONSIVE ======= */
+@media (max-width: 600px) {
+  #schSummaryCards { grid-template-columns: repeat(3,1fr) !important; }
+}
 @media (max-width: 768px) {
   :root { --sidebar-w: 0px; }
   .sidebar { display: none !important; }
@@ -732,7 +735,7 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
       <button class="nav-item" onclick="showPage('income')" id="nav-income"><span class="nav-icon">📊</span>สรุปรายได้</button>
       <button class="nav-item" onclick="showPage('lab')" id="nav-lab"><span class="nav-icon">🧪</span>ค่าแลป</button>
       <button class="nav-item" onclick="showPage('settings')" id="nav-settings" style="display:none;"><span class="nav-icon">⚙️</span>ตั้งค่า</button>
-      <button class="nav-item" id="nav-schedule" style="display:none;" onclick="showPage('schedule')"><span class="nav-icon">📅</span>ตารางนัด</button>
+      <button class="nav-item" id="nav-schedule" style="display:none;" onclick="showPage('schedule')"><span class="nav-icon">🗓️</span>นัดหมาย</button>
     </div>
     <div class="sidebar-footer">
       <div class="sync-status" style="justify-content:space-between;">
@@ -767,7 +770,7 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
       <button class="top-tab" id="ttab-income" onclick="showPage('income');setMobileNav('income')"><span class="mn-icon">📊</span>รายได้</button>
       <button class="top-tab" id="ttab-lab" onclick="showPage('lab');setMobileNav('lab')"><span class="mn-icon">🧪</span>แลป</button>
       <button class="top-tab" id="ttab-settings" style="display:none;" onclick="showPage('settings');setMobileNav('settings')"><span class="mn-icon">⚙️</span>ตั้งค่า</button>
-      <button class="top-tab" id="ttab-schedule" style="display:none;" onclick="showPage('schedule');setMobileNav('schedule')"><span class="mn-icon">📅</span>ตารางนัด</button>
+      <button class="top-tab" id="ttab-schedule" style="display:none;" onclick="showPage('schedule');setMobileNav('schedule')"><span class="mn-icon">🗓️</span>นัดหมาย</button>
     </div>
 
     <!-- ===== HOME PAGE ===== -->
@@ -870,11 +873,7 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
               <span style="font-size:26px;font-weight:800;color:var(--wine-dark);font-family:'Prompt',sans-serif;" id="ms-count">0</span>
               <span style="font-size:12px;color:var(--text-light);">ราย</span>
             </div>
-            <div style="width:1px;height:36px;background:var(--border);"></div>
-            <div style="display:flex;align-items:baseline;gap:6px;">
-              <span style="font-size:12px;color:var(--wine);font-weight:700;">💰 รายได้รวม</span>
-              <span style="font-size:26px;font-weight:800;color:var(--wine);font-family:'Prompt',sans-serif;" id="ms-total">฿0</span>
-            </div>
+            <span id="ms-total" style="display:none"></span>
             <span id="ms-cash" style="display:none"></span>
             <span id="ms-transfer" style="display:none"></span>
             <span id="ms-sso" style="display:none"></span>
@@ -933,10 +932,13 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
     <!-- ===== LAB PAGE ===== -->
     <div class="page" id="page-lab">
       <div class="card-box">
-        <div class="card-box-hdr">
+        <div class="card-box-hdr" style="flex-wrap:wrap;gap:10px;">
           <div class="card-box-title">🧪 บันทึกค่าแลป</div>
           <div class="filter-row">
             <input type="month" class="form-control" id="labFilterMonth" onchange="renderLabPage()" style="height:36px">
+            <select class="form-control" id="labDocFilter" onchange="renderLabPage()" style="height:36px;width:140px;display:none;">
+              <option value="">— หมอทั้งหมด —</option>
+            </select>
             <button class="btn btn-primary btn-sm" onclick="openAddLab()">+ เพิ่มค่าแลป</button>
           </div>
         </div>
@@ -957,27 +959,47 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
 
     <!-- ===== SCHEDULE PAGE (MANAGER ONLY) ===== -->
     <div class="page" id="page-schedule">
+      <!-- TOP: Add appointment + month filter -->
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+          <input type="month" class="form-control" id="scheduleMonth" onchange="renderSchedulePage()" style="height:38px;">
+          <select class="form-control" id="scheduleDocFilter" onchange="renderSchedulePage()" style="height:38px;width:150px;">
+            <option value="">— หมอทั้งหมด —</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" onclick="openAddApt()">+ เพิ่มนัด</button>
+      </div>
+
+      <!-- SUMMARY CARDS -->
+      <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:16px;" id="schSummaryCards">
+        <div style="background:#fff;border-radius:12px;padding:12px;text-align:center;border:1px solid var(--border);box-shadow:var(--shadow);">
+          <div style="font-size:11px;color:var(--text-light);font-weight:700;">ทั้งหมด</div>
+          <div style="font-size:22px;font-weight:800;color:var(--wine-dark);font-family:'Prompt',sans-serif;" id="sch-total">0</div>
+        </div>
+        <div style="background:#fff;border-radius:12px;padding:12px;text-align:center;border:1px solid var(--border);box-shadow:var(--shadow);">
+          <div style="font-size:11px;color:var(--wine);font-weight:700;">confirm</div>
+          <div style="font-size:22px;font-weight:800;color:var(--wine);font-family:'Prompt',sans-serif;" id="sch-confirm">0</div>
+        </div>
+        <div style="background:#fff;border-radius:12px;padding:12px;text-align:center;border:1px solid var(--border);box-shadow:var(--shadow);">
+          <div style="font-size:11px;color:#999;font-weight:700;">ไม่คอนเฟิร์ม</div>
+          <div style="font-size:22px;font-weight:800;color:#888;font-family:'Prompt',sans-serif;" id="sch-unconfirm">0</div>
+        </div>
+        <div style="background:#fff;border-radius:12px;padding:12px;text-align:center;border:1px solid var(--border);box-shadow:var(--shadow);">
+          <div style="font-size:11px;color:var(--blue);font-weight:700;">walk-in</div>
+          <div style="font-size:22px;font-weight:800;color:var(--blue);font-family:'Prompt',sans-serif;" id="sch-walkin">0</div>
+        </div>
+        <div style="background:#fff;border-radius:12px;padding:12px;text-align:center;border:1px solid var(--border);box-shadow:var(--shadow);">
+          <div style="font-size:11px;color:var(--green);font-weight:700;">เสร็จ</div>
+          <div style="font-size:22px;font-weight:800;color:var(--green);font-family:'Prompt',sans-serif;" id="sch-done">0</div>
+        </div>
+        <div style="background:#fff;border-radius:12px;padding:12px;text-align:center;border:1px solid var(--border);box-shadow:var(--shadow);">
+          <div style="font-size:11px;color:var(--red);font-weight:700;">ยกเลิก</div>
+          <div style="font-size:22px;font-weight:800;color:var(--red);font-family:'Prompt',sans-serif;" id="sch-cancel">0</div>
+        </div>
+      </div>
+
+      <!-- CALENDAR + LIST -->
       <div class="card-box">
-        <div class="card-box-hdr" style="flex-wrap:wrap;gap:10px;">
-          <div class="card-box-title">📅 ตารางนัดทั้งเดือน</div>
-          <div class="filter-row">
-            <input type="month" class="form-control" id="scheduleMonth" onchange="renderSchedulePage()" style="height:36px;">
-            <select class="form-control" id="scheduleDocFilter" onchange="renderSchedulePage()" style="height:36px;width:140px;">
-              <option value="">— หมอทั้งหมด —</option>
-            </select>
-            <button class="btn btn-primary btn-sm" onclick="openAddApt()">+ เพิ่มนัด</button>
-          </div>
-        </div>
-        <!-- Summary strip -->
-        <div style="display:flex;gap:16px;padding:12px 20px;background:var(--wine-pale);border-bottom:1px solid var(--border);flex-wrap:wrap;">
-          <div style="font-size:13px;color:var(--wine-dark);font-weight:700;">นัดทั้งหมด: <span id="sch-total" style="color:var(--wine);font-size:18px;font-family:'Prompt',sans-serif;">0</span></div>
-          <div style="font-size:13px;color:var(--wine-dark);font-weight:700;">confirm: <span id="sch-confirm" style="color:var(--wine);">0</span></div>
-          <div style="font-size:13px;color:var(--wine-dark);font-weight:700;">ไม่คอนเฟิร์ม: <span id="sch-unconfirm" style="color:#999;">0</span></div>
-          <div style="font-size:13px;color:var(--wine-dark);font-weight:700;">walk-in: <span id="sch-walkin" style="color:var(--blue);">0</span></div>
-          <div style="font-size:13px;color:var(--wine-dark);font-weight:700;">เสร็จ: <span id="sch-done" style="color:var(--green);">0</span></div>
-          <div style="font-size:13px;color:var(--wine-dark);font-weight:700;">ยกเลิก: <span id="sch-cancel" style="color:var(--red);">0</span></div>
-        </div>
-        <!-- Calendar grid -->
         <div id="scheduleCalendar" style="padding:16px;"></div>
       </div>
     </div>
@@ -1461,7 +1483,7 @@ function showPage(p){
   if(navEl) navEl.classList.add('active');
   // Save last page for session restore
   localStorage.setItem('bl_lastPage', p);
-  const titles = {home:'🏠 หน้าหลัก',treatment:'📋 บันทึกการรักษา',income:'📊 สรุปรายได้',lab:'🧪 ค่าแลป',settings:'⚙️ ตั้งค่า',schedule:'📅 ตารางนัด (ทั้งเดือน)'};
+  const titles = {home:'🏠 หน้าหลัก',treatment:'📋 บันทึกการรักษา',income:'📊 สรุปรายได้',lab:'🧪 ค่าแลป',settings:'⚙️ ตั้งค่า',schedule:'🗓️ นัดหมาย'};
   document.getElementById('pageTitle').textContent = titles[p]||p;
   if(p==='home') renderHome();
   if(p==='treatment') renderTreatPage();
@@ -1995,8 +2017,22 @@ function deleteLab(id){
 }
 function renderLabPage(){
   const month=document.getElementById('labFilterMonth')?.value||todayStr().slice(0,7);
+  // Show/populate doc filter for manager only
+  const docFilterEl=document.getElementById('labDocFilter');
+  if(docFilterEl){
+    docFilterEl.style.display = isManager ? '' : 'none';
+    if(isManager && docFilterEl.options.length<=1){
+      doctors.forEach(d=>{
+        const o=document.createElement('option');
+        o.value=d.name; o.textContent=d.name;
+        docFilterEl.appendChild(o);
+      });
+    }
+  }
+  const docFilter = isManager ? (docFilterEl?.value||'') : currentUser.name;
   let rows=labs;
-  if(!isManager) rows=rows.filter(l=>l.docName===currentUser.name);
+  if(docFilter) rows=rows.filter(l=>l.docName===docFilter);
+  else if(!isManager) rows=rows.filter(l=>l.docName===currentUser.name);
   rows=rows.filter(l=>l.date&&l.date.startsWith(month));
   rows.sort((a,b)=>a.date.localeCompare(b.date));
   const tbody=document.getElementById('labPageBody');
@@ -2017,15 +2053,37 @@ function renderLabPage(){
         </div></td>
       </tr>`).join('');
   }
-  buildLabSummary(rows,month);
+  const docF = isManager ? (document.getElementById('labDocFilter')?.value||'') : currentUser.name;
+  buildLabSummary(rows,month,docF);
 }
-function buildLabSummary(rows,month){
+function buildLabSummary(rows,month,docFilter){
   const el=document.getElementById('labSummary');
   const labs_list=['สายน้ำทิพย์','SC','PC','Dentaneer','Hexa','อื่นๆ'];
   const works=['Crown','Denture (TP)','Denture (RPD)','Denture (Valplast)','Denture (Full)','Implant Abutment','Veneer','Inlay/Onlay','Night Guard','Bleaching Tray','Retainer','อื่นๆ'];
   const totLab={};
   labs_list.forEach(lb=>{ totLab[lb]=rows.filter(r=>r.lab===lb).reduce((s,r)=>s+(+r.price||0),0); });
   const grand=rows.reduce((s,r)=>s+(+r.price||0),0);
+  // Doctor breakdown (manager, no filter)
+  let docBreakdown = '';
+  if(isManager && !docFilter){
+    const docTotals = doctors.map(d=>({
+      name:d.name, emoji:d.emoji||'🦷',
+      total:rows.filter(r=>r.docName===d.name).reduce((s,r)=>s+(+r.price||0),0),
+      count:rows.filter(r=>r.docName===d.name).length
+    })).filter(d=>d.total>0);
+    if(docTotals.length){
+      docBreakdown = `<div style="margin-top:16px;border-top:1px solid var(--border);padding-top:14px;">
+        <div style="font-size:13px;font-weight:700;color:var(--wine-dark);margin-bottom:10px;">💊 แยกตามหมอ</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          ${docTotals.map(d=>`<div style="background:var(--wine-pale);border-radius:10px;padding:10px 16px;min-width:140px;">
+            <div style="font-size:12px;color:var(--wine-dark);font-weight:700;">${d.emoji} ${d.name}</div>
+            <div style="font-size:18px;font-weight:800;color:var(--wine);font-family:'Prompt',sans-serif;">฿${fmt(d.total)}</div>
+            <div style="font-size:11px;color:var(--text-light);">${d.count} รายการ</div>
+          </div>`).join('')}
+        </div>
+      </div>`;
+    }
+  }
   el.innerHTML=`<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px;">
     ${labs_list.map(lb=>`<div style="flex:1;min-width:160px;background:var(--cream);border:1px solid var(--border);border-radius:10px;padding:12px 14px;">
       <div style="font-size:12px;color:var(--text-light);font-weight:700;">${lb}</div>
@@ -2035,7 +2093,7 @@ function buildLabSummary(rows,month){
       <div style="font-size:12px;color:var(--wine);font-weight:700;">รวมทั้งหมด</div>
       <div style="font-size:20px;font-weight:800;color:var(--wine);font-family:'Prompt',sans-serif;">฿${fmt(grand)}</div>
     </div>
-  </div>`;
+  </div>${docBreakdown}`;
 }
 function labBadgeClass(lab){ return {สายน้ำทิพย์:'lab-snt',SC:'lab-sc',PC:'lab-pc',Dentaneer:'lab-dent',Hexa:'lab-hexa',อื่นๆ:'lab-other'}[lab]||'lab-snt'; }
 
@@ -2056,8 +2114,8 @@ function buildSettingsPage(){
         <div class="form-group">
           <label>เพศ</label>
           <div class="gender-toggle">
-            <button class="gender-btn ${doc.gender==='female'?'active':''}" onclick="setGender('${doc.id}','female',this)">👩 หญิง</button>
             <button class="gender-btn ${doc.gender==='male'?'active':''}" onclick="setGender('${doc.id}','male',this)">👨 ชาย</button>
+            <button class="gender-btn ${doc.gender==='female'?'active':''}" onclick="setGender('${doc.id}','female',this)">👩 หญิง</button>
           </div>
         </div>
         <div class="form-group">
@@ -2070,7 +2128,7 @@ function buildSettingsPage(){
         </div>
         ${isManager?`<div class="form-group">
           <label>PIN (4 หลัก)</label>
-          <input class="form-control" value="${doc.pin}" id="set-pin-${doc.id}" maxlength="4" placeholder="****" type="password">
+          <input class="form-control" value="${doc.pin}" id="set-pin-${doc.id}" maxlength="4" placeholder="1234" type="text" inputmode="numeric" pattern="[0-9]*" style="letter-spacing:6px;font-size:18px;font-weight:700;">
         </div>`:''}
         <button class="btn btn-primary" style="width:100%" onclick="saveDocSettings('${doc.id}')">💾 บันทึกการตั้งค่า</button>
       </div>
