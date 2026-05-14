@@ -738,7 +738,7 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
       <button class="nav-item" onclick="showPage('income')" id="nav-income"><span class="nav-icon">📊</span>สรุปรายได้</button>
       <button class="nav-item" onclick="showPage('lab')" id="nav-lab"><span class="nav-icon">🧪</span>ค่าแลป</button>
       <button class="nav-item" onclick="showPage('settings')" id="nav-settings" style="display:none;"><span class="nav-icon">⚙️</span>ตั้งค่า</button>
-      <button class="nav-item" id="nav-schedule" style="display:none;" onclick="showPage('schedule')"><span class="nav-icon">🗓️</span>นัดหมาย</button>
+
     </div>
     <div class="sidebar-footer">
       <div class="sync-status" style="justify-content:space-between;">
@@ -773,7 +773,7 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
       <button class="top-tab" id="ttab-income" onclick="showPage('income');setMobileNav('income')"><span class="mn-icon">📊</span>รายได้</button>
       <button class="top-tab" id="ttab-lab" onclick="showPage('lab');setMobileNav('lab')"><span class="mn-icon">🧪</span>แลป</button>
       <button class="top-tab" id="ttab-settings" style="display:none;" onclick="showPage('settings');setMobileNav('settings')"><span class="mn-icon">⚙️</span>ตั้งค่า</button>
-      <button class="top-tab" id="ttab-schedule" style="display:none;" onclick="showPage('schedule');setMobileNav('schedule')"><span class="mn-icon">🗓️</span>นัดหมาย</button>
+
     </div>
 
     <!-- ===== HOME PAGE ===== -->
@@ -960,52 +960,15 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
     <div class="page" id="page-settings">
       <div class="settings-grid" id="settingsGrid"></div>
 
-    <!-- ===== SCHEDULE PAGE (MANAGER ONLY) ===== -->
-    <div class="page" id="page-schedule">
-      <!-- TOP: Add appointment + month filter -->
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
-        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-          <input type="month" class="form-control" id="scheduleMonth" onchange="renderSchedulePage()" style="height:38px;">
-          <select class="form-control" id="scheduleDocFilter" onchange="renderSchedulePage()" style="height:38px;width:150px;">
-            <option value="">— หมอทั้งหมด —</option>
-          </select>
-        </div>
-        <button class="btn btn-primary" onclick="openAddApt()">+ เพิ่มนัด</button>
+      <!-- DANGER ZONE - Manager only -->
+      <div style="margin-top:20px;background:#fff;border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);border:1.5px solid rgba(231,76,90,0.25);">
+        <div style="font-size:15px;font-weight:700;color:#c0203a;margin-bottom:6px;font-family:'Prompt',sans-serif;">⚠️ จัดการข้อมูล</div>
+        <div style="font-size:13px;color:var(--text-light);margin-bottom:16px;">ล้างข้อมูลที่ cache ในเครื่อง แล้วโหลดจาก Google Sheet ใหม่ทั้งหมด</div>
+        <button class="btn btn-danger" onclick="clearCacheAndReload()" style="font-size:14px;padding:10px 20px;">
+          🗑️ ล้าง Cache และโหลดใหม่
+        </button>
+        <div style="font-size:12px;color:var(--text-light);margin-top:10px;">⚠️ ข้อมูลในหน้าจอจะหายชั่วคราว ระบบจะดึงข้อมูลจาก Sheet ใหม่</div>
       </div>
-
-      <!-- SUMMARY CARDS -->
-      <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:16px;" id="schSummaryCards">
-        <div style="background:#fff;border-radius:12px;padding:12px;text-align:center;border:1px solid var(--border);box-shadow:var(--shadow);">
-          <div style="font-size:11px;color:var(--text-light);font-weight:700;">ทั้งหมด</div>
-          <div style="font-size:22px;font-weight:800;color:var(--wine-dark);font-family:'Prompt',sans-serif;" id="sch-total">0</div>
-        </div>
-        <div style="background:#fff;border-radius:12px;padding:12px;text-align:center;border:1px solid var(--border);box-shadow:var(--shadow);">
-          <div style="font-size:11px;color:var(--wine);font-weight:700;">confirm</div>
-          <div style="font-size:22px;font-weight:800;color:var(--wine);font-family:'Prompt',sans-serif;" id="sch-confirm">0</div>
-        </div>
-        <div style="background:#fff;border-radius:12px;padding:12px;text-align:center;border:1px solid var(--border);box-shadow:var(--shadow);">
-          <div style="font-size:11px;color:#999;font-weight:700;">ไม่คอนเฟิร์ม</div>
-          <div style="font-size:22px;font-weight:800;color:#888;font-family:'Prompt',sans-serif;" id="sch-unconfirm">0</div>
-        </div>
-        <div style="background:#fff;border-radius:12px;padding:12px;text-align:center;border:1px solid var(--border);box-shadow:var(--shadow);">
-          <div style="font-size:11px;color:var(--blue);font-weight:700;">walk-in</div>
-          <div style="font-size:22px;font-weight:800;color:var(--blue);font-family:'Prompt',sans-serif;" id="sch-walkin">0</div>
-        </div>
-        <div style="background:#fff;border-radius:12px;padding:12px;text-align:center;border:1px solid var(--border);box-shadow:var(--shadow);">
-          <div style="font-size:11px;color:var(--green);font-weight:700;">เสร็จ</div>
-          <div style="font-size:22px;font-weight:800;color:var(--green);font-family:'Prompt',sans-serif;" id="sch-done">0</div>
-        </div>
-        <div style="background:#fff;border-radius:12px;padding:12px;text-align:center;border:1px solid var(--border);box-shadow:var(--shadow);">
-          <div style="font-size:11px;color:var(--red);font-weight:700;">ยกเลิก</div>
-          <div style="font-size:22px;font-weight:800;color:var(--red);font-family:'Prompt',sans-serif;" id="sch-cancel">0</div>
-        </div>
-      </div>
-
-      <!-- CALENDAR + LIST -->
-      <div class="card-box" style="overflow:visible;">
-        <div id="scheduleCalendar" style="padding:16px;min-height:200px;"></div>
-      </div>
-    </div>
 
   </div><!-- end main-content -->
   <!-- MOBILE BOTTOM NAV -->
@@ -1059,9 +1022,19 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
         <label>ชื่อ-สกุล</label>
         <input class="form-control" id="apt-name" placeholder="ชื่อผู้ป่วย">
       </div>
+      <div class="form-group">
+        <label>เบอร์โทรศัพท์</label>
+        <input class="form-control" id="apt-phone" placeholder="08X-XXX-XXXX" type="tel" inputmode="numeric" maxlength="10">
+      </div>
       <div class="form-group form-control-full">
-        <label>รายการรักษา</label>
-        <select class="form-control" id="apt-proc"></select>
+        <label>รายการรักษา <span style="color:var(--text-light);font-weight:400;font-size:11px;">(เลือกได้หลายรายการ)</span></label>
+        <div id="apt-proc-box" style="border:1.5px solid var(--border);border-radius:8px;background:var(--cream);padding:8px 12px;cursor:pointer;min-height:40px;position:relative;" onclick="toggleProcDropdown()">
+          <span id="apt-proc-label" style="color:#9B7A94;font-size:14px;">เลือกรายการรักษา...</span>
+        </div>
+        <div id="apt-proc-dropdown" style="display:none;position:absolute;z-index:999;background:#fff;border:1.5px solid var(--border);border-radius:10px;box-shadow:var(--shadow);padding:8px;max-height:260px;overflow-y:auto;width:100%;margin-top:4px;">
+          <div id="apt-proc-options"></div>
+        </div>
+        <input type="hidden" id="apt-proc">
       </div>
       <div class="form-group">
         <label>สถานะ</label>
@@ -1408,8 +1381,8 @@ function startApp(){
   const iyr = document.getElementById('income-filter-year');
   if(iyr) iyr.value = now.getFullYear()+543;
 
-  // Show schedule + settings tab for manager only
-  ['nav-schedule','ttab-schedule','nav-settings','ttab-settings'].forEach(id=>{
+  // Show settings tab for manager only
+  ['nav-settings','ttab-settings'].forEach(id=>{
     const el=document.getElementById(id);
     if(el) el.style.display = isManager ? '' : 'none';
   });
@@ -1464,7 +1437,15 @@ function populateSelects(){
   const procOpts = PROCEDURES.map(p=>`<option>${p}</option>`).join('');
   const timeOpts = TIME_SLOTS.map(t=>`<option>${t}</option>`).join('');
   document.getElementById('apt-doc').innerHTML = docOpts;
-  document.getElementById('apt-proc').innerHTML = procOpts;
+  // apt-proc is now multi-select checkbox - build options
+  const procBox = document.getElementById('apt-proc-options');
+  if(procBox){
+    procBox.innerHTML = PROCEDURES.map(p=>`
+      <label style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;cursor:pointer;font-size:13px;transition:background 0.12s;" onmouseover="this.style.background='var(--wine-pale)'" onmouseout="this.style.background='transparent'">
+        <input type="checkbox" value="${p}" onchange="updateProcLabel()" style="accent-color:var(--wine);width:15px;height:15px;cursor:pointer;">
+        <span>${p}</span>
+      </label>`).join('');
+  }
   // apt-time is now type=time input, no need to populate
   document.getElementById('treat-doc').innerHTML = docOpts;
   document.getElementById('treat-proc').innerHTML = procOpts;
@@ -1495,7 +1476,7 @@ function showPage(p){
   if(navEl) navEl.classList.add('active');
   // Save last page for session restore
   localStorage.setItem('bl_lastPage', p);
-  const titles = {home:'🏠 หน้าหลัก',treatment:'📋 บันทึกการรักษา',income:'📊 สรุปรายได้',lab:'🧪 ค่าแลป',settings:'⚙️ ตั้งค่า',schedule:'🗓️ นัดหมาย'};
+  const titles = {home:'🏠 หน้าหลัก',treatment:'📋 บันทึกการรักษา',income:'📊 สรุปรายได้',lab:'🧪 ค่าแลป',settings:'⚙️ ตั้งค่า'};
   document.getElementById('pageTitle').textContent = titles[p]||p;
   if(p==='home') renderHome();
   if(p==='treatment') renderTreatPage();
@@ -1555,7 +1536,7 @@ function renderAptList(today){
     <div class="apt-row">
       <div style="font-weight:700;color:var(--wine)">${a.time}</div>
       <div style="font-size:12px;color:var(--text-light)">${a.hn||'—'}</div>
-      <div style="font-weight:600">${a.patName}</div>
+      <div><div style="font-weight:600">${a.patName}</div>${a.phone?`<div style="font-size:11px;color:var(--text-light);">📞 ${a.phone}</div>`:''}</div>
       <div style="font-size:12px;color:var(--text-mid)">${a.proc}</div>
       <div style="font-size:12px">${a.docName}</div>
       <div>
@@ -1594,6 +1575,7 @@ function openAddApt(){
   document.getElementById('aptModalTitle').textContent='เพิ่มนัด';
   document.getElementById('apt-date').value=todayStr();
   document.getElementById('apt-hn').value='';
+  document.getElementById('apt-phone').value='';
   document.getElementById('apt-name').value='';
   // Default time = now rounded to nearest 30min, clamped 10:00-18:30
   const nowH=new Date(); 
@@ -1604,6 +1586,8 @@ function openAddApt(){
   document.getElementById('apt-time').value=`${hhStr}:${mmStr}`;
   document.getElementById('apt-status').value='ไม่คอนเฟิร์ม';
   document.getElementById('apt-note').value='';
+  clearProcSelection();
+  document.getElementById('apt-proc-dropdown').style.display='none';
   if(!isManager){ document.getElementById('apt-doc').value=currentUser.name; }
   document.getElementById('modalApt').classList.add('open');
 }
@@ -1618,6 +1602,7 @@ function saveApt(){
     time: document.getElementById('apt-time').value,
     docName: document.getElementById('apt-doc').value,
     hn: document.getElementById('apt-hn').value,
+    phone: document.getElementById('apt-phone').value||'',
     patName: document.getElementById('apt-name').value,
     proc: document.getElementById('apt-proc').value,
     status: document.getElementById('apt-status').value,
@@ -2427,6 +2412,44 @@ function renderSchedulePage(){
   }
 }
 
+function toggleProcDropdown(){
+  const dd = document.getElementById('apt-proc-dropdown');
+  if(!dd) return;
+  const isOpen = dd.style.display !== 'none';
+  dd.style.display = isOpen ? 'none' : 'block';
+  if(!isOpen){
+    // Position dropdown
+    const box = document.getElementById('apt-proc-box');
+    if(box){ dd.style.width = box.offsetWidth + 'px'; }
+  }
+}
+function updateProcLabel(){
+  const checks = document.querySelectorAll('#apt-proc-options input[type=checkbox]:checked');
+  const vals = Array.from(checks).map(c=>c.value);
+  const label = document.getElementById('apt-proc-label');
+  const hidden = document.getElementById('apt-proc');
+  if(vals.length===0){
+    label.textContent='เลือกรายการรักษา...';
+    label.style.color='#9B7A94';
+  } else {
+    label.textContent = vals.join(', ');
+    label.style.color='var(--text-dark)';
+  }
+  if(hidden) hidden.value = vals.join(', ');
+}
+function clearProcSelection(){
+  document.querySelectorAll('#apt-proc-options input[type=checkbox]').forEach(c=>c.checked=false);
+  updateProcLabel();
+}
+// Close proc dropdown when clicking outside
+document.addEventListener('click', function(e){
+  const box = document.getElementById('apt-proc-box');
+  const dd = document.getElementById('apt-proc-dropdown');
+  if(box && dd && !box.contains(e.target) && !dd.contains(e.target)){
+    dd.style.display='none';
+  }
+});
+
 function startAutoSync(){
   setInterval(syncAll,10000);
 }
@@ -2457,6 +2480,22 @@ function showToast(msg,type='success'){
   el.className='toast show'+(type==='error'?' error':' success');
   setTimeout(()=>el.classList.remove('show'),2800);
 }
+function clearCacheAndReload(){
+  if(!confirm('ล้าง Cache และโหลดข้อมูลใหม่จาก Sheet?
+
+ข้อมูลในเครื่องจะถูกล้างและดึงใหม่จาก Google Sheet')) return;
+  // Keep session and doctor pins
+  const session = localStorage.getItem('bl_session');
+  const pins = localStorage.getItem('bl_doctors_pins');
+  const lastPage = localStorage.getItem('bl_lastPage');
+  localStorage.clear();
+  if(session) localStorage.setItem('bl_session', session);
+  if(pins) localStorage.setItem('bl_doctors_pins', pins);
+  if(lastPage) localStorage.setItem('bl_lastPage', lastPage);
+  showToast('ล้าง Cache สำเร็จ กำลังโหลดใหม่...');
+  setTimeout(()=>location.reload(), 1000);
+}
+
 function logout(){
   if(!confirm('ออกจากระบบ?')) return;
   localStorage.removeItem('bl_session');
@@ -2599,7 +2638,7 @@ if(window.innerWidth > 640){
 // }
 //
 // SHEET HEADERS:
-// ตารางนัด: id, date, time, docName, hn, patName, proc, status, note
+// ตารางนัด: id, date, time, docName, hn, phone, patName, proc, status, note
 // บันทึกการรักษา: id, date, time, hn, patName, docName, proc, cash, transfer, sso, company, note, status
 // แลป: id, date, docName, hn, patName, work, lab, price, note
 // settings: id, name, gender, specialty, share, pin
