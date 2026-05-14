@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bangluang Dental Clinic — Dashboard</title>
+<title>Bangluang Dental | คลินิกทันตกรรมบางหลวง</title>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&family=Prompt:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
@@ -74,12 +74,10 @@ html, body { height: 100%; font-family: 'Sarabun', sans-serif; background: var(-
   text-align: center; margin-bottom: 28px;
 }
 .logo-circle {
-  width: 80px; height: 80px; border-radius: 50%;
+  width: 96px; height: 96px; border-radius: 50%;
   background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
-  margin: 0 auto 12px; display: flex; align-items: center; justify-content: center;
-  font-family: 'Prompt', sans-serif; font-size: 28px; font-weight: 700;
-  color: var(--wine-deeper); box-shadow: 0 4px 20px rgba(212,168,71,0.4);
-  letter-spacing: -1px;
+  margin: 0 auto 14px; display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 6px 24px rgba(212,168,71,0.45);
 }
 .login-title { color: #fff; font-size: 22px; font-weight: 700; font-family: 'Prompt', sans-serif; }
 .login-subtitle { color: rgba(255,255,255,0.6); font-size: 14px; margin-top: 4px; }
@@ -206,6 +204,16 @@ html, body { height: 100%; font-family: 'Sarabun', sans-serif; background: var(-
   box-shadow: 0 2px 8px rgba(107,45,94,0.06);
 }
 .topbar-title { font-size: 18px; font-weight: 700; color: var(--wine-dark); font-family: 'Prompt', sans-serif; }
+.mobile-logout-btn {
+  background: rgba(231,76,90,0.1); border: 1px solid rgba(231,76,90,0.3);
+  color: var(--red); border-radius: 8px; padding: 6px 10px;
+  font-size: 16px; cursor: pointer; transition: all 0.15s;
+  display: none; /* hidden on desktop, sidebar has logout */
+}
+.mobile-logout-btn:hover { background: rgba(231,76,90,0.2); }
+@media (max-width: 900px) {
+  .mobile-logout-btn { display: flex; align-items: center; }
+}
 .topbar-date { font-size: 13px; color: var(--text-light); }
 .topbar-right { display: flex; align-items: center; gap: 12px; }
 .sync-badge {
@@ -591,8 +599,48 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
 <div id="loginScreen">
   <div class="login-card">
     <div class="login-logo">
-      <div class="logo-circle">BL</div>
-      <div class="login-title">Bangluang Dental</div>
+      <div class="logo-circle" style="background:#6B2D5E;padding:6px;width:96px;height:96px;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 175">
+  <!-- LARGE TOOTH: outline only, white stroke -->
+  <path d="
+    M 28,148
+    L 28,62
+    L 55,22
+    L 82,58
+    L 102,18
+    L 148,62
+    L 148,112
+    L 130,148
+    L 112,118
+    L 92,148
+    L 72,118
+    L 52,148
+    Z"
+    fill="none"
+    stroke="white"
+    stroke-width="9"
+    stroke-linejoin="round"
+    stroke-linecap="round"
+  />
+  <!-- SMALL TOOTH: solid white, bottom-right overlapping -->
+  <path d="
+    M 118,108
+    L 118,70
+    L 133,48
+    L 152,28
+    L 172,62
+    L 172,108
+    L 158,135
+    L 145,108
+    L 133,135
+    L 120,108
+    Z"
+    fill="white"
+    stroke="white"
+    stroke-width="2"
+    stroke-linejoin="round"
+  />
+</svg></div>
+      <div class="login-title" style="font-family:'Prompt',sans-serif;letter-spacing:2px;font-size:24px;">Bangluang</div>
       <div class="login-subtitle">คลินิกทันตกรรมบางหลวง</div>
     </div>
 
@@ -650,9 +698,14 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
 <div id="appShell">
   <div class="sidebar">
     <div class="sidebar-logo">
-      <div class="sidebar-logo-circle">BL</div>
+      <div class="sidebar-logo-circle" style="background:#6B2D5E;padding:4px;flex-shrink:0;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 175" width="30" height="26">
+  <path d="M 28,148 L 28,62 L 55,22 L 82,58 L 102,18 L 148,62 L 148,112 L 130,148 L 112,118 L 92,148 L 72,118 L 52,148 Z"
+    fill="none" stroke="white" stroke-width="10" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M 118,108 L 118,70 L 133,48 L 152,28 L 172,62 L 172,108 L 158,135 L 145,108 L 133,135 L 120,108 Z"
+    fill="white" stroke="white" stroke-width="2" stroke-linejoin="round"/>
+</svg></div>
       <div>
-        <div class="sidebar-clinic-name">Bangluang Dental</div>
+        <div class="sidebar-clinic-name" style="letter-spacing:1px;">Bangluang</div>
         <div class="sidebar-clinic-sub">คลินิกทันตกรรมบางหลวง</div>
       </div>
     </div>
@@ -669,6 +722,7 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
       <button class="nav-item" onclick="showPage('income')" id="nav-income"><span class="nav-icon">📊</span>สรุปรายได้</button>
       <button class="nav-item" onclick="showPage('lab')" id="nav-lab"><span class="nav-icon">🧪</span>ค่าแลป</button>
       <button class="nav-item" onclick="showPage('settings')" id="nav-settings"><span class="nav-icon">⚙️</span>ตั้งค่า</button>
+      <button class="nav-item" id="nav-schedule" style="display:none;" onclick="showPage('schedule')"><span class="nav-icon">📅</span>ตารางนัด</button>
     </div>
     <div class="sidebar-footer">
       <div class="sync-status" style="justify-content:space-between;">
@@ -693,6 +747,7 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
           <span style="width:7px;height:7px;border-radius:50%;background:#2ecc90;display:inline-block;"></span>
           Synced
         </div>
+        <button onclick="logout()" class="mobile-logout-btn" title="ออกจากระบบ">🚪</button>
       </div>
     </div>
     <!-- TOP TAB BAR (mobile navigation) -->
@@ -702,6 +757,7 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
       <button class="top-tab" id="ttab-income" onclick="showPage('income');setMobileNav('income')"><span class="mn-icon">📊</span>รายได้</button>
       <button class="top-tab" id="ttab-lab" onclick="showPage('lab');setMobileNav('lab')"><span class="mn-icon">🧪</span>แลป</button>
       <button class="top-tab" id="ttab-settings" onclick="showPage('settings');setMobileNav('settings')"><span class="mn-icon">⚙️</span>ตั้งค่า</button>
+      <button class="top-tab" id="ttab-schedule" style="display:none;" onclick="showPage('schedule');setMobileNav('schedule')"><span class="mn-icon">📅</span>ตารางนัด</button>
     </div>
 
     <!-- ===== HOME PAGE ===== -->
@@ -888,6 +944,32 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
     <!-- ===== SETTINGS PAGE ===== -->
     <div class="page" id="page-settings">
       <div class="settings-grid" id="settingsGrid"></div>
+
+    <!-- ===== SCHEDULE PAGE (MANAGER ONLY) ===== -->
+    <div class="page" id="page-schedule">
+      <div class="card-box">
+        <div class="card-box-hdr" style="flex-wrap:wrap;gap:10px;">
+          <div class="card-box-title">📅 ตารางนัดทั้งเดือน</div>
+          <div class="filter-row">
+            <input type="month" class="form-control" id="scheduleMonth" onchange="renderSchedulePage()" style="height:36px;">
+            <select class="form-control" id="scheduleDocFilter" onchange="renderSchedulePage()" style="height:36px;width:140px;">
+              <option value="">— หมอทั้งหมด —</option>
+            </select>
+            <button class="btn btn-primary btn-sm" onclick="openAddApt()">+ เพิ่มนัด</button>
+          </div>
+        </div>
+        <!-- Summary strip -->
+        <div style="display:flex;gap:16px;padding:12px 20px;background:var(--wine-pale);border-bottom:1px solid var(--border);flex-wrap:wrap;">
+          <div style="font-size:13px;color:var(--wine-dark);font-weight:700;">นัดทั้งหมด: <span id="sch-total" style="color:var(--wine);font-size:18px;font-family:'Prompt',sans-serif;">0</span></div>
+          <div style="font-size:13px;color:var(--wine-dark);font-weight:700;">confirm: <span id="sch-confirm" style="color:var(--wine);">0</span></div>
+          <div style="font-size:13px;color:var(--wine-dark);font-weight:700;">ไม่คอนเฟิร์ม: <span id="sch-unconfirm" style="color:#999;">0</span></div>
+          <div style="font-size:13px;color:var(--wine-dark);font-weight:700;">walk-in: <span id="sch-walkin" style="color:var(--blue);">0</span></div>
+          <div style="font-size:13px;color:var(--wine-dark);font-weight:700;">เสร็จ: <span id="sch-done" style="color:var(--green);">0</span></div>
+          <div style="font-size:13px;color:var(--wine-dark);font-weight:700;">ยกเลิก: <span id="sch-cancel" style="color:var(--red);">0</span></div>
+        </div>
+        <!-- Calendar grid -->
+        <div id="scheduleCalendar" style="padding:16px;"></div>
+      </div>
     </div>
 
   </div><!-- end main-content -->
@@ -926,7 +1008,7 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
       </div>
       <div class="form-group">
         <label>เวลา</label>
-        <select class="form-control" id="apt-time" required></select>
+        <input type="time" class="form-control" id="apt-time" required min="10:00" max="18:30" step="1800">
       </div>
       <div class="form-group">
         <label>หมอ</label>
@@ -1163,19 +1245,9 @@ let currentPeriod = 'day';
 // ============================================================
 //  SAVE HELPERS
 // ============================================================
-function saveLocal(){
-  localStorage.setItem('bl_apt', JSON.stringify(appointments));
-  localStorage.setItem('bl_treat', JSON.stringify(treatments));
-  localStorage.setItem('bl_lab', JSON.stringify(labs));
-  localStorage.setItem('bl_doctors', JSON.stringify(doctors));
-}
-function loadLocal(){
-  const d = localStorage.getItem('bl_doctors');
-  if(d) doctors = JSON.parse(d);
-  appointments = JSON.parse(localStorage.getItem('bl_apt')||'[]');
-  treatments = JSON.parse(localStorage.getItem('bl_treat')||'[]');
-  labs = JSON.parse(localStorage.getItem('bl_lab')||'[]');
-}
+// ---- Sheet-only mode: saveLocal is no-op, data lives in Sheet ----
+function saveLocal(){ /* no localStorage, Sheet is source of truth */ }
+function loadLocal(){ /* data loaded via syncAll from Sheet */ }
 
 // ============================================================
 //  LOGIN
@@ -1256,9 +1328,16 @@ function verifyLogin(){
 // ============================================================
 function startApp(){
   loadLocal();
+  // Save session so refresh doesn't log out
+  localStorage.setItem('bl_session', JSON.stringify({
+    userId: currentUser.id,
+    isManager: isManager,
+    ts: Date.now()
+  }));
   document.getElementById('loginScreen').style.display='none';
   const app = document.getElementById('appShell');
   app.classList.add('visible');
+  showLoadingOverlay(true);
 
   // sidebar user info
   document.getElementById('sideUserAvatar').textContent = currentUser.emoji;
@@ -1280,6 +1359,8 @@ function startApp(){
   const lm = document.getElementById('labFilterMonth');
   if(lm) lm.value = today.slice(0,7);
   // income filters
+  const schMonth = document.getElementById('scheduleMonth');
+  if(schMonth) schMonth.value = today.slice(0,7);
   const iday = document.getElementById('income-filter-day');
   if(iday) iday.value = today;
   const imon = document.getElementById('income-filter-month');
@@ -1287,9 +1368,42 @@ function startApp(){
   const iyr = document.getElementById('income-filter-year');
   if(iyr) iyr.value = now.getFullYear()+543;
 
-  showPage('home');
+  // Show schedule tab for manager only
+  ['nav-schedule','ttab-schedule'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.style.display = isManager ? '' : 'none';
+  });
   buildSettingsPage();
+  // Load all data from Sheet on startup
+  syncAll().then(()=>{
+    showLoadingOverlay(false);
+    const lastPage = localStorage.getItem('bl_lastPage') || 'home';
+    showPage(lastPage);
+  }).catch(()=>{
+    showLoadingOverlay(false);
+    showPage('home');
+    showToast('⚠️ ไม่สามารถโหลดข้อมูลจาก Sheet ได้ ตรวจสอบการเชื่อมต่อ','error');
+  });
   startAutoSync();
+}
+
+function showLoadingOverlay(show){
+  let el = document.getElementById('loadingOverlay');
+  if(!el){
+    el = document.createElement('div');
+    el.id = 'loadingOverlay';
+    el.innerHTML = `<div style="text-align:center;">
+      <div style="font-size:40px;margin-bottom:16px;animation:spin 1s linear infinite;display:inline-block;">🔄</div>
+      <div style="font-size:16px;font-weight:700;color:#fff;margin-bottom:6px;">กำลังโหลดข้อมูล...</div>
+      <div style="font-size:13px;color:rgba(255,255,255,0.6);">เชื่อมต่อ Google Sheet</div>
+    </div>`;
+    el.style.cssText='position:fixed;inset:0;z-index:8000;background:rgba(50,15,45,0.85);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;';
+    document.body.appendChild(el);
+    const style=document.createElement('style');
+    style.textContent='@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}';
+    document.head.appendChild(style);
+  }
+  el.style.display = show ? 'flex' : 'none';
 }
 
 function toDateStr(d){ return d.toISOString().slice(0,10); }
@@ -1301,7 +1415,7 @@ function populateSelects(){
   const timeOpts = TIME_SLOTS.map(t=>`<option>${t}</option>`).join('');
   document.getElementById('apt-doc').innerHTML = docOpts;
   document.getElementById('apt-proc').innerHTML = procOpts;
-  document.getElementById('apt-time').innerHTML = timeOpts;
+  // apt-time is now type=time input, no need to populate
   document.getElementById('treat-doc').innerHTML = docOpts;
   document.getElementById('treat-proc').innerHTML = procOpts;
   document.getElementById('lab-doc').innerHTML = docOpts;
@@ -1329,6 +1443,8 @@ function showPage(p){
   document.getElementById('page-'+p).classList.add('active');
   const navEl = document.getElementById('nav-'+p);
   if(navEl) navEl.classList.add('active');
+  // Save last page for session restore
+  localStorage.setItem('bl_lastPage', p);
   const titles = {home:'🏠 หน้าหลัก',treatment:'📋 บันทึกการรักษา',income:'📊 สรุปรายได้',lab:'🧪 ค่าแลป',settings:'⚙️ ตั้งค่า'};
   document.getElementById('pageTitle').textContent = titles[p]||p;
   if(p==='home') renderHome();
@@ -1336,6 +1452,7 @@ function showPage(p){
   if(p==='income') renderIncome();
   if(p==='lab') renderLabPage();
   if(p==='settings') buildSettingsPage();
+  if(p==='schedule') renderSchedulePage();
   setMobileNav(p);
 }
 
@@ -1421,7 +1538,11 @@ function openAddApt(){
   document.getElementById('apt-date').value=todayStr();
   document.getElementById('apt-hn').value='';
   document.getElementById('apt-name').value='';
-  document.getElementById('apt-time').value=TIME_SLOTS[0];
+  // Default time = now rounded to nearest 30min, clamped 10:00-18:30
+  const nowH=new Date(); 
+  let hh=nowH.getHours(), mm=nowH.getMinutes()>=30?30:0;
+  if(hh<10){hh=10;mm=0;} if(hh>18||(hh===18&&mm>30)){hh=18;mm=30;}
+  document.getElementById('apt-time').value=`${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}`;
   document.getElementById('apt-status').value='ไม่คอนเฟิร์ม';
   document.getElementById('apt-note').value='';
   if(!isManager){ document.getElementById('apt-doc').value=currentUser.name; }
@@ -1960,8 +2081,9 @@ function saveDocSettings(docId){
 // ============================================================
 async function syncToSheet(type, data){
   if(!APPS_SCRIPT_URL||APPS_SCRIPT_URL.includes('YOUR_SCRIPT_ID')) return;
-  const syncDotEl = document.getElementById('syncDot');
-  if(syncDotEl) syncDotEl.style.background='var(--gold)';
+  const dot = document.getElementById('syncDot');
+  const txt = document.getElementById('syncText');
+  if(dot) dot.style.background='var(--gold)';
   try {
     await fetch(APPS_SCRIPT_URL,{
       method:'POST',
@@ -1969,69 +2091,42 @@ async function syncToSheet(type, data){
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({type,data}),
     });
-    const t = new Date().toLocaleTimeString('th-TH');
-    const el = document.getElementById('syncText');
-    if(el) el.textContent='ซิงค์แล้ว '+t;
-    if(syncDotEl) syncDotEl.style.background='var(--green)';
+    if(dot) dot.style.background='var(--green)';
+    if(txt) txt.textContent='ซิงค์แล้ว '+new Date().toLocaleTimeString('th-TH');
+    // Refresh data from Sheet after 1.5s (give Sheet time to write)
+    setTimeout(syncAll, 1500);
   } catch(e){
     console.warn('Sync error',e);
-    if(syncDotEl) syncDotEl.style.background='var(--red)';
-    const el = document.getElementById('syncText');
-    if(el) el.textContent='⚠️ sync ไม่สำเร็จ';
+    if(dot) dot.style.background='var(--red)';
+    if(txt) txt.textContent='⚠️ sync ไม่สำเร็จ';
   }
 }
 async function syncAll(){
   if(!APPS_SCRIPT_URL||APPS_SCRIPT_URL.includes('YOUR_SCRIPT_ID')) return;
-  // ไม่ sync ถ้ามี modal เปิดอยู่
   if(document.querySelector('.modal-overlay.open')) return;
+  const dot=document.getElementById('syncDot');
+  const txt=document.getElementById('syncText');
   try {
     const res=await fetch(APPS_SCRIPT_URL+'?action=getAll',{cache:'no-store'});
-    if(!res.ok) return;
+    if(!res.ok) throw new Error('HTTP '+res.status);
     const d=await res.json();
-    let changed=false;
-    const sid = r => String(r.id||'').trim();
-
-    if(d.appointments){
-      d.appointments.forEach(r=>{
-        if(!sid(r)) return;
-        const i=appointments.findIndex(a=>sid(a)===sid(r));
-        if(i===-1){ appointments.push(r); changed=true; }
-        else if(appointments[i].status!==r.status){ appointments[i].status=r.status; changed=true; }
-      });
-    }
-    if(d.treatments){
-      d.treatments.forEach(r=>{
-        if(!sid(r)) return;
-        const exists=treatments.find(t=>sid(t)===sid(r));
-        if(!exists){ treatments.push(r); changed=true; }
-      });
-    }
-    if(d.labs){
-      d.labs.forEach(r=>{
-        if(!sid(r)) return;
-        const exists=labs.find(l=>sid(l)===sid(r));
-        if(!exists){ labs.push(r); changed=true; }
-      });
-    }
-
-    if(changed){
-      saveLocal();
-      // re-render เฉพาะหน้าที่เปิดอยู่ และไม่ใช่ income (ป้องกันกราฟ flicker)
-      const p=document.querySelector('.page.active')?.id?.replace('page-','');
-      if(p==='home') renderHome();
-      else if(p==='treatment') renderTreatPage();
-      else if(p==='lab') renderLabPage();
-      // income และ settings ไม่ auto-render เพื่อป้องกันการซ้ำ
-    }
-
+    // ---- Sheet is source of truth: full replace ----
+    const sid = r=>String(r.id||'').trim();
+    if(Array.isArray(d.appointments)) appointments = d.appointments.filter(r=>sid(r));
+    if(Array.isArray(d.treatments))  treatments  = d.treatments.filter(r=>sid(r));
+    if(Array.isArray(d.labs))        labs        = d.labs.filter(r=>sid(r));
+    // re-render current page
+    const p=document.querySelector('.page.active')?.id?.replace('page-','');
+    if(p==='home') renderHome();
+    else if(p==='treatment') renderTreatPage();
+    else if(p==='lab') renderLabPage();
+    else if(p==='income') renderIncome();
     const t=new Date().toLocaleTimeString('th-TH');
-    const el=document.getElementById('syncText');
-    if(el) el.textContent='ซิงค์แล้ว '+t;
-    const dot=document.getElementById('syncDot');
+    if(txt) txt.textContent='ซิงค์แล้ว '+t;
     if(dot) dot.style.background='var(--green)';
   } catch(e){
-    const dot=document.getElementById('syncDot');
     if(dot) dot.style.background='var(--red)';
+    if(txt) txt.textContent='⚠️ ไม่สามารถเชื่อมได้';
     console.warn('syncAll error:',e);
   }
 }
@@ -2047,6 +2142,126 @@ async function manualSync(){
   dot.style.background='var(--green)';
   txt.textContent='ซิงค์แล้ว '+new Date().toLocaleTimeString('th-TH');
   showToast('Sync สำเร็จ ✅');
+}
+
+// ============================================================
+//  SCHEDULE PAGE (Manager only)
+// ============================================================
+function renderSchedulePage(){
+  const monthEl = document.getElementById('scheduleMonth');
+  const docFilter = document.getElementById('scheduleDocFilter')?.value || '';
+  if(!monthEl) return;
+  if(!monthEl.value) monthEl.value = todayStr().slice(0,7);
+  const month = monthEl.value; // YYYY-MM
+
+  // Populate doc filter
+  const df = document.getElementById('scheduleDocFilter');
+  if(df && df.options.length <= 1){
+    doctors.forEach(d=>{
+      const o=document.createElement('option');
+      o.value=d.name; o.textContent=d.name;
+      df.appendChild(o);
+    });
+  }
+
+  // Filter appointments
+  let apts = appointments.filter(a=>a.date&&a.date.startsWith(month));
+  if(docFilter) apts = apts.filter(a=>a.docName===docFilter);
+
+  // Update summary
+  document.getElementById('sch-total').textContent = apts.length;
+  document.getElementById('sch-confirm').textContent = apts.filter(a=>a.status==='confirm').length;
+  document.getElementById('sch-unconfirm').textContent = apts.filter(a=>a.status==='ไม่คอนเฟิร์ม').length;
+  document.getElementById('sch-walkin').textContent = apts.filter(a=>a.status==='walk-in').length;
+  document.getElementById('sch-done').textContent = apts.filter(a=>a.status==='เสร็จ').length;
+  document.getElementById('sch-cancel').textContent = apts.filter(a=>a.status==='ยกเลิก').length;
+
+  // Build calendar
+  const [y,m] = month.split('-').map(Number);
+  const firstDay = new Date(y,m-1,1).getDay(); // 0=Sun
+  const daysInMonth = new Date(y,m,0).getDate();
+  const DAYS = ['อา','จ','อ','พ','พฤ','ศ','ส'];
+  const monthNamesTH = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+
+  let html = `<div style="font-size:16px;font-weight:700;color:var(--wine-dark);text-align:center;margin-bottom:12px;font-family:'Prompt',sans-serif;">
+    ${monthNamesTH[m-1]} ${y+543}
+  </div>`;
+
+  // Day headers
+  html += `<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px;">`;
+  DAYS.forEach((d,i)=>{
+    const color = i===0?'var(--red)':i===6?'var(--blue)':'var(--text-mid)';
+    html += `<div style="text-align:center;font-size:12px;font-weight:700;color:${color};padding:4px 0;">${d}</div>`;
+  });
+  html += `</div>`;
+
+  // Calendar grid
+  html += `<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;">`;
+
+  // Empty cells before first day
+  for(let i=0;i<firstDay;i++){
+    html += `<div style="min-height:80px;"></div>`;
+  }
+
+  const today = todayStr();
+  for(let d=1;d<=daysInMonth;d++){
+    const ds = `${month}-${String(d).padStart(2,'0')}`;
+    const dayApts = apts.filter(a=>a.date===ds).sort((a,b)=>a.time?.localeCompare(b.time||'')||0);
+    const isToday = ds===today;
+    const dow = new Date(y,m-1,d).getDay();
+    const isWeekend = dow===0||dow===6;
+
+    html += `<div style="min-height:80px;border-radius:8px;border:1px solid ${isToday?'var(--wine)':'var(--border)'};
+      background:${isToday?'var(--wine-pale)':isWeekend?'rgba(52,152,219,0.04)':'#fff'};
+      padding:4px;overflow:hidden;">
+      <div style="font-size:12px;font-weight:${isToday?'800':'600'};color:${isToday?'var(--wine)':isWeekend?'var(--blue)':'var(--text-mid)'};margin-bottom:3px;">${d}</div>`;
+
+    dayApts.slice(0,4).forEach(a=>{
+      const sc = {
+        'เสร็จ':'#2ecc90','confirm':'var(--wine)','ไม่คอนเฟิร์ม':'#aaa',
+        'walk-in':'var(--blue)','รอ':'var(--orange)','ยกเลิก':'var(--red)'
+      }[a.status]||'#999';
+      html += `<div onclick="openStatusDropdown(event,'${a.id}')" style="font-size:10px;background:${sc}22;border-left:2px solid ${sc};
+        padding:2px 4px;border-radius:3px;margin-bottom:2px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"
+        title="${a.time||''} ${a.patName} - ${a.docName}">
+        <span style="color:${sc};font-weight:700;">${a.time||''}</span> ${a.patName}
+      </div>`;
+    });
+    if(dayApts.length>4){
+      html += `<div style="font-size:10px;color:var(--text-light);text-align:center;">+${dayApts.length-4} เพิ่มเติม</div>`;
+    }
+    html += `</div>`;
+  }
+  html += `</div>`;
+
+  // Appointment list below calendar
+  html += `<div style="margin-top:20px;border-top:1px solid var(--border);padding-top:16px;">
+    <div style="font-size:14px;font-weight:700;color:var(--wine-dark);margin-bottom:10px;">รายการนัดทั้งหมด ${apts.length} รายการ</div>
+    <div style="overflow-x:auto;">
+    <table style="width:100%;border-collapse:collapse;font-size:13px;">
+      <thead><tr style="background:var(--wine-pale);">
+        <th style="padding:8px 12px;text-align:left;color:var(--wine-dark);font-size:12px;">วันที่</th>
+        <th style="padding:8px 12px;text-align:left;color:var(--wine-dark);font-size:12px;">เวลา</th>
+        <th style="padding:8px 12px;text-align:left;color:var(--wine-dark);font-size:12px;">ชื่อ</th>
+        <th style="padding:8px 12px;text-align:left;color:var(--wine-dark);font-size:12px;">รายการ</th>
+        <th style="padding:8px 12px;text-align:left;color:var(--wine-dark);font-size:12px;">หมอ</th>
+        <th style="padding:8px 12px;text-align:left;color:var(--wine-dark);font-size:12px;">สถานะ</th>
+      </tr></thead>
+      <tbody>`;
+
+  apts.sort((a,b)=>a.date.localeCompare(b.date)||(a.time||'').localeCompare(b.time||'')).forEach(a=>{
+    html += `<tr style="border-bottom:1px solid rgba(107,45,94,0.06);">
+      <td style="padding:8px 12px;">${fmtDate(a.date)}</td>
+      <td style="padding:8px 12px;font-weight:700;color:var(--wine);">${a.time||'—'}</td>
+      <td style="padding:8px 12px;font-weight:600;">${a.patName||'—'}</td>
+      <td style="padding:8px 12px;font-size:12px;">${a.proc||'—'}</td>
+      <td style="padding:8px 12px;font-size:12px;">${a.docName||'—'}</td>
+      <td style="padding:8px 12px;"><span class="${statusClass(a.status)}" onclick="openStatusDropdown(event,'${a.id}')">${a.status||'รอ'}</span></td>
+    </tr>`;
+  });
+
+  html += `</tbody></table></div></div>`;
+  document.getElementById('scheduleCalendar').innerHTML = html;
 }
 
 function startAutoSync(){
@@ -2081,6 +2296,7 @@ function showToast(msg,type='success'){
 }
 function logout(){
   if(!confirm('ออกจากระบบ?')) return;
+  localStorage.removeItem('bl_session');
   currentUser=null; isManager=false;
   document.getElementById('appShell').classList.remove('visible');
   document.getElementById('loginScreen').style.display='flex';
@@ -2109,6 +2325,35 @@ if(window.innerWidth > 640){
   const rp = document.querySelector('.login-body-right');
   if(rp){ rp.style.opacity='0.35'; rp.style.pointerEvents='none'; rp.style.transition='opacity 0.25s'; }
 }
+
+// Auto-restore session on page load/refresh
+(function restoreSession(){
+  try {
+    const saved = localStorage.getItem('bl_session');
+    if(!saved) return;
+    const sess = JSON.parse(saved);
+    // Session expires after 12 hours
+    if(Date.now() - sess.ts > 12 * 60 * 60 * 1000){
+      localStorage.removeItem('bl_session'); return;
+    }
+    // Find user
+    let user = null;
+    if(sess.isManager){ user = {...MANAGER}; isManager = true; }
+    else {
+      const doc = DOCTORS_DATA.find(d=>d.id===sess.userId);
+      if(doc){ user = {...doc}; isManager = false; }
+    }
+    if(!user) return;
+    currentUser = user;
+    // Also merge with saved doctor settings
+    const savedDocs = localStorage.getItem('bl_doctors');
+    if(savedDocs) doctors = JSON.parse(savedDocs);
+    startApp();
+    // Restore last active page
+    const lastPage = localStorage.getItem('bl_lastPage') || 'home';
+    showPage(lastPage);
+  } catch(e){ console.warn('Session restore error:',e); }
+})();
 </script>
 
 <!-- ======== GOOGLE APPS SCRIPT TEMPLATE ======== -->
