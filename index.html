@@ -1355,7 +1355,7 @@ function startApp(){
   // default filter dates
   const today = toDateStr(now);
   const el = document.getElementById('treatFilterDate');
-  if(el) el.value = today;
+  if(el) el.value = today; // today is already YYYY-MM-DD from toDateStr()
   const lm = document.getElementById('labFilterMonth');
   if(lm) lm.value = today.slice(0,7);
   // income filters
@@ -1445,7 +1445,7 @@ function showPage(p){
   if(navEl) navEl.classList.add('active');
   // Save last page for session restore
   localStorage.setItem('bl_lastPage', p);
-  const titles = {home:'🏠 หน้าหลัก',treatment:'📋 บันทึกการรักษา',income:'📊 สรุปรายได้',lab:'🧪 ค่าแลป',settings:'⚙️ ตั้งค่า'};
+  const titles = {home:'🏠 หน้าหลัก',treatment:'📋 บันทึกการรักษา',income:'📊 สรุปรายได้',lab:'🧪 ค่าแลป',settings:'⚙️ ตั้งค่า',schedule:'📅 ตารางนัด (ทั้งเดือน)'};
   document.getElementById('pageTitle').textContent = titles[p]||p;
   if(p==='home') renderHome();
   if(p==='treatment') renderTreatPage();
@@ -1461,6 +1461,10 @@ function showPage(p){
 // ============================================================
 function renderHome(){
   const today = todayStr();
+  // Normalize dates before comparing
+  const normD = v=>{ if(!v) return ''; const s=String(v).trim(); if(/\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0,10); const d2=new Date(s); return isNaN(d2)?s:d2.toISOString().slice(0,10); };
+  treatments.forEach(t=>{ if(t.date) t.date=normD(t.date); });
+  appointments.forEach(a=>{ if(a.date) a.date=normD(a.date); });
   let treats = treatments.filter(t=>t.date===today);
   if(!isManager) treats = treats.filter(t=>t.docName===currentUser.name);
 
@@ -2112,15 +2116,56 @@ async function syncAll(){
     const d=await res.json();
     // ---- Sheet is source of truth: full replace ----
     const sid = r=>String(r.id||'').trim();
-    if(Array.isArray(d.appointments)) appointments = d.appointments.filter(r=>sid(r));
-    if(Array.isArray(d.treatments))  treatments  = d.treatments.filter(r=>sid(r));
-    if(Array.isArray(d.labs))        labs        = d.labs.filter(r=>sid(r));
+    // Normalize date fields to YYYY-MM-DD
+    const normDate = v => {
+      if(!v && v!==0) return '';
+      const s = String(v).trim();
+      if(!s || s==='undefined' || s==='null') return '';
+      // Already YYYY-MM-DD
+      if(/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+      // M/D/YYYY or MM/DD/YYYY (Google Sheets date format)
+      if(/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(s)){
+        const [m,d,y]=s.split('/');
+        return `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
+      }
+      // Try Date parse
+      const d2 = new Date(s);
+      if(!isNaN(d2.getTime())) return d2.toISOString().slice(0,10);
+      return s;
+    };
+    const normTime = v => {
+      if(!v && v!==0) return '';
+      const s = String(v).trim();
+      if(!s || s==='undefined' || s==='null') return '';
+      // Already HH:MM format
+      if(/^\d{2}:\d{2}/.test(s)) return s.slice(0,5);
+      // ISO date string with time e.g. "1899-12-30T03:17:56.000Z"
+      if(s.includes('T')) {
+        const d2 = new Date(s);
+        if(!isNaN(d2.getTime())){
+          // Convert UTC to local HH:MM
+          const h = String(d2.getUTCHours()).padStart(2,'0');
+          const m = String(d2.getUTCMinutes()).padStart(2,'0');
+          return h+':'+m;
+        }
+      }
+      return s;
+    };
+    const normRow = r => { 
+      if(r.date) r.date = normDate(r.date);
+      if(r.time) r.time = normTime(r.time);
+      return r; 
+    };
+    if(Array.isArray(d.appointments)) appointments = d.appointments.filter(r=>sid(r)).map(normRow);
+    if(Array.isArray(d.treatments))  treatments  = d.treatments.filter(r=>sid(r)).map(normRow);
+    if(Array.isArray(d.labs))        labs        = d.labs.filter(r=>sid(r)).map(normRow);
     // re-render current page
     const p=document.querySelector('.page.active')?.id?.replace('page-','');
     if(p==='home') renderHome();
     else if(p==='treatment') renderTreatPage();
     else if(p==='lab') renderLabPage();
     else if(p==='income') renderIncome();
+    else if(p==='schedule') renderSchedulePage();
     const t=new Date().toLocaleTimeString('th-TH');
     if(txt) txt.textContent='ซิงค์แล้ว '+t;
     if(dot) dot.style.background='var(--green)';
@@ -2149,21 +2194,33 @@ async function manualSync(){
 // ============================================================
 function renderSchedulePage(){
   const monthEl = document.getElementById('scheduleMonth');
-  const docFilter = document.getElementById('scheduleDocFilter')?.value || '';
   if(!monthEl) return;
   if(!monthEl.value) monthEl.value = todayStr().slice(0,7);
   const month = monthEl.value; // YYYY-MM
+  const docFilter = document.getElementById('scheduleDocFilter')?.value || '';
 
   // Populate doc filter
   const df = document.getElementById('scheduleDocFilter');
-  if(df && df.options.length <= 1){
+  if(df){
+    // keep selected value
+    const prev = df.value;
+    df.innerHTML = '<option value="">— หมอทั้งหมด —</option>';
     doctors.forEach(d=>{
       const o=document.createElement('option');
       o.value=d.name; o.textContent=d.name;
       df.appendChild(o);
     });
+    if(prev) df.value = prev;
   }
 
+  // Show loading if no data yet
+  const calEl = document.getElementById('scheduleCalendar');
+  if(!calEl) return;
+  if(appointments.length===0){
+    calEl.innerHTML='<div style="text-align:center;padding:40px;color:var(--text-light);font-size:14px;">🔄 กำลังโหลดข้อมูลจาก Sheet...</div>';
+    setTimeout(renderSchedulePage, 2000);
+    return;
+  }
   // Filter appointments
   let apts = appointments.filter(a=>a.date&&a.date.startsWith(month));
   if(docFilter) apts = apts.filter(a=>a.docName===docFilter);
