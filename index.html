@@ -2162,7 +2162,14 @@ function saveDocSettings(docId){
   }
   // Save PIN to localStorage for persistence across refresh
   localStorage.setItem('bl_doctors_pins', JSON.stringify(
-    doctors.map(d=>({id:d.id, pin:d.pin, share:d.share, name:d.name, specialty:d.specialty, gender:d.gender}))
+    doctors.map(d=>({
+      id:d.id, 
+      pin:d.pin||'', 
+      share:d.share||50, 
+      name:d.name||DOCTORS_DATA.find(x=>x.id===d.id)?.name||'',
+      specialty:d.specialty||'', 
+      gender:d.gender||'female'
+    }))
   ));
   saveLocal();
   syncToSheet('settings', doc);
@@ -2531,8 +2538,18 @@ function setMobileNav(page){
     pins.forEach(p=>{
       const d = doctors.find(x=>x.id===p.id);
       const orig = DOCTORS_DATA.find(x=>x.id===p.id);
-      if(d){ d.pin=p.pin; d.share=p.share; d.name=p.name; d.specialty=p.specialty; d.gender=p.gender; }
-      if(orig){ orig.pin=p.pin; orig.share=p.share; orig.name=p.name; }
+      if(d){
+        if(p.pin && p.pin.length===4) d.pin=p.pin;
+        if(p.share) d.share=p.share;
+        if(p.name && p.name.trim()) d.name=p.name;
+        if(p.specialty) d.specialty=p.specialty;
+        if(p.gender) d.gender=p.gender;
+      }
+      if(orig){
+        if(p.pin && p.pin.length===4) orig.pin=p.pin;
+        if(p.share) orig.share=p.share;
+        if(p.name && p.name.trim()) orig.name=p.name;
+      }
     });
   } catch(e){}
 })();
