@@ -72,6 +72,7 @@ html, body { height: 100%; font-family: 'Sarabun', sans-serif; background: var(-
   .login-card { padding: 24px 18px; width: 100%; border-radius: 20px; }
   .login-body { grid-template-columns: 1fr; gap: 0; }
   .login-body-right { background: none; border: none; padding: 0; }
+  .login-body-left { display: block; }
 }
 .login-logo {
   text-align: center; margin-bottom: 14px;
@@ -2537,10 +2538,21 @@ function setMobileNav(page){
 })();
 
 buildDoctorGrid();
-// Desktop: start with right panel dimmed
+// Desktop: show both columns, dim right panel
 if(window.innerWidth > 640){
+  // Ensure select phase is always visible on desktop
+  const sp = document.getElementById('selectPhase');
+  if(sp) sp.style.display = 'block';
+  const pp = document.getElementById('pinPhase');
+  if(pp){ pp.style.display='block'; }
   const rp = document.querySelector('.login-body-right');
   if(rp){ rp.style.opacity='0.35'; rp.style.pointerEvents='none'; rp.style.transition='opacity 0.25s'; }
+} else {
+  // Mobile: ensure selectPhase shows, pinPhase hidden
+  const sp = document.getElementById('selectPhase');
+  if(sp) sp.style.display = 'block';
+  const pp = document.getElementById('pinPhase');
+  if(pp) pp.style.display = 'none';
 }
 
 // Auto-restore session on page load/refresh
