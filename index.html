@@ -1713,7 +1713,7 @@ function statusBgColor(s){
     'คอนเฟิร์ม'  :'rgba(52,152,219,0.10)',
     'เสร็จสิ้น'  :'rgba(39,174,96,0.14)',
     'เสร็จ'       :'rgba(39,174,96,0.14)',
-    'ยกเลิก'      :'rgba(231,76,60,0.13)',
+    'ยกเลิก'      :'rgba(231,76,60,0.25)',
     'walk-in'     :'rgba(52,152,219,0.07)',
     'ไม่คอนเฟิร์ม':'rgba(0,0,0,0.03)',
   };
@@ -1777,7 +1777,7 @@ function renderTreatList(treats){
 //  APPOINTMENTS
 // ============================================================
 let _editAptId = null;
-function openAddApt(apt=null, prefillDate=null){
+function openAddApt(apt=null, prefillDate=null, prefillTime=null){
   _editAptId = apt ? apt.id : null;
   document.getElementById('aptModalTitle').textContent = apt ? 'แก้ไขนัด' : 'เพิ่มนัด';
   document.getElementById('apt-date').value = apt?.date || prefillDate || todayStr();
@@ -1786,9 +1786,11 @@ function openAddApt(apt=null, prefillDate=null){
   document.getElementById('apt-phone').value= apt?.phone || '';
   document.getElementById('apt-note').value = apt?.note || '';
   document.getElementById('apt-status').value = apt?.status || 'นัดวันนี้';
-  // Time
+  // Time — prefillTime จาก slot > apt.time > ปัดเวลาปัจจุบัน
   if(apt?.time){
     document.getElementById('apt-time').value = apt.time;
+  } else if(prefillTime){
+    document.getElementById('apt-time').value = prefillTime;
   } else {
     const nowH=new Date();
     let hh=nowH.getHours(), mm=nowH.getMinutes()>=30?30:0;
@@ -2764,7 +2766,7 @@ function renderSchedulePage(){
           const isToday = day.ds===today;
           html += `<td style="border:1px solid #f0f0f0;padding:1px 2px;vertical-align:top;
             background:${isToday?'rgba(107,45,94,0.03)':'#fff'};cursor:pointer;"
-            onclick="openAddApt(null,'${day.ds}')" title="เพิ่มนัด ${day.ds} ${slot}">`;
+            onclick="openAddApt(null,'${day.ds}','${slot}')" title="เพิ่มนัด ${day.ds} ${slot}">`;
           cellApts.forEach(a=>{
             const sc = STATUS_COLOR[a.status]||'#999';
             const safeId = String(a.id).replace(/"/g,'');
