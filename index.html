@@ -2666,11 +2666,18 @@ function renderSchedulePage(){
       const dow     = new Date(y,m-1,d).getDay();
       const isSun   = dow===0; const isSat = dow===6;
 
-      html += `<div style="min-height:90px;border-radius:6px;border:1.5px solid ${isToday?'var(--wine)':'var(--border)'};
+      // สรุปหมอ + จำนวนนัดของวันนั้น
+      const docSummary = {};
+      dayApts.forEach(a=>{ if(a.docName) docSummary[a.docName]=(docSummary[a.docName]||0)+1; });
+      const docSummaryHtml = Object.entries(docSummary).map(([name,cnt])=>
+        `<span style="font-size:9px;font-weight:700;color:${docColor(name)};margin-right:4px;white-space:nowrap;">${name.replace('หมอ','')} <span style="background:${docColor(name)}22;border-radius:8px;padding:0 4px;">${cnt}</span></span>`
+      ).join('');
+
+      html += `<div style="min-height:100px;border-radius:6px;border:1.5px solid ${isToday?'var(--wine)':'var(--border)'};
         background:${isToday?'var(--wine-pale)':isSun?'rgba(231,76,90,0.03)':isSat?'rgba(52,152,219,0.03)':'#fff'};
         padding:4px;overflow:hidden;position:relative;">
         <!-- Date number + add button -->
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;">
           <div style="font-size:13px;font-weight:${isToday?'900':'600'};color:${isToday?'#fff':isSun?'var(--red)':isSat?'var(--blue)':'var(--text-mid)'};
             ${isToday?`background:var(--wine);border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;`:''}">
             ${d}
@@ -2678,7 +2685,19 @@ function renderSchedulePage(){
           <button onclick="openAddApt(null,'${ds}')" title="เพิ่มนัด ${ds}"
             style="background:none;border:none;cursor:pointer;font-size:13px;padding:0;line-height:1;color:var(--wine-light);opacity:0.6;transition:opacity 0.15s;"
             onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'">＋</button>
-        </div>`;
+        </div>
+        <!-- Doctor summary -->
+        ${docSummaryHtml ? `<div style="display:flex;flex-wrap:wrap;gap:1px;margin-bottom:2px;">${docSummaryHtml}</div>` : ''}
+        <!-- Day note input -->
+        <input type="text" placeholder="โน้ต..." maxlength="40"
+          value="${(getDayNote(ds)||'').replace(/"/g,'&quot;')}"
+          data-date="${ds}"
+          onclick="event.stopPropagation()"
+          onchange="saveDayNote(this.dataset.date, this.value)"
+          style="width:100%;border:none;border-bottom:1px dashed rgba(107,45,94,0.2);
+          background:transparent;font-size:10px;color:var(--text-mid);padding:1px 2px;
+          outline:none;margin-bottom:3px;font-family:'Sarabun',sans-serif;">
+        `;
 
       dayApts.slice(0,3).forEach(a=>{
         const sc = STATUS_COLOR[a.status]||'#999';
@@ -2823,6 +2842,24 @@ let _autoSyncStarted = false;
 // ============================================================
 //  AUTO-FILL PATIENT FROM HN
 // ============================================================
+// ============================================================
+//  DAY NOTES (localStorage only)
+// ============================================================
+function getDayNote(date){
+  try {
+    const notes = JSON.parse(localStorage.getItem('bl_day_notes')||'{}');
+    return notes[date] || '';
+  } catch(e){ return ''; }
+}
+function saveDayNote(date, val){
+  try {
+    const notes = JSON.parse(localStorage.getItem('bl_day_notes')||'{}');
+    if(val) notes[date] = val;
+    else delete notes[date];
+    localStorage.setItem('bl_day_notes', JSON.stringify(notes));
+  } catch(e){}
+}
+
 function autoFillPatient(hn, prefix){
   const hint = document.getElementById(prefix+'-hn-hint');
   if(!hn || String(hn).trim().length < 1){
