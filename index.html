@@ -1209,7 +1209,8 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
       </div>
       <div class="form-group">
         <label>HN</label>
-        <input class="form-control" id="treat-hn" placeholder="xxxxx">
+        <input class="form-control" id="treat-hn" placeholder="xxxxx" oninput="autoFillPatient(this.value,'treat')">
+        <div id="treat-hn-hint" style="font-size:11px;margin-top:4px;min-height:16px;"></div>
       </div>
       <div class="form-group">
         <label>ชื่อ-สกุล</label>
@@ -1884,9 +1885,21 @@ function openAddTreat(t=null){
   const today=todayStr();
   document.getElementById('treat-id').value = t?.id||'';
   document.getElementById('treat-date').value = t?.date||today;
-  document.getElementById('treat-time').value=t?.time||'10:00';
+  // เวลาปัจจุบัน rounded to nearest minute
+  if(t?.time){
+    document.getElementById('treat-time').value = t.time;
+  } else {
+    const now = new Date();
+    const hh = String(now.getHours()).padStart(2,'0');
+    const mm = String(now.getMinutes()).padStart(2,'0');
+    document.getElementById('treat-time').value = `${hh}:${mm}`;
+  }
   document.getElementById('treat-hn').value = t?.hn||'';
   document.getElementById('treat-name').value = t?.patName||'';
+  // clear hint และ trigger autofill ถ้ามี HN อยู่แล้ว
+  const treatHint = document.getElementById('treat-hn-hint');
+  if(treatHint) treatHint.innerHTML = '';
+  if(t?.hn) autoFillPatient(t.hn, 'treat');
   document.getElementById('treat-doc').value = t?.docName||(isManager?doctors[0]?.name:currentUser.name);
   document.getElementById('treat-proc').value = t?.proc||PROCEDURES[0];
   document.getElementById('treat-cash').value = t?.cash||'';
