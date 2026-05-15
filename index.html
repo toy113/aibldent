@@ -2460,9 +2460,25 @@ async function syncAll(){
         const [m,d,y]=s.split('/');
         return `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
       }
-      // Try Date parse
+      // ISO string with T — ใช้ local date ไม่ใช่ UTC
+      if(s.includes('T')){
+        const d2 = new Date(s);
+        if(!isNaN(d2.getTime())){
+          // ใช้ local year/month/day เพื่อป้องกันวันเปลี่ยนเมื่อ UTC ต่างกับไทย (UTC+7)
+          const y2 = d2.getFullYear();
+          const m2 = String(d2.getMonth()+1).padStart(2,'0');
+          const d3 = String(d2.getDate()).padStart(2,'0');
+          return `${y2}-${m2}-${d3}`;
+        }
+      }
+      // Try Date parse — ใช้ local date
       const d2 = new Date(s);
-      if(!isNaN(d2.getTime())) return d2.toISOString().slice(0,10);
+      if(!isNaN(d2.getTime())){
+        const y2 = d2.getFullYear();
+        const m2 = String(d2.getMonth()+1).padStart(2,'0');
+        const d3 = String(d2.getDate()).padStart(2,'0');
+        return `${y2}-${m2}-${d3}`;
+      }
       return s;
     };
     const normTime = v => {
@@ -2470,12 +2486,16 @@ async function syncAll(){
       const s = String(v).trim();
       if(!s || s==='undefined' || s==='null') return '';
       // Already HH:MM format
-      if(/^\d{2}:\d{2}/.test(s)) return s.slice(0,5);
+      if(/^\d{1,2}:\d{2}/.test(s)){
+        const [hh,mm] = s.split(':');
+        return `${String(hh).padStart(2,'0')}:${mm.slice(0,2)}`;
+      }
       // ISO date string with time e.g. "1899-12-30T03:17:56.000Z"
+      // Google Sheets เก็บเวลาเป็น fraction of day → Apps Script ส่งมาเป็น ISO
+      // ใช้ getUTCHours เพราะ Google Sheets time เป็น UTC-based serial
       if(s.includes('T')) {
         const d2 = new Date(s);
         if(!isNaN(d2.getTime())){
-          // Convert UTC to local HH:MM
           const h = String(d2.getUTCHours()).padStart(2,'0');
           const m = String(d2.getUTCMinutes()).padStart(2,'0');
           return h+':'+m;
