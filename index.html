@@ -693,20 +693,20 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
     <div class="login-doctor-grid">
       <!-- แถว 1: 4 คน -->
       <div class="login-doc-row row4">
-        <button class="login-doc-btn" type="button" data-id="toy"><span>🦷</span><span>หมอทอย</span></button>
-        <button class="login-doc-btn" type="button" data-id="mind"><span>👩‍⚕️</span><span>หมอมายด์</span></button>
-        <button class="login-doc-btn" type="button" data-id="koi"><span>🌸</span><span>หมอก้อย</span></button>
-        <button class="login-doc-btn" type="button" data-id="pong"><span>👨‍⚕️</span><span>หมอป้อง</span></button>
+        <button class="login-doc-btn" type="button" data-id="toy" onclick="doSelectDoctor('toy')"><span>🦷</span><span>หมอทอย</span></button>
+        <button class="login-doc-btn" type="button" data-id="mind" onclick="doSelectDoctor('mind')"><span>👩‍⚕️</span><span>หมอมายด์</span></button>
+        <button class="login-doc-btn" type="button" data-id="koi" onclick="doSelectDoctor('koi')"><span>🌸</span><span>หมอก้อย</span></button>
+        <button class="login-doc-btn" type="button" data-id="pong" onclick="doSelectDoctor('pong')"><span>👨‍⚕️</span><span>หมอป้อง</span></button>
       </div>
       <!-- แถว 2: 3 คน กึ่งกลาง -->
       <div class="login-doc-row row3">
-        <button class="login-doc-btn" type="button" data-id="aim"><span>💫</span><span>หมอเอม</span></button>
-        <button class="login-doc-btn" type="button" data-id="khao"><span>⭐</span><span>หมอข้าว</span></button>
-        <button class="login-doc-btn" type="button" data-id="part"><span>🔬</span><span>หมอพาร์ท</span></button>
+        <button class="login-doc-btn" type="button" data-id="aim" onclick="doSelectDoctor('aim')"><span>💫</span><span>หมอเอม</span></button>
+        <button class="login-doc-btn" type="button" data-id="khao" onclick="doSelectDoctor('khao')"><span>⭐</span><span>หมอข้าว</span></button>
+        <button class="login-doc-btn" type="button" data-id="part" onclick="doSelectDoctor('part')"><span>🔬</span><span>หมอพาร์ท</span></button>
       </div>
     </div>
     <div class="login-divider"><span>หรือ</span></div>
-    <button class="login-manager-btn" type="button" data-id="manager">
+    <button class="login-manager-btn" type="button" data-id="manager" onclick="doSelectDoctor('manager')">
       <span>🔐</span> ผู้จัดการ
     </button>
   </div>
@@ -1443,23 +1443,30 @@ function buildDoctorGrid(){
 // ===== LOGIN EVENT DELEGATION =====
 (function setupLogin(){
   setTimeout(function(){
-    // ใช้ event delegation บน loginScreen แทน ผูกทีเดียวครอบทั้งหมด
     var loginScreen = document.getElementById('loginScreen');
     if(loginScreen){
       loginScreen.addEventListener('click', function(e){
-        var btn = e.target.closest('.login-doc-btn, .login-manager-btn');
-        if(btn){
-          e.preventDefault(); e.stopPropagation();
-          doSelectDoctor(btn.dataset.id);
-          return;
-        }
-        var backBtn = e.target.closest('#loginBackBtn');
-        if(backBtn){ goBackToSelect(); return; }
-        var numBtn = e.target.closest('.lnb');
-        if(numBtn){ e.preventDefault(); doNum(numBtn.dataset.n); return; }
+        try {
+          var btn = e.target.closest('.login-doc-btn, .login-manager-btn');
+          if(btn && btn.dataset.id){
+            e.preventDefault(); e.stopPropagation();
+            doSelectDoctor(btn.dataset.id);
+            return;
+          }
+          var backBtn = e.target.closest('#loginBackBtn, [onclick*="goBackToSelect"]');
+          if(backBtn){ goBackToSelect(); return; }
+          var numBtn = e.target.closest('.lnb');
+          if(numBtn && numBtn.dataset.n !== undefined){
+            e.preventDefault(); doNum(numBtn.dataset.n); return;
+          }
+        } catch(err){ console.error('Login click error:', err); }
       });
     }
-  }, 50);
+    // Fallback: ผูก onclick โดยตรงในกรณี delegation ไม่ทำงาน
+    document.querySelectorAll('.login-doc-btn[data-id], .login-manager-btn[data-id]').forEach(function(btn){
+      btn.onclick = function(e){ e.stopPropagation(); doSelectDoctor(this.dataset.id); };
+    });
+  }, 200);
 })();
 
 function doSelectDoctor(id){
