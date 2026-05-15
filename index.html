@@ -746,6 +746,7 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
       <button class="nav-item" onclick="showPage('treatment')" id="nav-treatment"><span class="nav-icon">📋</span>บันทึกการรักษา</button>
       <button class="nav-item" onclick="showPage('income')" id="nav-income"><span class="nav-icon">📊</span>สรุปรายได้</button>
       <button class="nav-item" onclick="showPage('lab')" id="nav-lab"><span class="nav-icon">🧪</span>ค่าแลป</button>
+      <button class="nav-item" onclick="showPage('schedule')" id="nav-schedule" style="display:none;"><span class="nav-icon">📆</span>ดูนัด</button>
       <button class="nav-item" onclick="showPage('settings')" id="nav-settings" style="display:none;"><span class="nav-icon">⚙️</span>ตั้งค่า</button>
 
     </div>
@@ -781,6 +782,7 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
       <button class="top-tab" id="ttab-treatment" onclick="showPage('treatment');setMobileNav('treatment')"><span class="mn-icon">📋</span>รักษา</button>
       <button class="top-tab" id="ttab-income" onclick="showPage('income');setMobileNav('income')"><span class="mn-icon">📊</span>รายได้</button>
       <button class="top-tab" id="ttab-lab" onclick="showPage('lab');setMobileNav('lab')"><span class="mn-icon">🧪</span>แลป</button>
+      <button class="top-tab" id="ttab-schedule" style="display:none;" onclick="showPage('schedule');setMobileNav('schedule')"><span class="mn-icon">📆</span>ดูนัด</button>
       <button class="top-tab" id="ttab-settings" style="display:none;" onclick="showPage('settings');setMobileNav('settings')"><span class="mn-icon">⚙️</span>ตั้งค่า</button>
 
     </div>
@@ -968,6 +970,97 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
       </div>
     </div>
 
+    <!-- ===== SCHEDULE PAGE (Manager only) ===== -->
+    <div class="page" id="page-schedule">
+      <!-- Header controls -->
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px;">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+          <input type="month" class="form-control" id="scheduleMonth" onchange="renderSchedulePage()" style="height:36px;width:180px;">
+          <select class="form-control" id="scheduleDocFilter" onchange="renderSchedulePage()" style="height:36px;width:160px;">
+            <option value="">— หมอทั้งหมด —</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" onclick="openAddAptSchedule()">+ เพิ่มนัด</button>
+      </div>
+
+      <!-- Summary stat strip -->
+      <div id="schStatStrip" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;">
+        <div style="background:#fff;border-radius:10px;padding:10px 18px;box-shadow:var(--shadow);border:1px solid var(--border);display:flex;align-items:center;gap:8px;">
+          <span style="font-size:20px;">📅</span>
+          <div>
+            <div style="font-size:11px;color:var(--text-light);font-weight:700;">นัดทั้งหมด</div>
+            <div style="font-size:22px;font-weight:800;color:var(--wine-dark);font-family:'Prompt',sans-serif;" id="sch-total">0</div>
+          </div>
+        </div>
+        <div style="background:#fff;border-radius:10px;padding:10px 18px;box-shadow:var(--shadow);border:1px solid var(--border);display:flex;align-items:center;gap:8px;">
+          <span style="font-size:20px;">✅</span>
+          <div>
+            <div style="font-size:11px;color:var(--text-light);font-weight:700;">คอนเฟิร์ม</div>
+            <div style="font-size:22px;font-weight:800;color:var(--blue);font-family:'Prompt',sans-serif;" id="sch-confirm">0</div>
+          </div>
+        </div>
+        <div style="background:#fff;border-radius:10px;padding:10px 18px;box-shadow:var(--shadow);border:1px solid var(--border);display:flex;align-items:center;gap:8px;">
+          <span style="font-size:20px;">🎉</span>
+          <div>
+            <div style="font-size:11px;color:var(--text-light);font-weight:700;">เสร็จสิ้น</div>
+            <div style="font-size:22px;font-weight:800;color:var(--green);font-family:'Prompt',sans-serif;" id="sch-done">0</div>
+          </div>
+        </div>
+        <div style="background:#fff;border-radius:10px;padding:10px 18px;box-shadow:var(--shadow);border:1px solid var(--border);display:flex;align-items:center;gap:8px;">
+          <span style="font-size:20px;">🚶</span>
+          <div>
+            <div style="font-size:11px;color:var(--text-light);font-weight:700;">Walk-in</div>
+            <div style="font-size:22px;font-weight:800;color:var(--blue);font-family:'Prompt',sans-serif;" id="sch-walkin">0</div>
+          </div>
+        </div>
+        <div style="background:#fff;border-radius:10px;padding:10px 18px;box-shadow:var(--shadow);border:1px solid var(--border);display:flex;align-items:center;gap:8px;">
+          <span style="font-size:20px;">❌</span>
+          <div>
+            <div style="font-size:11px;color:var(--text-light);font-weight:700;">ยกเลิก</div>
+            <div style="font-size:22px;font-weight:800;color:var(--red);font-family:'Prompt',sans-serif;" id="sch-cancel">0</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Calendar card -->
+      <div class="card-box" style="margin-bottom:20px;">
+        <div class="card-box-hdr">
+          <div class="card-box-title">📆 ปฏิทินนัด</div>
+          <!-- color legend -->
+          <div style="display:flex;gap:10px;flex-wrap:wrap;font-size:11px;font-weight:700;">
+            <span style="color:var(--wine);">📅 นัดวันนี้</span>
+            <span style="color:var(--orange);">⏳ รอทำ</span>
+            <span style="color:var(--blue);">✅ คอนเฟิร์ม</span>
+            <span style="color:var(--green);">🎉 เสร็จสิ้น</span>
+            <span style="color:var(--red);">❌ ยกเลิก</span>
+            <span style="color:#3498DB;">🚶 Walk-in</span>
+          </div>
+        </div>
+        <div style="padding:16px;">
+          <div id="scheduleCalendar"></div>
+        </div>
+      </div>
+
+      <!-- Appointment list table -->
+      <div class="card-box">
+        <div class="card-box-hdr">
+          <div class="card-box-title">📋 รายการนัดทั้งหมดในเดือนนี้</div>
+          <div id="schListCount" style="font-size:13px;font-weight:700;color:var(--wine-mid);"></div>
+        </div>
+        <div style="overflow-x:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>วันที่</th><th>เวลา</th><th>HN</th><th>ชื่อ-สกุล</th>
+                <th>รายการ</th><th>หมอ</th><th>สถานะ</th><th>จัดการ</th>
+              </tr>
+            </thead>
+            <tbody id="schListBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
     <!-- ===== SETTINGS PAGE ===== -->
     <div class="page" id="page-settings">
       <div class="settings-grid" id="settingsGrid"></div>
@@ -997,6 +1090,9 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
       </button>
       <button class="mobile-nav-btn" id="mnav-lab" onclick="showPage('lab');setMobileNav('lab')">
         <span class="mn-icon">🧪</span>แลป
+      </button>
+      <button class="mobile-nav-btn" id="mnav-schedule" onclick="showPage('schedule');setMobileNav('schedule')" style="display:none;">
+        <span class="mn-icon">📆</span>ดูนัด
       </button>
       <button class="mobile-nav-btn" id="mnav-settings" onclick="showPage('settings');setMobileNav('settings')">
         <span class="mn-icon">⚙️</span>ตั้งค่า
@@ -1422,8 +1518,8 @@ function startApp(){
   const iyr = document.getElementById('income-filter-year');
   if(iyr) iyr.value = now.getFullYear()+543;
 
-  // Show settings tab for manager only
-  ['nav-settings','ttab-settings'].forEach(id=>{
+  // Show settings + schedule tab for manager only
+  ['nav-settings','ttab-settings','nav-schedule','ttab-schedule','mnav-schedule'].forEach(id=>{
     const el=document.getElementById(id);
     if(el) el.style.display = isManager ? '' : 'none';
   });
@@ -1510,7 +1606,6 @@ function showPage(p){
   if(p==='lab') renderLabPage();
   if(p==='settings') buildSettingsPage();
   if(p==='schedule'){
-    // Force render after page becomes visible
     requestAnimationFrame(()=>requestAnimationFrame(renderSchedulePage));
   }
   setMobileNav(p);
@@ -1593,25 +1688,40 @@ function renderTreatList(treats){
 // ============================================================
 //  APPOINTMENTS
 // ============================================================
-function openAddApt(){
-  editTreatId=null;
-  document.getElementById('aptModalTitle').textContent='เพิ่มนัด';
-  document.getElementById('apt-date').value=todayStr();
-  document.getElementById('apt-hn').value='';
-  document.getElementById('apt-name').value='';
-  document.getElementById('apt-phone').value='';
-  // Default time = now rounded to nearest 30min, clamped 10:00-18:30
-  const nowH=new Date(); 
-  let hh=nowH.getHours(), mm=nowH.getMinutes()>=30?30:0;
-  if(hh<10){hh=10;mm=0;} if(hh>18||(hh===18&&mm>30)){hh=18;mm=30;}
-  const hhStr=String(hh).padStart(2,'0');
-  const mmStr=String(mm).padStart(2,'0');
-  document.getElementById('apt-time').value=`${hhStr}:${mmStr}`;
-  document.getElementById('apt-status').value='นัดวันนี้';
-  document.getElementById('apt-note').value='';
+let _editAptId = null;
+function openAddApt(apt=null, prefillDate=null){
+  _editAptId = apt ? apt.id : null;
+  document.getElementById('aptModalTitle').textContent = apt ? 'แก้ไขนัด' : 'เพิ่มนัด';
+  document.getElementById('apt-date').value = apt?.date || prefillDate || todayStr();
+  document.getElementById('apt-hn').value   = apt?.hn || '';
+  document.getElementById('apt-name').value = apt?.patName || '';
+  document.getElementById('apt-phone').value= apt?.phone || '';
+  document.getElementById('apt-note').value = apt?.note || '';
+  document.getElementById('apt-status').value = apt?.status || 'นัดวันนี้';
+  // Time
+  if(apt?.time){
+    document.getElementById('apt-time').value = apt.time;
+  } else {
+    const nowH=new Date();
+    let hh=nowH.getHours(), mm=nowH.getMinutes()>=30?30:0;
+    if(hh<10){hh=10;mm=0;} if(hh>18||(hh===18&&mm>30)){hh=18;mm=30;}
+    document.getElementById('apt-time').value=`${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}`;
+  }
+  // Proc checkboxes
   clearProcSelection();
+  if(apt?.proc){
+    const procs = apt.proc.split(',').map(p=>p.trim());
+    document.querySelectorAll('#apt-proc-options input[type=checkbox]').forEach(cb=>{
+      if(procs.includes(cb.value)) cb.checked=true;
+    });
+    updateProcLabel();
+  }
   document.getElementById('apt-proc-dropdown').style.display='none';
-  if(!isManager){ document.getElementById('apt-doc').value=currentUser.name; }
+  if(!isManager){
+    document.getElementById('apt-doc').value=currentUser.name;
+  } else if(apt?.docName){
+    document.getElementById('apt-doc').value=apt.docName;
+  }
   document.getElementById('modalApt').classList.add('open');
 }
 let _aptSaving = false;
@@ -1620,7 +1730,7 @@ function saveApt(){
   _aptSaving = true;
   setTimeout(()=>_aptSaving=false, 2000);
   const apt = {
-    id: Date.now().toString(),
+    id: _editAptId || Date.now().toString(),
     date: document.getElementById('apt-date').value||todayStr(),
     time: document.getElementById('apt-time').value,
     docName: document.getElementById('apt-doc').value,
@@ -1631,18 +1741,32 @@ function saveApt(){
     status: document.getElementById('apt-status').value,
     note: document.getElementById('apt-note').value,
   };
-  if(!apt.patName){ showToast('กรุณาใส่ชื่อผู้ป่วย','error'); return; }
-  appointments.push(apt);
+  if(!apt.patName){ showToast('กรุณาใส่ชื่อผู้ป่วย','error'); _aptSaving=false; return; }
+  const idx = appointments.findIndex(a=>a.id===apt.id);
+  if(idx>-1) appointments[idx]=apt; else appointments.push(apt);
   saveLocal();
   closeModal('modalApt');
-  renderHome();
-  showToast('เพิ่มนัดสำเร็จ');
+  // Re-render whichever page is active
+  const p=document.querySelector('.page.active')?.id?.replace('page-','');
+  if(p==='home') renderHome();
+  else if(p==='schedule') renderSchedulePage();
+  showToast(_editAptId ? 'แก้ไขนัดสำเร็จ' : 'เพิ่มนัดสำเร็จ');
   syncToSheet('appointments', apt).then(()=>{
-    // After 2s, sync from Sheet to verify
     setTimeout(syncAll, 2000);
-  }).catch(err => {
+  }).catch(()=>{
     showToast('⚠️ บันทึกไม่สำเร็จ กรุณาตรวจสอบการเชื่อมต่อ', 'error');
   });
+  _editAptId = null;
+}
+function deleteApt(id){
+  if(!confirm('ยืนยันลบนัดนี้?')) return;
+  appointments = appointments.filter(a=>a.id!==id);
+  saveLocal();
+  const p=document.querySelector('.page.active')?.id?.replace('page-','');
+  if(p==='home') renderHome();
+  else if(p==='schedule') renderSchedulePage();
+  showToast('ลบนัดสำเร็จ');
+  syncToSheet('delete',{type:'appointments',id});
 }
 
 // ============================================================
@@ -2294,7 +2418,7 @@ async function syncAll(){
     else if(p==='treatment') renderTreatPage();
     else if(p==='lab') renderLabPage();
     else if(p==='income') renderIncome();
-    // schedule renders only via showPage, not syncAll
+    else if(p==='schedule') renderSchedulePage();
     const t=new Date().toLocaleTimeString('th-TH');
     if(txt) txt.textContent='ซิงค์แล้ว '+t;
     if(dot) dot.style.background='var(--green)';
@@ -2321,135 +2445,192 @@ async function manualSync(){
 // ============================================================
 //  SCHEDULE PAGE (Manager only)
 // ============================================================
-function renderSchedulePage(){
-  // Always render when called
-  try {
+function openAddAptSchedule(){
+  // Pre-fill date from currently viewed month (first day or today)
   const monthEl = document.getElementById('scheduleMonth');
-  if(!monthEl){ console.warn('scheduleMonth not found'); return; }
-  if(!monthEl.value) monthEl.value = todayStr().slice(0,7);
-  const month = monthEl.value;
-  const docFilter = document.getElementById('scheduleDocFilter')?.value || '';
-  console.log('renderSchedulePage: month='+month+' apts='+appointments.length);
-
-  // Populate doc filter
-  const df = document.getElementById('scheduleDocFilter');
-  if(df){
-    // keep selected value
-    const prev = df.value;
-    df.innerHTML = '<option value="">— หมอทั้งหมด —</option>';
-    doctors.forEach(d=>{
-      const o=document.createElement('option');
-      o.value=d.name; o.textContent=d.name;
-      df.appendChild(o);
-    });
-    if(prev) df.value = prev;
-  }
-
-  let apts = appointments.filter(a=>a.date&&a.date.startsWith(month));
-  if(docFilter) apts = apts.filter(a=>a.docName===docFilter);
-
-  // Update summary
-  document.getElementById('sch-total').textContent = apts.length;
-  document.getElementById('sch-confirm').textContent = apts.filter(a=>a.status==='confirm').length;
-  document.getElementById('sch-unconfirm').textContent = apts.filter(a=>a.status==='ไม่คอนเฟิร์ม').length;
-  document.getElementById('sch-walkin').textContent = apts.filter(a=>a.status==='walk-in').length;
-  document.getElementById('sch-done').textContent = apts.filter(a=>a.status==='เสร็จ').length;
-  document.getElementById('sch-cancel').textContent = apts.filter(a=>a.status==='ยกเลิก').length;
-
-  // Build calendar
-  const [y,m] = month.split('-').map(Number);
-  const firstDay = new Date(y,m-1,1).getDay(); // 0=Sun
-  const daysInMonth = new Date(y,m,0).getDate();
-  const DAYS = ['อา','จ','อ','พ','พฤ','ศ','ส'];
-  const monthNamesTH = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
-
-  let html = `<div style="font-size:16px;font-weight:700;color:var(--wine-dark);text-align:center;margin-bottom:12px;font-family:'Prompt',sans-serif;">
-    ${monthNamesTH[m-1]} ${y+543}
-  </div>`;
-
-  // Day headers
-  html += `<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px;">`;
-  DAYS.forEach((d,i)=>{
-    const color = i===0?'var(--red)':i===6?'var(--blue)':'var(--text-mid)';
-    html += `<div style="text-align:center;font-size:12px;font-weight:700;color:${color};padding:4px 0;">${d}</div>`;
-  });
-  html += `</div>`;
-
-  // Calendar grid
-  html += `<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;">`;
-
-  // Empty cells before first day
-  for(let i=0;i<firstDay;i++){
-    html += `<div style="min-height:80px;"></div>`;
-  }
-
+  const month = monthEl?.value || todayStr().slice(0,7);
   const today = todayStr();
-  for(let d=1;d<=daysInMonth;d++){
-    const ds = `${month}-${String(d).padStart(2,'0')}`;
-    const dayApts = apts.filter(a=>a.date===ds).sort((a,b)=>a.time?.localeCompare(b.time||'')||0);
-    const isToday = ds===today;
-    const dow = new Date(y,m-1,d).getDay();
-    const isWeekend = dow===0||dow===6;
+  const prefillDate = today.startsWith(month) ? today : month+'-01';
+  openAddApt(null, prefillDate);
+}
 
-    html += `<div style="min-height:80px;border-radius:8px;border:1px solid ${isToday?'var(--wine)':'var(--border)'};
-      background:${isToday?'var(--wine-pale)':isWeekend?'rgba(52,152,219,0.04)':'#fff'};
-      padding:4px;overflow:hidden;">
-      <div style="font-size:12px;font-weight:${isToday?'800':'600'};color:${isToday?'var(--wine)':isWeekend?'var(--blue)':'var(--text-mid)'};margin-bottom:3px;">${d}</div>`;
+function renderSchedulePage(){
+  try {
+    const monthEl = document.getElementById('scheduleMonth');
+    if(!monthEl){ console.warn('scheduleMonth not found'); return; }
+    if(!monthEl.value) monthEl.value = todayStr().slice(0,7);
+    const month = monthEl.value;
 
-    dayApts.slice(0,4).forEach(a=>{
-      const sc = {
-        'เสร็จ':'#2ecc90','confirm':'var(--wine)','ไม่คอนเฟิร์ม':'#aaa',
-        'walk-in':'var(--blue)','รอ':'var(--orange)','ยกเลิก':'var(--red)'
-      }[a.status]||'#999';
-      html += `<div onclick="openStatusDropdown(event,'${a.id}')" style="font-size:10px;background:${sc}22;border-left:2px solid ${sc};
-        padding:2px 4px;border-radius:3px;margin-bottom:2px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"
-        title="${a.time||''} ${a.patName} - ${a.docName}">
-        <span style="color:${sc};font-weight:700;">${a.time||''}</span> ${a.patName}
-      </div>`;
+    // Populate doc filter
+    const df = document.getElementById('scheduleDocFilter');
+    if(df){
+      const prev = df.value;
+      df.innerHTML = '<option value="">— หมอทั้งหมด —</option>';
+      doctors.forEach(d=>{
+        const o=document.createElement('option');
+        o.value=d.name; o.textContent=d.name;
+        df.appendChild(o);
+      });
+      if(prev) df.value = prev;
+    }
+    const docFilter = df?.value || '';
+
+    let apts = appointments.filter(a=>a.date&&a.date.startsWith(month));
+    if(docFilter) apts = apts.filter(a=>a.docName===docFilter);
+
+    // Update summary stats
+    document.getElementById('sch-total').textContent   = apts.length;
+    document.getElementById('sch-confirm').textContent = apts.filter(a=>['คอนเฟิร์ม','confirm'].includes(a.status)).length;
+    document.getElementById('sch-done').textContent    = apts.filter(a=>['เสร็จสิ้น','เสร็จ'].includes(a.status)).length;
+    document.getElementById('sch-walkin').textContent  = apts.filter(a=>a.status==='walk-in').length;
+    document.getElementById('sch-cancel').textContent  = apts.filter(a=>a.status==='ยกเลิก').length;
+
+    // ---- Build Calendar ----
+    const [y, m] = month.split('-').map(Number);
+    const firstDay   = new Date(y, m-1, 1).getDay(); // 0=Sun
+    const daysInMonth= new Date(y, m, 0).getDate();
+    const DAYS       = ['อา','จ','อ','พ','พฤ','ศ','ส'];
+    const MONTH_TH   = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+
+    const STATUS_COLOR = {
+      'นัดวันนี้':'var(--wine)','รอทำ':'var(--orange)',
+      'คอนเฟิร์ม':'var(--blue)','confirm':'var(--wine)',
+      'เสร็จสิ้น':'var(--green)','เสร็จ':'var(--green)',
+      'ยกเลิก':'var(--red)','walk-in':'#3498DB',
+      'ไม่คอนเฟิร์ม':'#aaa'
+    };
+
+    const today = todayStr();
+
+    let html = `<div style="font-size:17px;font-weight:800;color:var(--wine-dark);text-align:center;margin-bottom:14px;font-family:'Prompt',sans-serif;">
+      ${MONTH_TH[m-1]} ${y+543}
+    </div>`;
+
+    // Day headers
+    html += `<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:3px;">`;
+    DAYS.forEach((d,i)=>{
+      const c = i===0?'var(--red)':i===6?'var(--blue)':'var(--text-mid)';
+      html += `<div style="text-align:center;font-size:11px;font-weight:700;color:${c};padding:5px 0;background:var(--wine-pale);border-radius:4px;">${d}</div>`;
     });
-    if(dayApts.length>4){
-      html += `<div style="font-size:10px;color:var(--text-light);text-align:center;">+${dayApts.length-4} เพิ่มเติม</div>`;
+    html += `</div>`;
+
+    // Calendar grid
+    html += `<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;">`;
+
+    // Empty before first day
+    for(let i=0;i<firstDay;i++){
+      html += `<div style="min-height:90px;background:rgba(0,0,0,0.02);border-radius:6px;"></div>`;
+    }
+
+    for(let d=1;d<=daysInMonth;d++){
+      const ds      = `${month}-${String(d).padStart(2,'0')}`;
+      const dayApts = apts.filter(a=>a.date===ds).sort((a,b)=>(a.time||'').localeCompare(b.time||''));
+      const isToday = ds===today;
+      const dow     = new Date(y,m-1,d).getDay();
+      const isSun   = dow===0; const isSat = dow===6;
+
+      html += `<div style="min-height:90px;border-radius:6px;border:1.5px solid ${isToday?'var(--wine)':'var(--border)'};
+        background:${isToday?'var(--wine-pale)':isSun?'rgba(231,76,90,0.03)':isSat?'rgba(52,152,219,0.03)':'#fff'};
+        padding:4px;overflow:hidden;position:relative;">
+        <!-- Date number + add button -->
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
+          <div style="font-size:13px;font-weight:${isToday?'900':'600'};color:${isToday?'#fff':isSun?'var(--red)':isSat?'var(--blue)':'var(--text-mid)'};
+            ${isToday?`background:var(--wine);border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;`:''}">
+            ${d}
+          </div>
+          <button onclick="openAddApt(null,'${ds}')" title="เพิ่มนัด ${ds}"
+            style="background:none;border:none;cursor:pointer;font-size:13px;padding:0;line-height:1;color:var(--wine-light);opacity:0.6;transition:opacity 0.15s;"
+            onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'">＋</button>
+        </div>`;
+
+      dayApts.slice(0,3).forEach(a=>{
+        const sc = STATUS_COLOR[a.status]||'#999';
+        const shortName = (a.patName||'').split(' ')[0];
+        html += `<div onclick="openEditApt('${a.id}')"
+          style="font-size:10px;background:${sc}20;border-left:2.5px solid ${sc};
+          padding:2px 5px;border-radius:3px;margin-bottom:2px;cursor:pointer;
+          white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:background 0.12s;"
+          onmouseover="this.style.background='${sc}35'" onmouseout="this.style.background='${sc}20'"
+          title="${a.time||''} ${a.patName||''} (${a.docName||''}) — ${a.status||''}">
+          <span style="color:${sc};font-weight:700;">${a.time||''}</span> ${shortName}
+          <span style="opacity:0.7;font-size:9px;">${a.docName||''}</span>
+        </div>`;
+      });
+      if(dayApts.length>3){
+        html += `<div onclick="showDayApts('${ds}')" style="font-size:10px;color:var(--wine);font-weight:700;text-align:center;cursor:pointer;padding:2px 0;border-radius:3px;background:var(--wine-pale);">
+          +${dayApts.length-3} รายการ
+        </div>`;
+      }
+      html += `</div>`;
     }
     html += `</div>`;
-  }
-  html += `</div>`;
 
-  // Appointment list below calendar
-  html += `<div style="margin-top:20px;border-top:1px solid var(--border);padding-top:16px;">
-    <div style="font-size:14px;font-weight:700;color:var(--wine-dark);margin-bottom:10px;">รายการนัดทั้งหมด ${apts.length} รายการ</div>
-    <div style="overflow-x:auto;">
-    <table style="width:100%;border-collapse:collapse;font-size:13px;">
-      <thead><tr style="background:var(--wine-pale);">
-        <th style="padding:8px 12px;text-align:left;color:var(--wine-dark);font-size:12px;">วันที่</th>
-        <th style="padding:8px 12px;text-align:left;color:var(--wine-dark);font-size:12px;">เวลา</th>
-        <th style="padding:8px 12px;text-align:left;color:var(--wine-dark);font-size:12px;">ชื่อ</th>
-        <th style="padding:8px 12px;text-align:left;color:var(--wine-dark);font-size:12px;">รายการ</th>
-        <th style="padding:8px 12px;text-align:left;color:var(--wine-dark);font-size:12px;">หมอ</th>
-        <th style="padding:8px 12px;text-align:left;color:var(--wine-dark);font-size:12px;">สถานะ</th>
-      </tr></thead>
-      <tbody>`;
+    const calEl = document.getElementById('scheduleCalendar');
+    if(calEl) calEl.innerHTML = html;
 
-  apts.sort((a,b)=>a.date.localeCompare(b.date)||(a.time||'').localeCompare(b.time||'')).forEach(a=>{
-    html += `<tr style="border-bottom:1px solid rgba(107,45,94,0.06);">
-      <td style="padding:8px 12px;">${fmtDate(a.date)}</td>
-      <td style="padding:8px 12px;font-weight:700;color:var(--wine);">${a.time||'—'}</td>
-      <td style="padding:8px 12px;font-weight:600;">${a.patName||'—'}</td>
-      <td style="padding:8px 12px;font-size:12px;">${a.proc||'—'}</td>
-      <td style="padding:8px 12px;font-size:12px;">${a.docName||'—'}</td>
-      <td style="padding:8px 12px;"><span class="${statusClass(a.status)}" onclick="openStatusDropdown(event,'${a.id}')">${a.status||'รอ'}</span></td>
-    </tr>`;
-  });
+    // ---- Build list table ----
+    const sortedApts = [...apts].sort((a,b)=>
+      a.date.localeCompare(b.date)||(a.time||'').localeCompare(b.time||'')
+    );
+    const badge = document.getElementById('schListCount');
+    if(badge) badge.textContent = `${sortedApts.length} รายการ`;
 
-  html += `</tbody></table></div></div>`;
-  const calEl2 = document.getElementById('scheduleCalendar');
+    const tbody = document.getElementById('schListBody');
+    if(!sortedApts.length){
+      tbody.innerHTML=`<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--text-light);">ไม่มีนัดในเดือนนี้</td></tr>`;
+    } else {
+      tbody.innerHTML = sortedApts.map(a=>`
+        <tr>
+          <td>${fmtDate(a.date)}</td>
+          <td style="font-weight:700;color:var(--wine);">${a.time||'—'}</td>
+          <td style="font-size:12px;color:var(--text-light);">${a.hn||'—'}</td>
+          <td style="font-weight:600;">${a.patName||'—'}</td>
+          <td style="font-size:12px;">${a.proc||'—'}</td>
+          <td style="font-size:12px;">${a.docName||'—'}</td>
+          <td><span class="${statusClass(a.status)}" onclick="openStatusDropdown(event,'${a.id}')" style="cursor:pointer;">${a.status||'รอ'}</span></td>
+          <td>
+            <div style="display:flex;gap:6px;">
+              <button class="btn btn-ghost btn-sm" onclick="openEditApt('${a.id}')">✏️</button>
+              <button class="btn btn-danger btn-sm" onclick="deleteApt('${a.id}')">🗑️</button>
+            </div>
+          </td>
+        </tr>`).join('');
+    }
 
-  if(calEl2) calEl2.innerHTML = html;
-  else console.error('scheduleCalendar NOT FOUND in DOM');
-  } catch(err) {
+  } catch(err){
     console.error('renderSchedulePage error:', err.message, err.stack);
-    const calEl2 = document.getElementById('scheduleCalendar');
-    if(calEl2) calEl2.innerHTML = `<div style="padding:20px;color:red;font-size:13px;">Error: ${err.message}</div>`;
+    const calEl = document.getElementById('scheduleCalendar');
+    if(calEl) calEl.innerHTML = `<div style="padding:20px;color:red;font-size:13px;">Error: ${err.message}</div>`;
   }
+}
+
+// Show all appointments for a specific day (popup / scroll to list)
+function showDayApts(dateStr){
+  // Scroll to list section and filter isn't practical — just open modal day view
+  // For simplicity: set month filter to that month and scroll to list, highlighting
+  showToast('📅 '+fmtDate(dateStr)+' — ดูรายการด้านล่างปฏิทิน');
+  const tbody = document.getElementById('schListBody');
+  if(tbody){
+    // highlight rows for that date
+    tbody.querySelectorAll('tr').forEach(tr=>{
+      const cell = tr.querySelector('td');
+      if(!cell) return;
+      // compare fmtDate output
+      tr.style.background = cell.textContent.trim()===fmtDate(dateStr) ? 'var(--wine-pale)' : '';
+    });
+    setTimeout(()=>{
+      tbody.querySelectorAll('tr').forEach(tr=>tr.style.background='');
+    }, 2500);
+    // Scroll table into view
+    const listCard = tbody.closest('.card-box');
+    if(listCard) listCard.scrollIntoView({behavior:'smooth',block:'start'});
+  }
+}
+
+// Open edit appointment modal from schedule page
+function openEditApt(id){
+  const apt = appointments.find(a=>a.id===id);
+  if(apt) openAddApt(apt);
 }
 
 function toggleProcDropdown(){
