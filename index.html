@@ -2831,33 +2831,41 @@ function autoFillPatient(hn, prefix){
   }
   const hnStr = String(hn).trim();
 
-  // ค้นจาก appointments ก่อน แล้วตาม treatments
-  const sources = [
-    ...appointments.filter(r=>String(r.hn).trim()===hnStr && r.patName),
-    ...treatments.filter(r=>String(r.hn).trim()===hnStr && r.patName),
+  // ค้นจาก appointments และ treatments — normalize ทุก field
+  const allRecords = [
+    ...appointments.map(r=>({
+      hn: String(r.hn||'').trim(),
+      patName: r.patName || r.name || '',
+      phone: r.phone || '',
+      id: r.id
+    })),
+    ...treatments.map(r=>({
+      hn: String(r.hn||'').trim(),
+      patName: r.patName || r.name || '',
+      phone: r.phone || '',
+      id: r.id
+    })),
   ];
 
-  if(!sources.length){
-    if(hint) hint.innerHTML = `<span style="color:var(--text-light);font-style:italic;">ไม่พบประวัติ HN นี้</span>`;
+  const matched = allRecords.filter(r => r.hn === hnStr && r.patName);
+
+  if(!matched.length){
+    if(hint) hint.innerHTML = `<span style="color:var(--text-light);font-style:italic;">ไม่พบประวัติ HN ${hnStr}</span>`;
     return;
   }
 
   // ใช้ข้อมูลล่าสุด
-  sources.sort((a,b)=>String(b.id).localeCompare(String(a.id)));
-  const found = sources[0];
+  matched.sort((a,b) => String(b.id).localeCompare(String(a.id)));
+  const found = matched[0];
 
   const nameEl  = document.getElementById(prefix+'-name');
   const phoneEl = document.getElementById(prefix+'-phone');
 
-  // ใส่เฉพาะช่องที่ยังว่างอยู่ (ไม่ทับข้อมูลที่กรอกไปแล้ว)
-  if(nameEl  && !nameEl.value  && found.patName) nameEl.value  = found.patName;
-  if(phoneEl && !phoneEl.value && found.phone)   phoneEl.value = found.phone;
+  // fill เสมอ (ไม่เช็คว่าว่างหรือเปล่า เพราะต้องการ autofill จาก HN)
+  if(nameEl  && found.patName) nameEl.value  = found.patName;
+  if(phoneEl && found.phone)   phoneEl.value = found.phone;
 
-  if(hint){
-    if(found.patName){
-      hint.innerHTML = `<span style="color:var(--green);font-weight:700;">✓ พบประวัติ: ${found.patName}${found.phone?' | '+found.phone:''}</span>`;
-    }
-  }
+  if(hint) hint.innerHTML = `<span style="color:var(--green);font-weight:700;">✓ ${found.patName}${found.phone?' | '+found.phone:''}</span>`;
 }
 
 function startAutoSync(){
