@@ -44,8 +44,11 @@ html, body { height: 100%; font-family: 'Sarabun', sans-serif; background: var(-
 #loginScreen {
   position: fixed; inset: 0; z-index: 9999;
   background: linear-gradient(160deg, #2D0B22 0%, #5C1A4A 40%, #7B2D6B 70%, #9B3D8B 100%);
-  display: flex; align-items: center; justify-content: center;
+  display: none; align-items: center; justify-content: center;
   overflow-y: auto; padding: 24px 16px;
+}
+#loginScreen.visible {
+  display: flex;
 }
 
 .login-step {
@@ -452,7 +455,7 @@ select.form-control { cursor: pointer; }
 .time-slot:hover { border-color: var(--wine-light); }
 
 /* APPOINTMENT MINI */
-.apt-row { display: grid; grid-template-columns: 80px 80px 1fr 160px 120px 100px; gap: 10px; align-items: center; padding: 10px 14px; border-bottom: 1px solid rgba(107,45,94,0.06); font-size: 13px; transition: background 0.14s; }
+.apt-row { display: grid; grid-template-columns: 80px 70px 160px 150px 180px 110px 100px; gap: 8px; align-items: center; padding: 10px 14px; border-bottom: 1px solid rgba(107,45,94,0.06); font-size: 13px; transition: background 0.14s; }
 .apt-row:hover { background: rgba(107,45,94,0.02); }
 .apt-row:last-child { border-bottom: none; }
 .apt-hdr { font-size: 11px; font-weight: 700; color: var(--wine-dark); text-transform: uppercase; letter-spacing: 0.4px; background: var(--wine-pale); border-bottom: 1px solid var(--border); }
@@ -547,10 +550,11 @@ select.form-control { cursor: pointer; }
   .income-item-value { font-size: 16px !important; }
 
   /* Apt table */
-  .apt-row { grid-template-columns: 60px 60px 1fr 100px !important; gap: 6px; font-size:12px; }
+  .apt-row { grid-template-columns: 60px 60px 1fr 90px !important; gap: 6px; font-size:12px; }
   .apt-row > div:nth-child(4) { display: none; } /* hide รายการ */
-  .apt-row > div:nth-child(5) { display: none; } /* hide หมอ on small */
-  .apt-hdr > div:nth-child(4), .apt-hdr > div:nth-child(5) { display:none; }
+  .apt-row > div:nth-child(5) { display: none; } /* hide หมายเหตุ */
+  .apt-row > div:nth-child(6) { display: none; } /* hide หมอ on small */
+  .apt-hdr > div:nth-child(4), .apt-hdr > div:nth-child(5), .apt-hdr > div:nth-child(6) { display:none; }
 
   /* Tables - make scrollable */
   .card-box { border-radius: 12px; }
@@ -655,7 +659,7 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
 <body>
 
 <!-- ======== LOGIN ======== -->
-<div id="loginScreen">
+<div id="loginScreen" class="visible">
 
   <!-- STEP 1: เลือกหมอ -->
   <div id="step-select" class="login-step">
@@ -743,10 +747,10 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
     </div>
     <div class="sidebar-nav">
       <button class="nav-item active" onclick="showPage('home')" id="nav-home"><span class="nav-icon">🏠</span>หน้าหลัก</button>
+      <button class="nav-item" onclick="showPage('schedule')" id="nav-schedule" style="display:none;"><span class="nav-icon">📆</span>ดูนัด</button>
       <button class="nav-item" onclick="showPage('treatment')" id="nav-treatment"><span class="nav-icon">📋</span>บันทึกการรักษา</button>
       <button class="nav-item" onclick="showPage('income')" id="nav-income"><span class="nav-icon">📊</span>สรุปรายได้</button>
       <button class="nav-item" onclick="showPage('lab')" id="nav-lab"><span class="nav-icon">🧪</span>ค่าแลป</button>
-      <button class="nav-item" onclick="showPage('schedule')" id="nav-schedule" style="display:none;"><span class="nav-icon">📆</span>ดูนัด</button>
       <button class="nav-item" onclick="showPage('settings')" id="nav-settings" style="display:none;"><span class="nav-icon">⚙️</span>ตั้งค่า</button>
 
     </div>
@@ -769,9 +773,12 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
         <div class="topbar-date" id="todayDate"></div>
       </div>
       <div class="topbar-right">
-        <div class="sync-badge">
-          <span style="width:7px;height:7px;border-radius:50%;background:#2ecc90;display:inline-block;"></span>
-          Synced
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span id="topbarUserName" style="font-size:13px;font-weight:700;color:var(--wine-dark);"></span>
+          <div class="sync-badge">
+            <span style="width:7px;height:7px;border-radius:50%;background:#2ecc90;display:inline-block;"></span>
+            Synced
+          </div>
         </div>
         <button onclick="logout()" class="mobile-logout-btn" title="ออกจากระบบ">🚪</button>
       </div>
@@ -779,10 +786,10 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
     <!-- TOP TAB BAR (mobile navigation) -->
     <div class="top-tab-bar" id="topTabBar">
       <button class="top-tab active" id="ttab-home" onclick="showPage('home');setMobileNav('home')"><span class="mn-icon">🏠</span>หน้าหลัก</button>
+      <button class="top-tab" id="ttab-schedule" style="display:none;" onclick="showPage('schedule');setMobileNav('schedule')"><span class="mn-icon">📆</span>ดูนัด</button>
       <button class="top-tab" id="ttab-treatment" onclick="showPage('treatment');setMobileNav('treatment')"><span class="mn-icon">📋</span>รักษา</button>
       <button class="top-tab" id="ttab-income" onclick="showPage('income');setMobileNav('income')"><span class="mn-icon">📊</span>รายได้</button>
       <button class="top-tab" id="ttab-lab" onclick="showPage('lab');setMobileNav('lab')"><span class="mn-icon">🧪</span>แลป</button>
-      <button class="top-tab" id="ttab-schedule" style="display:none;" onclick="showPage('schedule');setMobileNav('schedule')"><span class="mn-icon">📆</span>ดูนัด</button>
       <button class="top-tab" id="ttab-settings" style="display:none;" onclick="showPage('settings');setMobileNav('settings')"><span class="mn-icon">⚙️</span>ตั้งค่า</button>
 
     </div>
@@ -794,10 +801,10 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
       <div class="card-box" style="margin-bottom:20px;">
         <div class="card-box-hdr">
           <div class="card-box-title">📅 ตารางนัดวันนี้</div>
-          <button class="btn btn-primary btn-sm" onclick="openAddApt()">+ เพิ่มนัด</button>
+          <button class="btn btn-primary btn-sm" id="btnAddAptHome" onclick="openAddApt()">+ เพิ่มนัด</button>
         </div>
         <div class="apt-row apt-hdr">
-          <div>เวลา</div><div>HN</div><div>ชื่อ-สกุล</div><div>รายการ</div><div>หมอ</div><div>สถานะ</div>
+          <div>เวลา</div><div>HN</div><div>ชื่อ-สกุล</div><div>รายการ</div><div>หมายเหตุ</div><div>หมอ</div><div>สถานะ</div>
         </div>
         <div id="aptList"></div>
       </div>
@@ -873,7 +880,7 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
             <input type="date" class="form-control" id="treatFilterDate" onchange="renderTreatPage()" style="height:36px;">
             <input type="month" class="form-control" id="treatFilterMonth" onchange="renderTreatPage()" style="height:36px;display:none;">
             <div class="search-box"><input type="text" class="form-control" placeholder="ค้นหาชื่อ/HN" id="treatSearch" oninput="renderTreatPage()" style="height:36px;padding-left:32px;width:180px;"></div>
-            <button class="btn btn-primary btn-sm" onclick="openAddTreat()">+ เพิ่มรายการ</button>
+            <button class="btn btn-primary btn-sm" id="btnAddTreat" onclick="openAddTreat()">+ เพิ่มรายการ</button>
           </div>
         </div>
         <!-- Monthly summary bar -->
@@ -956,7 +963,7 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
             <select class="form-control" id="labDocFilter" onchange="renderLabPage()" style="height:36px;width:140px;display:none;">
               <option value="">— หมอทั้งหมด —</option>
             </select>
-            <button class="btn btn-primary btn-sm" onclick="openAddLab()">+ เพิ่มค่าแลป</button>
+            <button class="btn btn-primary btn-sm" id="btnAddLab" onclick="openAddLab()">+ เพิ่มค่าแลป</button>
           </div>
         </div>
         <table>
@@ -980,7 +987,7 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
             <option value="">— หมอทั้งหมด —</option>
           </select>
         </div>
-        <button class="btn btn-primary" onclick="openAddAptSchedule()">+ เพิ่มนัด</button>
+        <button class="btn btn-primary" id="btnAddAptSchedule" onclick="openAddAptSchedule()">+ เพิ่มนัด</button>
       </div>
 
       <!-- Summary stat strip -->
@@ -1082,6 +1089,9 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
       <button class="mobile-nav-btn active" id="mnav-home" onclick="showPage('home');setMobileNav('home')">
         <span class="mn-icon">🏠</span>หน้าหลัก
       </button>
+      <button class="mobile-nav-btn" id="mnav-schedule" onclick="showPage('schedule');setMobileNav('schedule')" style="display:none;">
+        <span class="mn-icon">📆</span>ดูนัด
+      </button>
       <button class="mobile-nav-btn" id="mnav-treatment" onclick="showPage('treatment');setMobileNav('treatment')">
         <span class="mn-icon">📋</span>รักษา
       </button>
@@ -1090,9 +1100,6 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
       </button>
       <button class="mobile-nav-btn" id="mnav-lab" onclick="showPage('lab');setMobileNav('lab')">
         <span class="mn-icon">🧪</span>แลป
-      </button>
-      <button class="mobile-nav-btn" id="mnav-schedule" onclick="showPage('schedule');setMobileNav('schedule')" style="display:none;">
-        <span class="mn-icon">📆</span>ดูนัด
       </button>
       <button class="mobile-nav-btn" id="mnav-settings" onclick="showPage('settings');setMobileNav('settings')">
         <span class="mn-icon">⚙️</span>ตั้งค่า
@@ -1486,13 +1493,16 @@ function startApp(){
     isManager: isManager,
     ts: Date.now()
   }));
-  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('loginScreen').classList.remove('visible');
   const app = document.getElementById('appShell');
   app.classList.add('visible');
   // sidebar user info
   document.getElementById('sideUserAvatar').textContent = currentUser.emoji;
   document.getElementById('sideUserName').textContent = currentUser.name;
   document.getElementById('sideUserRole').textContent = isManager ? 'ผู้จัดการ' : (currentUser.specialty||'');
+  // แสดงชื่อผู้ login ใน topbar
+  const topbarName = document.getElementById('topbarUserName');
+  if(topbarName) topbarName.textContent = (currentUser.emoji||'') + ' ' + currentUser.name;
 
   // today date
   const now = new Date();
@@ -1520,6 +1530,12 @@ function startApp(){
 
   // Show settings + schedule tab for manager only
   ['nav-settings','ttab-settings','nav-schedule','ttab-schedule','mnav-schedule'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.style.display = isManager ? '' : 'none';
+  });
+
+  // Show add buttons for manager only, hide for doctors
+  ['btnAddAptHome','btnAddTreat','btnAddLab','btnAddAptSchedule'].forEach(id=>{
     const el=document.getElementById(id);
     if(el) el.style.display = isManager ? '' : 'none';
   });
@@ -1656,7 +1672,8 @@ function renderAptList(today){
       <div style="font-weight:700;color:var(--wine)">${a.time}</div>
       <div style="font-size:12px;color:var(--text-light)">${a.hn||'—'}</div>
       <div style="font-weight:600">${a.patName}</div>
-      <div style="font-size:12px;color:var(--text-mid)">${a.proc}</div>
+      <div style="font-size:12px;color:var(--text-mid)">${a.proc||'—'}</div>
+      <div style="font-size:12px;color:var(--text-light);font-style:${a.note?'normal':'italic'}">${a.note||'—'}</div>
       <div style="font-size:12px">${a.docName}</div>
       <div>
         <span class="${statusClass(a.status)}" onclick="openStatusDropdown(event,'${a.id}')" style="cursor:pointer">${a.status}</span>
@@ -1923,19 +1940,21 @@ function renderTreatPage(){
 // ============================================================
 function setPeriod(p,btn){
   currentPeriod=p;
-  // Only toggle tabs inside income page
-  ['iperiod-day','iperiod-month','iperiod-year'].forEach(id=>{
+  // Reset ALL period tabs including range
+  ['iperiod-day','iperiod-month','iperiod-year','iperiod-range'].forEach(id=>{
     const el=document.getElementById(id);
     if(el) el.classList.remove('active');
   });
   btn.classList.add('active');
   // Show/hide pickers
-  const dayEl=document.getElementById('income-filter-day');
-  const monEl=document.getElementById('income-filter-month');
-  const yrEl=document.getElementById('income-filter-year');
-  if(dayEl) dayEl.style.display = p==='day' ? '' : 'none';
-  if(monEl) monEl.style.display = p==='month' ? '' : 'none';
-  if(yrEl)  yrEl.style.display  = p==='year'  ? '' : 'none';
+  const dayEl  = document.getElementById('income-filter-day');
+  const monEl  = document.getElementById('income-filter-month');
+  const yrEl   = document.getElementById('income-filter-year');
+  const rangeEl= document.getElementById('income-filter-range');
+  if(dayEl)   dayEl.style.display   = p==='day'   ? '' : 'none';
+  if(monEl)   monEl.style.display   = p==='month' ? '' : 'none';
+  if(yrEl)    yrEl.style.display    = p==='year'  ? '' : 'none';
+  if(rangeEl) rangeEl.style.display = p==='range' ? 'flex' : 'none';
   renderIncome();
 }
 function renderIncome(){
@@ -2671,7 +2690,10 @@ document.addEventListener('click', function(e){
   }
 });
 
+let _autoSyncStarted = false;
 function startAutoSync(){
+  if(_autoSyncStarted) return;
+  _autoSyncStarted = true;
   setInterval(syncAll,10000);
 }
 
@@ -2730,7 +2752,7 @@ function logout(){
   localStorage.removeItem('bl_session');
   currentUser=null; isManager=false;
   document.getElementById('appShell').classList.remove('visible');
-  document.getElementById('loginScreen').style.display='flex';
+  document.getElementById('loginScreen').classList.add('visible');
   currentPin=''; goBackToSelect();
 }
 
