@@ -1804,7 +1804,7 @@ function saveApt(){
     note: document.getElementById('apt-note').value,
   };
   if(!apt.patName){ showToast('กรุณาใส่ชื่อผู้ป่วย','error'); _aptSaving=false; return; }
-  const idx = appointments.findIndex(a=>a.id===apt.id);
+  const idx = appointments.findIndex(a=>String(a.id)===String(apt.id));
   if(idx>-1) appointments[idx]=apt; else appointments.push(apt);
   saveLocal();
   closeModal('modalApt');
@@ -1822,7 +1822,7 @@ function saveApt(){
 }
 function deleteApt(id){
   if(!confirm('ยืนยันลบนัดนี้?')) return;
-  appointments = appointments.filter(a=>a.id!==id);
+  appointments = appointments.filter(a=>String(a.id)!==String(id));
   saveLocal();
   const p=document.querySelector('.page.active')?.id?.replace('page-','');
   if(p==='home') renderHome();
@@ -1854,7 +1854,7 @@ function setStatus(s){
   const id = statusTarget;
   statusTarget = null;
   document.getElementById('statusDropdown').style.display='none';
-  const idx=appointments.findIndex(a=>a.id===id);
+  const idx=appointments.findIndex(a=>String(a.id)===String(id));
   if(idx>-1){
     appointments[idx].status=s;
     saveLocal();
@@ -2496,6 +2496,22 @@ async function syncAll(){
     if(Array.isArray(d.appointments)) appointments = d.appointments.filter(r=>sid(r)).map(normRow);
     if(Array.isArray(d.treatments))  treatments  = d.treatments.filter(r=>sid(r)).map(normRow);
     if(Array.isArray(d.labs))        labs        = d.labs.filter(r=>sid(r)).map(normRow);
+    // ---- Apply settings from Sheet (pin, share, specialty, gender) ----
+    if(Array.isArray(d.settings) && d.settings.length){
+      d.settings.forEach(s=>{
+        if(!s.id) return;
+        const doc = doctors.find(x=>String(x.id)===String(s.id));
+        const orig = DOCTORS_DATA.find(x=>String(x.id)===String(s.id));
+        [doc, orig].forEach(x=>{
+          if(!x) return;
+          if(s.pin && String(s.pin).length===4) x.pin = String(s.pin);
+          if(s.share!==undefined && s.share!=='') x.share = +s.share || x.share;
+          if(s.specialty) x.specialty = s.specialty;
+          if(s.gender) x.gender = s.gender;
+          if(s.name) x.name = s.name;
+        });
+      });
+    }
     // re-render current page
     const p=document.querySelector('.page.active')?.id?.replace('page-','');
     if(p==='home') renderHome();
@@ -2676,11 +2692,19 @@ function renderSchedulePage(){
           <td><span class="${statusClass(a.status)}" data-apt-id="${a.id}" onclick="openStatusDropdown(event,this.dataset.aptId)" style="cursor:${isManager?'pointer':'default'};">${a.status||'รอ'}</span></td>
           <td>
             <div style="display:flex;gap:6px;">
-              <button class="btn btn-ghost btn-sm" data-apt-id="${a.id}" onclick="openEditApt(this.dataset.aptId)">✏️</button>
-              <button class="btn btn-danger btn-sm" data-apt-id="${a.id}" onclick="deleteApt(this.dataset.aptId)">🗑️</button>
+              <button class="btn btn-ghost btn-sm sch-edit-btn" data-id="${a.id}">✏️</button>
+              <button class="btn btn-danger btn-sm sch-del-btn" data-id="${a.id}">🗑️</button>
             </div>
           </td>
         </tr>`).join('');
+
+      // Event delegation — ผูก click บน tbody แทน inline onclick
+      tbody.onclick = function(e){
+        const editBtn = e.target.closest('.sch-edit-btn');
+        const delBtn  = e.target.closest('.sch-del-btn');
+        if(editBtn){ openEditApt(editBtn.dataset.id); }
+        if(delBtn){  deleteApt(delBtn.dataset.id); }
+      };
     }
 
   } catch(err){
@@ -2715,8 +2739,9 @@ function showDayApts(dateStr){
 
 // Open edit appointment modal from schedule page
 function openEditApt(id){
-  const apt = appointments.find(a=>a.id===id);
-  if(apt) openAddApt(apt);
+  const apt = appointments.find(a=>String(a.id)===String(id));
+  if(apt){ openAddApt(apt); }
+  else { showToast('ไม่พบข้อมูลนัด','error'); }
 }
 
 function toggleProcDropdown(){
@@ -2970,11 +2995,11 @@ document.getElementById('pinPhase').style.display='none';
 //   if(e.parameter.action==='getAll'){
 //     const ss = SpreadsheetApp.getActiveSpreadsheet();
 //     const out = {};
-//     ['ตารางนัด','บันทึกการรักษา','แลป'].forEach(name=>{
+//     ['ตารางนัด','บันทึกการรักษา','แลป','settings'].forEach(name=>{
 //       const sh=ss.getSheetByName(name);
 //       if(sh){
 //         const [hdr,...rows]=sh.getDataRange().getValues();
-//         const key={ตารางนัด:'appointments','บันทึกการรักษา':'treatments','แลป':'labs'}[name];
+//         const key={ตารางนัด:'appointments','บันทึกการรักษา':'treatments','แลป':'labs','settings':'settings'}[name];
 //         out[key]=rows.map(r=>Object.fromEntries(hdr.map((h,i)=>[h,r[i]])));
 //       }
 //     });
