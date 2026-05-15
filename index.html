@@ -454,7 +454,7 @@ select.form-control { cursor: pointer; }
 .slot-select { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
 /* TIME SLOT GRID */
 #scheduleCalendar { overflow: visible; }
-#scheduleCalendar table td { min-height: 28px; height: 28px; }
+#scheduleCalendar table td { min-height: 60px; height: auto; vertical-align: top; }
 #scheduleCalendar table td:hover { background: rgba(107,45,94,0.06) !important; }
 #scheduleCalendar thead th { position: sticky; top: 0; z-index: 2; }
 
@@ -1151,7 +1151,7 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
       </div>
       <div class="form-group">
         <label>HN</label>
-        <input class="form-control" id="apt-hn" placeholder="xxxxx" oninput="autoFillPatient(this.value,'apt')">
+        <input class="form-control" id="apt-hn" placeholder="xx-xxxxx" oninput="fmtHN(this);autoFillPatient(this.value,'apt')" maxlength="8">
         <div id="apt-hn-hint" style="font-size:11px;margin-top:4px;min-height:16px;"></div>
       </div>
       <div class="form-group">
@@ -1160,7 +1160,7 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
       </div>
       <div class="form-group">
         <label>เบอร์โทรศัพท์</label>
-        <input class="form-control" id="apt-phone" placeholder="08xxxxxxxx" type="tel" inputmode="numeric" maxlength="10">
+        <input class="form-control" id="apt-phone" placeholder="0xx-xxx-xxxx" type="tel" inputmode="numeric" maxlength="12" oninput="fmtPhone(this)">
       </div>
 
       <div class="form-group form-control-full">
@@ -1215,7 +1215,7 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
       </div>
       <div class="form-group">
         <label>HN</label>
-        <input class="form-control" id="treat-hn" placeholder="xxxxx" oninput="autoFillPatient(this.value,'treat')">
+        <input class="form-control" id="treat-hn" placeholder="xx-xxxxx" oninput="fmtHN(this);autoFillPatient(this.value,'treat')" maxlength="8">
         <div id="treat-hn-hint" style="font-size:11px;margin-top:4px;min-height:16px;"></div>
       </div>
       <div class="form-group">
@@ -2655,8 +2655,8 @@ function renderSchedulePage(){
     const daysInMonth = new Date(y, m, 0).getDate();
     const MONTH_TH = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
     const DAY_NAMES = ['อา','จ','อ','พ','พฤ','ศ','ส'];
-    const DAY_BG    = ['#E74C3C','#F1C40F','#E91E8C','#27AE60','#E67E22','#3498DB','#8E44AD'];
-    const DAY_COLOR = ['#fff','#333','#fff','#fff','#fff','#fff','#fff'];
+    const DAY_BG    = ['#FFACAC','#FFE08A','#FFB3DE','#A8E6BC','#FFD0A0','#A8D8F0','#C9B8F0'];
+    const DAY_COLOR = ['#7B2020','#6B4A00','#7B2060','#1A6B40','#7B4000','#1A4A7B','#3D1A7B'];
     const STATUS_COLOR = {
       'นัดวันนี้':'var(--wine)','รอทำ':'var(--orange)',
       'คอนเฟิร์ม':'var(--blue)','confirm':'var(--wine)',
@@ -2694,14 +2694,15 @@ function renderSchedulePage(){
     });
     if(week.length>0){while(week.length<7)week.push(null);weeks.push(week);}
 
-    // apt map: date -> time -> [apts]
+    // apt map: date -> time(HH:MM) -> [apts]
     const aptMap = {};
     apts.forEach(a=>{
-      if(!a.date||!a.time) return;
+      if(!a.date) return;
+      const t = String(a.time||'').trim().slice(0,5); // normalize to HH:MM
+      if(!t) return;
       if(!aptMap[a.date]) aptMap[a.date]={};
-      const slotKey = a.time.slice(0,5);
-      if(!aptMap[a.date][slotKey]) aptMap[a.date][slotKey]=[];
-      aptMap[a.date][slotKey].push(a);
+      if(!aptMap[a.date][t]) aptMap[a.date][t]=[];
+      aptMap[a.date][t].push(a);
     });
 
     let html = `<div style="font-size:17px;font-weight:800;color:var(--wine-dark);text-align:center;margin-bottom:12px;font-family:'Prompt',sans-serif;">${MONTH_TH[m-1]} ${y+543}</div>`;
@@ -2720,8 +2721,9 @@ function renderSchedulePage(){
           return;
         }
         const isToday = day.ds===today;
-        const bg = isToday ? 'var(--wine)' : DAY_BG[day.dow];
-        const fg = isToday ? '#fff' : DAY_COLOR[day.dow];
+        const bg = DAY_BG[day.dow]; // ใช้สีประจำวันเสมอ ไม่เปลี่ยนเมื่อเป็นวันนี้
+        const fg = DAY_COLOR[day.dow];
+        const borderStyle = isToday ? 'border:3px solid #fff;box-shadow:0 0 0 3px #FFD700,0 2px 8px rgba(0,0,0,0.3);' : 'border:1px solid #e0e0e0;';
         // หมอที่มีนัดในวันนั้น
         const dayDocSummary = {};
         (apts.filter(a=>a.date===day.ds)).forEach(a=>{ if(a.docName) dayDocSummary[a.docName]=(dayDocSummary[a.docName]||0)+1; });
@@ -2729,8 +2731,9 @@ function renderSchedulePage(){
           `<span style="display:inline-block;background:rgba(255,255,255,0.85);border-radius:6px;padding:0 4px;font-size:9px;font-weight:800;color:${docColor(name)};margin:1px;">${name.replace('หมอ','')}·${cnt}</span>`
         ).join('');
         const noteVal = (getDayNote(day.ds)||'').replace(/"/g,'&quot;');
-        html += `<th style="background:${bg};border:1px solid #e0e0e0;padding:4px 2px;text-align:center;vertical-align:top;">
-          <div style="font-size:10px;font-weight:700;color:${fg};opacity:0.85;">${DAY_NAMES[day.dow]}</div>
+        html += `<th style="background:${bg};${borderStyle}padding:4px 2px;text-align:center;vertical-align:top;position:relative;">
+          ${isToday ? `<div style="position:absolute;top:2px;left:50%;transform:translateX(-50%);font-size:8px;background:#FFD700;color:#333;border-radius:8px;padding:0 5px;font-weight:800;white-space:nowrap;">วันนี้</div>` : ''}
+          <div style="font-size:10px;font-weight:700;color:${fg};opacity:0.85;margin-top:${isToday?'12px':'0'};">${DAY_NAMES[day.dow]}</div>
           <div style="font-size:14px;font-weight:900;color:${fg};">${day.d}</div>
           ${docTagsHtml ? `<div style="margin-top:2px;display:flex;flex-wrap:wrap;justify-content:center;gap:1px;">${docTagsHtml}</div>` : ''}
           <input type="text" placeholder="โน้ต..." maxlength="40"
@@ -2762,21 +2765,34 @@ function renderSchedulePage(){
             white-space:nowrap;background:${timeBg};">${slot}</td>`;
         wk.forEach(day=>{
           if(!day){ html += `<td style="border:1px solid #f0f0f0;background:#f9f9f9;"></td>`; return; }
-          const cellApts = (aptMap[day.ds]||{})[slot]||[];
+          // หา apt ที่ตรง slot นี้ หรืออยู่ในช่วง slot นี้ (เวลาที่ไม่ตรง :00/:30 จะ round ไป slot ใกล้ที่สุด)
+          const slotMins = parseInt(slot.split(':')[0])*60 + parseInt(slot.split(':')[1]);
+          const nextSlotMins = slotMins + 30;
+          const cellApts = apts.filter(a=>{
+            if(a.date !== day.ds || !a.time) return false;
+            const t = String(a.time).slice(0,5);
+            const [th,tm] = t.split(':').map(Number);
+            const aptMins = th*60+tm;
+            return aptMins >= slotMins && aptMins < nextSlotMins;
+          });
           const isToday = day.ds===today;
-          html += `<td style="border:1px solid #f0f0f0;padding:1px 2px;vertical-align:top;
-            background:${isToday?'rgba(107,45,94,0.03)':'#fff'};cursor:pointer;"
+          html += `<td style="border:1px solid ${isToday?'rgba(52,152,219,0.3)':'#f0f0f0'};padding:1px 2px;vertical-align:top;
+            background:${isToday?'rgba(52,152,219,0.06)':'#fff'};cursor:pointer;"
             onclick="openAddApt(null,'${day.ds}','${slot}')" title="เพิ่มนัด ${day.ds} ${slot}">`;
           cellApts.forEach(a=>{
             const sc = STATUS_COLOR[a.status]||'#999';
             const safeId = String(a.id).replace(/"/g,'');
-            const shortName = (a.patName||'').split(' ')[0].substring(0,6);
-            const noteText = a.note ? ` · ${a.note}` : '';
+            const shortName = (a.patName||'').split(' ')[0]; // ชื่อแรก ไม่ตัด
+            const noteText = a.note ? `· ${a.note}` : '';
             html += `<div data-apt-id="${safeId}" onclick="event.stopPropagation();openEditApt(this.dataset.aptId)"
-              style="font-size:9px;background:${sc}18;border-left:2px solid ${sc};border-radius:2px;
-              padding:1px 3px;margin-bottom:1px;cursor:pointer;white-space:nowrap;overflow:hidden;
-              text-overflow:ellipsis;font-weight:600;color:${sc};"
-              title="${a.patName||''} ${a.note||''} (${a.docName||''}) ${a.status||''}">${shortName}<span style="font-weight:400;opacity:0.8;">${noteText}</span></div>`;
+              style="font-size:10px;background:${sc}15;border-left:3px solid ${sc};border-radius:3px;
+              padding:3px 5px;margin-bottom:2px;cursor:pointer;line-height:1.4;"
+              title="${a.patName||''} HN:${a.hn||''} ${a.phone||''} (${a.docName||''}) ${a.status||''}">
+              <div style="font-weight:700;color:${sc};">${shortName} <span style="font-weight:400;opacity:0.75;font-size:9px;">${noteText}</span></div>
+              ${a.hn?`<div style="font-size:9px;color:#888;">HN: ${a.hn}</div>`:''}
+              ${a.phone?`<div style="font-size:9px;color:#888;">${a.phone}</div>`:''}
+              ${a.proc?`<div style="font-size:9px;color:${sc};opacity:0.85;">${a.proc}</div>`:''}
+            </div>`;
           });
           html += `</td>`;
         });
@@ -2913,6 +2929,21 @@ let _autoSyncStarted = false;
 //  AUTO-FILL PATIENT FROM HN
 // ============================================================
 // ============================================================
+// ============================================================
+//  INPUT FORMATTERS
+// ============================================================
+function fmtHN(input){
+  let v = input.value.replace(/[^0-9]/g,'');
+  if(v.length > 2) v = v.slice(0,2)+'-'+v.slice(2,7);
+  input.value = v;
+}
+function fmtPhone(input){
+  let v = input.value.replace(/[^0-9]/g,'');
+  if(v.length > 6)      v = v.slice(0,3)+'-'+v.slice(3,6)+'-'+v.slice(6,10);
+  else if(v.length > 3) v = v.slice(0,3)+'-'+v.slice(3,6);
+  input.value = v;
+}
+
 //  DAY NOTES (localStorage only)
 // ============================================================
 // day_notes array (loaded from Sheet via syncAll)
