@@ -1145,7 +1145,8 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
       </div>
       <div class="form-group">
         <label>HN</label>
-        <input class="form-control" id="apt-hn" placeholder="xxxxx">
+        <input class="form-control" id="apt-hn" placeholder="xxxxx" oninput="autoFillPatient(this.value,'apt')">
+        <div id="apt-hn-hint" style="font-size:11px;margin-top:4px;min-height:16px;"></div>
       </div>
       <div class="form-group">
         <label>ชื่อ-สกุล</label>
@@ -2806,6 +2807,46 @@ document.addEventListener('click', function(e){
 });
 
 let _autoSyncStarted = false;
+// ============================================================
+//  AUTO-FILL PATIENT FROM HN
+// ============================================================
+function autoFillPatient(hn, prefix){
+  const hint = document.getElementById(prefix+'-hn-hint');
+  if(!hn || String(hn).trim().length < 1){
+    if(hint) hint.innerHTML = '';
+    return;
+  }
+  const hnStr = String(hn).trim();
+
+  // ค้นจาก appointments ก่อน แล้วตาม treatments
+  const sources = [
+    ...appointments.filter(r=>String(r.hn).trim()===hnStr && r.patName),
+    ...treatments.filter(r=>String(r.hn).trim()===hnStr && r.patName),
+  ];
+
+  if(!sources.length){
+    if(hint) hint.innerHTML = `<span style="color:var(--text-light);font-style:italic;">ไม่พบประวัติ HN นี้</span>`;
+    return;
+  }
+
+  // ใช้ข้อมูลล่าสุด
+  sources.sort((a,b)=>String(b.id).localeCompare(String(a.id)));
+  const found = sources[0];
+
+  const nameEl  = document.getElementById(prefix+'-name');
+  const phoneEl = document.getElementById(prefix+'-phone');
+
+  // ใส่เฉพาะช่องที่ยังว่างอยู่ (ไม่ทับข้อมูลที่กรอกไปแล้ว)
+  if(nameEl  && !nameEl.value  && found.patName) nameEl.value  = found.patName;
+  if(phoneEl && !phoneEl.value && found.phone)   phoneEl.value = found.phone;
+
+  if(hint){
+    if(found.patName){
+      hint.innerHTML = `<span style="color:var(--green);font-weight:700;">✓ พบประวัติ: ${found.patName}${found.phone?' | '+found.phone:''}</span>`;
+    }
+  }
+}
+
 function startAutoSync(){
   if(_autoSyncStarted) return;
   _autoSyncStarted = true;
