@@ -52,7 +52,7 @@ html, body { height: 100%; font-family: 'Sarabun', sans-serif; background: var(-
 }
 
 .login-step {
-  width: 100%; max-width: 420px;
+  width: 100%; max-width: 560px;
   display: flex; flex-direction: column; align-items: center;
 }
 
@@ -78,19 +78,24 @@ html, body { height: 100%; font-family: 'Sarabun', sans-serif; background: var(-
   align-self: flex-start;
 }
 .login-doctor-grid {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+  display: flex; flex-direction: column; gap: 10px;
   width: 100%; margin-bottom: 16px;
 }
+.login-doc-row {
+  display: grid; gap: 10px; justify-items: center;
+}
+.login-doc-row.row4 { grid-template-columns: repeat(4, 1fr); }
+.login-doc-row.row3 { grid-template-columns: repeat(3, 1fr); max-width: 75%; margin: 0 auto; width: 100%; }
 .login-doc-btn {
   background: rgba(255,255,255,0.08);
   border: 1.5px solid rgba(255,255,255,0.2);
-  border-radius: 14px; padding: 16px 12px;
-  color: #fff; cursor: pointer;
-  display: flex; flex-direction: column; align-items: center; gap: 8px;
-  font-family: 'Sarabun', sans-serif; font-size: 15px; font-weight: 600;
+  border-radius: 14px; padding: 12px 8px;
+  color: #fff; cursor: pointer; width: 100%;
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  font-family: 'Sarabun', sans-serif; font-size: 13px; font-weight: 600;
   transition: all 0.18s; -webkit-tap-highlight-color: transparent;
 }
-.login-doc-btn span:first-child { font-size: 28px; line-height: 1; }
+.login-doc-btn span:first-child { font-size: 26px; line-height: 1; }
 .login-doc-btn:hover, .login-doc-btn:active {
   background: rgba(255,255,255,0.18);
   border-color: rgba(255,255,255,0.5);
@@ -678,13 +683,19 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
 
     <div class="login-select-label">เลือกทันตแพทย์</div>
     <div class="login-doctor-grid">
-      <button class="login-doc-btn" type="button" data-id="toy"><span>🦷</span><span>หมอทอย</span></button>
-      <button class="login-doc-btn" type="button" data-id="mind"><span>👩‍⚕️</span><span>หมอมายด์</span></button>
-      <button class="login-doc-btn" type="button" data-id="koi"><span>🌸</span><span>หมอก้อย</span></button>
-      <button class="login-doc-btn" type="button" data-id="pong"><span>👨‍⚕️</span><span>หมอป้อง</span></button>
-      <button class="login-doc-btn" type="button" data-id="aim"><span>💫</span><span>หมอเอม</span></button>
-      <button class="login-doc-btn" type="button" data-id="khao"><span>⭐</span><span>หมอข้าว</span></button>
-      <button class="login-doc-btn" type="button" data-id="part"><span>🔬</span><span>หมอพาร์ท</span></button>
+      <!-- แถว 1: 4 คน -->
+      <div class="login-doc-row row4">
+        <button class="login-doc-btn" type="button" data-id="toy"><span>🦷</span><span>หมอทอย</span></button>
+        <button class="login-doc-btn" type="button" data-id="mind"><span>👩‍⚕️</span><span>หมอมายด์</span></button>
+        <button class="login-doc-btn" type="button" data-id="koi"><span>🌸</span><span>หมอก้อย</span></button>
+        <button class="login-doc-btn" type="button" data-id="pong"><span>👨‍⚕️</span><span>หมอป้อง</span></button>
+      </div>
+      <!-- แถว 2: 3 คน กึ่งกลาง -->
+      <div class="login-doc-row row3">
+        <button class="login-doc-btn" type="button" data-id="aim"><span>💫</span><span>หมอเอม</span></button>
+        <button class="login-doc-btn" type="button" data-id="khao"><span>⭐</span><span>หมอข้าว</span></button>
+        <button class="login-doc-btn" type="button" data-id="part"><span>🔬</span><span>หมอพาร์ท</span></button>
+      </div>
     </div>
     <div class="login-divider"><span>หรือ</span></div>
     <button class="login-manager-btn" type="button" data-id="manager">
@@ -1308,7 +1319,7 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
 </div>
 
 <!-- STATUS CHANGE DROPDOWN -->
-<div id="statusDropdown" style="display:none;position:fixed;z-index:5000;background:#fff;border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow-lg);padding:6px;min-width:150px;">
+<div id="statusDropdown" onclick="event.stopPropagation()" style="display:none;position:fixed;z-index:5000;background:#fff;border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow-lg);padding:6px;min-width:150px;">
   <div style="font-size:11px;color:var(--text-light);padding:4px 8px 6px;border-bottom:1px solid var(--border);margin-bottom:4px;font-weight:700;">เปลี่ยนสถานะ</div>
   <div class="status-opt" onclick="setStatus('นัดวันนี้')"><span style="color:var(--wine)">📅</span> นัดวันนี้</div>
   <div class="status-opt" onclick="setStatus('รอทำ')"><span style="color:var(--orange)">⏳</span> รอทำ</div>
@@ -1332,17 +1343,39 @@ const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbziGhaq1nUYtOTG
 //  DOCTORS & AUTH
 // ============================================================
 const DOCTORS_DATA = [
-  { id:'toy',   name:'หมอทอย',  pin:'1111', emoji:'🦷', specialty:'ทันตกรรมทั่วไป',   gender:'female', share:50 },
-  { id:'mind',  name:'หมอมายด์', pin:'6465', emoji:'👩‍⚕️', specialty:'จัดฟัน',           gender:'female', share:50 },
-  { id:'koi',   name:'หมอก้อย',  pin:'9677', emoji:'🌸', specialty:'รักษารากฟัน',      gender:'female', share:50 },
-  { id:'pong',  name:'หมอป้อง',  pin:'3467', emoji:'👨‍⚕️', specialty:'ผ่าตัดช่องปาก',    gender:'male',   share:50 },
-  { id:'aim',   name:'หมอเอม',   pin:'7699', emoji:'💫', specialty:'ทันตกรรมเด็ก',     gender:'female', share:50 },
-  { id:'khao',  name:'หมอข้าว',  pin:'8986', emoji:'⭐', specialty:'ทันตกรรมทั่วไป',   gender:'female', share:50 },
-  { id:'part',  name:'หมอพาร์ท', pin:'8888', emoji:'🔬', specialty:'รากฟันเทียม',      gender:'male',   share:50 },
+  { id:'toy',   name:'หมอทอย',  pin:'1111', emoji:'🦷', specialty:'ทันตกรรมทั่วไป',   gender:'female', share:50, color:'#9B59B6' },
+  { id:'mind',  name:'หมอมายด์', pin:'6465', emoji:'👩‍⚕️', specialty:'จัดฟัน',           gender:'female', share:50, color:'#E91E8C' },
+  { id:'koi',   name:'หมอก้อย',  pin:'9677', emoji:'🌸', specialty:'รักษารากฟัน',      gender:'female', share:50, color:'#16A085' },
+  { id:'pong',  name:'หมอป้อง',  pin:'3467', emoji:'👨‍⚕️', specialty:'ผ่าตัดช่องปาก',    gender:'male',   share:50, color:'#2471A3' },
+  { id:'aim',   name:'หมอเอม',   pin:'7699', emoji:'💫', specialty:'ทันตกรรมเด็ก',     gender:'female', share:50, color:'#D35400' },
+  { id:'khao',  name:'หมอข้าว',  pin:'8986', emoji:'⭐', specialty:'ทันตกรรมทั่วไป',   gender:'female', share:50, color:'#27AE60' },
+  { id:'part',  name:'หมอพาร์ท', pin:'8888', emoji:'🔬', specialty:'รากฟันเทียม',      gender:'male',   share:50, color:'#C0392B' },
 ];
 const MANAGER = { id:'manager', name:'ผู้จัดการ', pin:'1234', emoji:'🔐', specialty:'จัดการระบบ', gender:'female', share:0 };
 
 const PROCEDURES = ['ขูดหินปูน','อุดฟัน','ถอนฟัน','ผ่าฟันคุด','ตรวจฟัน','X-Ray','TP','RPD','Valplast','จ่ายยา','ตัดไหม','เกลารากฟัน','รากฟันเทียม','จัดฟัน','ฟอกสีฟัน','ครอบฟัน','รักษารากฟัน','เคลือบหลุมร่องฟัน','อื่นๆ'];
+
+const PROC_COLORS = {
+  'ขูดหินปูน':    '#2980B9',
+  'อุดฟัน':       '#27AE60',
+  'ถอนฟัน':       '#E74C3C',
+  'ผ่าฟันคุด':    '#C0392B',
+  'ตรวจฟัน':      '#8E44AD',
+  'X-Ray':        '#16A085',
+  'TP':           '#D35400',
+  'RPD':          '#E67E22',
+  'Valplast':     '#F39C12',
+  'จ่ายยา':       '#1ABC9C',
+  'ตัดไหม':       '#7F8C8D',
+  'เกลารากฟัน':  '#2471A3',
+  'รากฟันเทียม': '#922B21',
+  'จัดฟัน':      '#6C3483',
+  'ฟอกสีฟัน':    '#F1C40F',
+  'ครอบฟัน':      '#BA4A00',
+  'รักษารากฟัน': '#117A65',
+  'เคลือบหลุมร่องฟัน': '#1F618D',
+  'อื่นๆ':        '#626567',
+};
 
 const TIME_SLOTS = [];
 for(let h=10;h<=18;h++) for(let m=0;m<60;m+=30){
@@ -1672,9 +1705,9 @@ function renderAptList(today){
       <div style="font-weight:700;color:var(--wine)">${a.time}</div>
       <div style="font-size:12px;color:var(--text-light)">${a.hn||'—'}</div>
       <div style="font-weight:600">${a.patName}</div>
-      <div style="font-size:12px;color:var(--text-mid)">${a.proc||'—'}</div>
+      <div style="font-size:12px;">${procBadge(a.proc)}</div>
       <div style="font-size:12px;color:var(--text-light);font-style:${a.note?'normal':'italic'}">${a.note||'—'}</div>
-      <div style="font-size:12px">${a.docName}</div>
+      <div style="font-size:12px;font-weight:700;color:${docColor(a.docName)}">${a.docName}</div>
       <div>
         <span class="${statusClass(a.status)}" onclick="openStatusDropdown(event,'${a.id}')" style="cursor:pointer">${a.status}</span>
       </div>
@@ -1693,8 +1726,8 @@ function renderTreatList(treats){
       <td>${t.time||'—'}</td>
       <td style="font-size:12px;color:var(--text-light)">${t.hn||'—'}</td>
       <td style="font-weight:600">${t.patName}</td>
-      <td><span style="background:var(--wine-pale);color:var(--wine);padding:2px 8px;border-radius:12px;font-size:11px;font-weight:700">${t.proc}</span></td>
-      <td style="font-size:13px">${t.docName}</td>
+      <td>${procBadge(t.proc)}</td>
+      <td style="font-size:13px;font-weight:700;color:${docColor(t.docName)}">${t.docName}</td>
       <td style="color:var(--green);font-weight:600">${t.cash?'฿'+fmt(+t.cash):''}</td>
       <td style="color:var(--blue);font-weight:600">${t.transfer?'฿'+fmt(+t.transfer):''}</td>
       <td style="color:var(--orange);font-weight:600">${t.sso?'฿'+fmt(+t.sso):''}</td>
@@ -1795,17 +1828,36 @@ function openStatusDropdown(e,id){
   statusTarget=id;
   const dd=document.getElementById('statusDropdown');
   dd.style.display='block';
-  dd.style.left=(e.clientX)+'px';
-  dd.style.top=(e.clientY+6)+'px';
+  // Position: clamp ไม่ให้เกินขอบจอ
+  const ddW=160, ddH=220;
+  let left=e.clientX, top=e.clientY+6;
+  if(left+ddW>window.innerWidth) left=window.innerWidth-ddW-8;
+  if(top+ddH>window.innerHeight) top=e.clientY-ddH-6;
+  dd.style.left=left+'px';
+  dd.style.top=top+'px';
 }
 function setStatus(s){
   if(!statusTarget) return;
-  const idx=appointments.findIndex(a=>a.id===statusTarget);
-  if(idx>-1){ appointments[idx].status=s; saveLocal(); renderHome(); showToast('เปลี่ยนสถานะเป็น '+s); syncToSheet('appointments',appointments[idx]); }
+  const id = statusTarget;
+  statusTarget = null;
   document.getElementById('statusDropdown').style.display='none';
-  statusTarget=null;
+  const idx=appointments.findIndex(a=>a.id===id);
+  if(idx>-1){
+    appointments[idx].status=s;
+    saveLocal();
+    showToast('เปลี่ยนสถานะเป็น '+s);
+    syncToSheet('appointments',appointments[idx]);
+    // Re-render whichever page is active
+    const p=document.querySelector('.page.active')?.id?.replace('page-','');
+    if(p==='home') renderHome();
+    else if(p==='schedule') renderSchedulePage();
+  }
 }
-document.addEventListener('click',()=>document.getElementById('statusDropdown').style.display='none');
+// ปิด dropdown เมื่อคลิกนอก — ต้องไม่ปิดตอนคลิกใน dropdown เอง
+document.addEventListener('click', function(e){
+  const dd=document.getElementById('statusDropdown');
+  if(dd && !dd.contains(e.target)) dd.style.display='none';
+});
 
 // ============================================================
 //  TREATMENTS
@@ -1920,8 +1972,8 @@ function renderTreatPage(){
       <td>${fmtDate(t.date)}</td>
       <td style="font-size:12px;color:var(--text-light)">${t.hn||'—'}</td>
       <td style="font-weight:600">${t.patName}</td>
-      <td>${t.proc}</td>
-      <td>${t.docName}</td>
+      <td>${procBadge(t.proc)}</td>
+      <td style="font-weight:700;color:${docColor(t.docName)}">${t.docName}</td>
       <td style="color:var(--green)">${t.cash&&+t.cash?'฿'+fmt(+t.cash):''}</td>
       <td style="color:var(--blue)">${t.transfer&&+t.transfer?'฿'+fmt(+t.transfer):''}</td>
       <td style="color:var(--orange)">${t.sso&&+t.sso?'฿'+fmt(+t.sso):''}</td>
@@ -2223,7 +2275,7 @@ function renderLabPage(){
         <td>${l.work}</td>
         <td><span class="lab-badge ${labBadgeClass(l.lab)}">${l.lab}</span></td>
         <td style="font-weight:700;color:var(--wine-dark)">฿${fmt(+l.price||0)}</td>
-        <td>${l.docName}</td>
+        <td style="font-weight:700;color:${docColor(l.docName)}">${l.docName}</td>
         <td><div style="display:flex;gap:6px;">
           <button class="btn btn-ghost btn-sm" onclick='openAddLab(${JSON.stringify(l)})'>✏️</button>
           <button class="btn btn-danger btn-sm" onclick="deleteLab('${l.id}')">🗑️</button>
@@ -2572,7 +2624,7 @@ function renderSchedulePage(){
           onmouseover="this.style.background='${sc}35'" onmouseout="this.style.background='${sc}20'"
           title="${a.time||''} ${a.patName||''} (${a.docName||''}) — ${a.status||''}">
           <span style="color:${sc};font-weight:700;">${a.time||''}</span> ${shortName}
-          <span style="opacity:0.7;font-size:9px;">${a.docName||''}</span>
+          <span style="opacity:0.85;font-size:9px;font-weight:700;color:${docColor(a.docName)}">${a.docName||''}</span>
         </div>`;
       });
       if(dayApts.length>3){
@@ -2604,8 +2656,8 @@ function renderSchedulePage(){
           <td style="font-weight:700;color:var(--wine);">${a.time||'—'}</td>
           <td style="font-size:12px;color:var(--text-light);">${a.hn||'—'}</td>
           <td style="font-weight:600;">${a.patName||'—'}</td>
-          <td style="font-size:12px;">${a.proc||'—'}</td>
-          <td style="font-size:12px;">${a.docName||'—'}</td>
+          <td style="font-size:12px;">${procBadge(a.proc)}</td>
+          <td style="font-size:12px;font-weight:700;color:${docColor(a.docName)}">${a.docName||'—'}</td>
           <td><span class="${statusClass(a.status)}" onclick="openStatusDropdown(event,'${a.id}')" style="cursor:pointer;">${a.status||'รอ'}</span></td>
           <td>
             <div style="display:flex;gap:6px;">
@@ -2701,6 +2753,21 @@ function startAutoSync(){
 //  HELPERS
 // ============================================================
 function totalPrice(t){ return (+t.cash||0)+(+t.transfer||0)+(+t.sso||0); }
+function docColor(name){
+  const doc = doctors.find(d=>d.name===name) || DOCTORS_DATA.find(d=>d.name===name);
+  return doc?.color || 'var(--text-mid)';
+}
+function procColor(proc){
+  if(!proc) return 'var(--text-mid)';
+  // รองรับหลายรายการ (comma-separated) — ใช้สีของรายการแรก
+  const first = proc.split(',')[0].trim();
+  return PROC_COLORS[first] || 'var(--text-mid)';
+}
+function procBadge(proc){
+  if(!proc) return '<span style="color:var(--text-light)">—</span>';
+  const parts = proc.split(',').map(p=>p.trim()).filter(Boolean);
+  return parts.map(p=>`<span style="display:inline-block;background:${PROC_COLORS[p]||'#626567'}22;color:${PROC_COLORS[p]||'#626567'};border:1px solid ${PROC_COLORS[p]||'#626567'}44;border-radius:6px;padding:1px 7px;font-size:11px;font-weight:700;margin:1px 2px;">${p}</span>`).join('');
+}
 function fmt(n){ return Math.round(n).toLocaleString('th-TH'); }
 function fmtDate(s){
   if(!s) return '—';
