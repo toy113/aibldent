@@ -823,7 +823,10 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
       <!-- 2) TREATMENT LIST -->
       <div class="card-box" style="margin-bottom:20px;">
         <div class="card-box-hdr">
-          <div class="card-box-title">🦷 รายการรักษาวันนี้ <span id="treatCountBadge" style="margin-left:8px;background:var(--wine-pale);color:var(--wine);padding:2px 10px;border-radius:20px;font-size:12px;font-weight:700;">0 ราย</span></div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div class="card-box-title">🦷 รายการรักษาวันนี้ <span id="treatCountBadge" style="margin-left:8px;background:var(--wine-pale);color:var(--wine);padding:2px 10px;border-radius:20px;font-size:12px;font-weight:700;">0 ราย</span></div>
+            <button id="btnAddTreatHome" class="btn btn-primary btn-sm" onclick="openAddTreat()" style="display:none;">+ เพิ่มรายการ</button>
+          </div>
           <div style="font-size:14px;font-weight:700;color:var(--gold);">รวม: <span id="treatTotalBadge">฿0</span></div>
         </div>
         <table>
@@ -1568,7 +1571,7 @@ function startApp(){
   });
 
   // Show add buttons for manager only, hide for doctors
-  ['btnAddAptHome','btnAddTreat','btnAddLab','btnAddAptSchedule'].forEach(id=>{
+  ['btnAddAptHome','btnAddTreat','btnAddLab','btnAddAptSchedule','btnAddTreatHome'].forEach(id=>{
     const el=document.getElementById(id);
     if(el) el.style.display = isManager ? '' : 'none';
   });
