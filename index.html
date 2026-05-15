@@ -1440,23 +1440,26 @@ function buildDoctorGrid(){
     });
   });
 }
-// ===== NEW LOGIN JS =====
+// ===== LOGIN EVENT DELEGATION =====
 (function setupLogin(){
   setTimeout(function(){
-    document.querySelectorAll('.login-doc-btn, .login-manager-btn').forEach(function(btn){
-      btn.addEventListener('click', function(e){
-        e.preventDefault(); e.stopPropagation();
-        doSelectDoctor(btn.dataset.id);
+    // ใช้ event delegation บน loginScreen แทน ผูกทีเดียวครอบทั้งหมด
+    var loginScreen = document.getElementById('loginScreen');
+    if(loginScreen){
+      loginScreen.addEventListener('click', function(e){
+        var btn = e.target.closest('.login-doc-btn, .login-manager-btn');
+        if(btn){
+          e.preventDefault(); e.stopPropagation();
+          doSelectDoctor(btn.dataset.id);
+          return;
+        }
+        var backBtn = e.target.closest('#loginBackBtn');
+        if(backBtn){ goBackToSelect(); return; }
+        var numBtn = e.target.closest('.lnb');
+        if(numBtn){ e.preventDefault(); doNum(numBtn.dataset.n); return; }
       });
-    });
-    var backBtn = document.getElementById('loginBackBtn');
-    if(backBtn) backBtn.addEventListener('click', function(){ goBackToSelect(); });
-    document.querySelectorAll('.lnb').forEach(function(btn){
-      btn.addEventListener('click', function(e){
-        e.preventDefault(); doNum(btn.dataset.n);
-      });
-    });
-  }, 100);
+    }
+  }, 50);
 })();
 
 function doSelectDoctor(id){
