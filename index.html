@@ -918,7 +918,7 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
           </div>
         </div>
         <table>
-          <thead><tr><th>วันที่</th><th>HN</th><th>ชื่อ-สกุล</th><th>รายการรักษา</th><th>หมอ</th><th>เงินสด</th><th>โอน</th><th>ปสค.</th><th>รวม</th><th>จัดการ</th></tr></thead>
+          <thead id="treatPageHead"><tr><th>วันที่</th><th>HN</th><th>ชื่อ-สกุล</th><th>รายการรักษา</th><th>หมอ</th><th>เงินสด</th><th>โอน</th><th>ปสค.</th><th>รวม</th><th id="treatPageColMgr">จัดการ</th></tr></thead>
           <tbody id="treatPageBody"></tbody>
         </table>
       </div>
@@ -1006,6 +1006,14 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
           <select class="form-control" id="scheduleDocFilter" onchange="renderSchedulePage()" style="height:36px;width:160px;">
             <option value="">— หมอทั้งหมด —</option>
           </select>
+          <div style="position:relative;">
+            <input type="text" class="form-control" id="scheduleSearch" placeholder="🔍 ค้นหา HN / ชื่อ..."
+              oninput="renderSchedulePage()"
+              style="height:36px;width:200px;padding-left:10px;">
+            <button onclick="document.getElementById('scheduleSearch').value='';renderSchedulePage();"
+              style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#aaa;font-size:14px;padding:0;line-height:1;"
+              title="ล้างการค้นหา">✕</button>
+          </div>
         </div>
         <button class="btn btn-primary" id="btnAddAptSchedule" onclick="openAddAptSchedule()">+ เพิ่มนัด</button>
       </div>
@@ -1189,9 +1197,12 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
         <input class="form-control" id="apt-note" placeholder="หมายเหตุ">
       </div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('modalApt')">ยกเลิก</button>
-      <button class="btn btn-primary" onclick="saveApt()">💾 บันทึก</button>
+    <div class="modal-footer" style="justify-content:space-between;">
+      <button class="btn btn-danger" id="btnDeleteAptModal" onclick="deleteAptFromModal()" style="display:none;">🗑️ ลบนัด</button>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-ghost" onclick="closeModal('modalApt')">ยกเลิก</button>
+        <button class="btn btn-primary" onclick="saveApt()">💾 บันทึก</button>
+      </div>
     </div>
   </div>
 </div>
@@ -1586,7 +1597,10 @@ function startApp(){
   buildSettingsPage();
   // Load all data from Sheet on startup
   // Show page immediately, sync in background
-  const lastPage = localStorage.getItem('bl_lastPage') || 'home';
+  const managerOnlyPages = ['settings','schedule'];
+  let lastPage = localStorage.getItem('bl_lastPage') || 'home';
+  // ถ้าหมอ restore ไปหน้า manager-only ให้ redirect ไปหน้าหลักแทน
+  if(!isManager && managerOnlyPages.includes(lastPage)) lastPage = 'home';
   showPage(lastPage);
   syncAll();
   startAutoSync();
@@ -1813,6 +1827,9 @@ function openAddApt(apt=null, prefillDate=null, prefillTime=null){
     document.getElementById('apt-doc').value=apt.docName;
   }
   document.getElementById('modalApt').classList.add('open');
+  // แสดงปุ่มลบเฉพาะตอนแก้ไข
+  const delBtn = document.getElementById('btnDeleteAptModal');
+  if(delBtn) delBtn.style.display = _editAptId ? '' : 'none';
 }
 let _aptSaving = false;
 function saveApt(){
@@ -1848,6 +1865,14 @@ function saveApt(){
   });
   _editAptId = null;
 }
+function deleteAptFromModal(){
+  if(!_editAptId) return;
+  if(!confirm('ยืนยันลบนัดนี้?')) return;
+  const id = _editAptId;
+  closeModal('modalApt');
+  deleteApt(id);
+}
+
 function deleteApt(id){
   if(!confirm('ยืนยันลบนัดนี้?')) return;
   appointments = appointments.filter(a=>String(a.id)!==String(id));
@@ -2031,14 +2056,16 @@ function renderTreatPage(){
       <td style="color:var(--blue)">${t.transfer&&+t.transfer?'฿'+fmt(+t.transfer):''}</td>
       <td style="color:var(--orange)">${t.sso&&+t.sso?'฿'+fmt(+t.sso):''}</td>
       <td style="font-weight:800;color:var(--wine-dark)">฿${fmt(totalPrice(t))}</td>
-      <td>
+      ${isManager?`<td>
         <div style="display:flex;gap:6px;">
           <button class="btn btn-ghost btn-sm" onclick='openAddTreat(${JSON.stringify(t)})'>✏️</button>
           <button class="btn btn-danger btn-sm" onclick="deleteTreat('${t.id}')">🗑️</button>
         </div>
-      </td>
+      </td>`:''}
     </tr>`).join('');
-}
+  // ซ่อน/แสดง header จัดการ
+  const colMgr = document.getElementById('treatPageColMgr');
+  if(colMgr) colMgr.style.display = isManager ? '' : 'none';
 
 // ============================================================
 //  INCOME / SUMMARY
@@ -2639,9 +2666,14 @@ function renderSchedulePage(){
       if(prev) df.value = prev;
     }
     const docFilter = df?.value || '';
+    const searchKw = (document.getElementById('scheduleSearch')?.value||'').trim().toLowerCase();
 
     let apts = appointments.filter(a=>a.date&&a.date.startsWith(month));
     if(docFilter) apts = apts.filter(a=>a.docName===docFilter);
+    if(searchKw) apts = apts.filter(a=>
+      String(a.hn||'').toLowerCase().includes(searchKw) ||
+      String(a.patName||'').toLowerCase().includes(searchKw)
+    );
 
     // Update summary stats
     document.getElementById('sch-total').textContent   = apts.length;
@@ -3079,7 +3111,14 @@ function clearCacheAndReload(){
 function logout(){
   if(!confirm('ออกจากระบบ?')) return;
   localStorage.removeItem('bl_session');
+  localStorage.removeItem('bl_lastPage'); // ล้างหน้าสุดท้ายเพื่อป้องกัน restore ไปหน้า manager-only
   currentUser=null; isManager=false;
+  // ซ่อน tab manager-only ก่อนกลับหน้า login
+  ['nav-settings','ttab-settings','nav-schedule','ttab-schedule','mnav-schedule',
+   'btnAddAptHome','btnAddTreat','btnAddLab','btnAddAptSchedule','btnAddTreatHome'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.style.display='none';
+  });
   document.getElementById('appShell').classList.remove('visible');
   document.getElementById('loginScreen').classList.add('visible');
   currentPin=''; goBackToSelect();
@@ -3158,9 +3197,11 @@ document.getElementById('pinPhase').style.display='none';
     }
     currentUser = user;
     startApp();
-    // Restore last active page
-    const lastPage = localStorage.getItem('bl_lastPage') || 'home';
-    showPage(lastPage);
+    // Restore last active page — filter manager-only pages for doctors
+    const _managerOnly = ['settings','schedule'];
+    let _lastPage = localStorage.getItem('bl_lastPage') || 'home';
+    if(!isManager && _managerOnly.includes(_lastPage)) _lastPage = 'home';
+    showPage(_lastPage);
   } catch(e){ console.warn('Session restore error:',e); }
 })();
 </script>
