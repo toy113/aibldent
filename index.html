@@ -452,6 +452,12 @@ select.form-control { cursor: pointer; }
 
 /* TIME SLOTS */
 .slot-select { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+/* TIME SLOT GRID */
+#scheduleCalendar { overflow: visible; }
+#scheduleCalendar table td { min-height: 28px; height: 28px; }
+#scheduleCalendar table td:hover { background: rgba(107,45,94,0.06) !important; }
+#scheduleCalendar thead th { position: sticky; top: 0; z-index: 2; }
+
 .time-slot {
   padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600;
   border: 1.5px solid var(--border); cursor: pointer; color: var(--text-mid); background: transparent; transition: all 0.14s;
@@ -852,7 +858,7 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
         <div class="stat-card rose">
           <div class="stat-icon">👨‍⚕️</div>
           <div class="stat-label">ส่วนแบ่งหมอ</div>
-          <div class="stat-value" id="statShare">0</div>
+          <div class="stat-value" id="statShare" style="color:#B8860B;">0</div>
           <div class="stat-sub">บาท</div>
         </div>
       </div>
@@ -2622,140 +2628,146 @@ function renderSchedulePage(){
     document.getElementById('sch-walkin').textContent  = apts.filter(a=>a.status==='walk-in').length;
     document.getElementById('sch-cancel').textContent  = apts.filter(a=>a.status==='ยกเลิก').length;
 
-    // ---- Build Calendar ----
+    // ---- Build Time Slot Grid ----
     const [y, m] = month.split('-').map(Number);
-    const firstDay   = new Date(y, m-1, 1).getDay(); // 0=Sun
-    const daysInMonth= new Date(y, m, 0).getDate();
-    const DAYS       = ['อา','จ','อ','พ','พฤ','ศ','ส'];
-    const MONTH_TH   = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
-
+    const daysInMonth = new Date(y, m, 0).getDate();
+    const MONTH_TH = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+    const DAY_NAMES = ['อา','จ','อ','พ','พฤ','ศ','ส'];
+    const DAY_BG    = ['#E74C3C','#F1C40F','#E91E8C','#27AE60','#E67E22','#3498DB','#8E44AD'];
+    const DAY_COLOR = ['#fff','#333','#fff','#fff','#fff','#fff','#fff'];
     const STATUS_COLOR = {
       'นัดวันนี้':'var(--wine)','รอทำ':'var(--orange)',
       'คอนเฟิร์ม':'var(--blue)','confirm':'var(--wine)',
       'เสร็จสิ้น':'var(--green)','เสร็จ':'var(--green)',
-      'ยกเลิก':'var(--red)','walk-in':'#3498DB',
-      'ไม่คอนเฟิร์ม':'#aaa'
+      'ยกเลิก':'var(--red)','walk-in':'#3498DB','ไม่คอนเฟิร์ม':'#aaa'
     };
-
     const today = todayStr();
 
-    let html = `<div style="font-size:17px;font-weight:800;color:var(--wine-dark);text-align:center;margin-bottom:14px;font-family:'Prompt',sans-serif;">
-      ${MONTH_TH[m-1]} ${y+543}
-    </div>`;
+    // Generate time slots 10:00 - 18:30 ทุก 30 นาที
+    const TIME_START = {h:10,m:0};
+    const TIME_END   = {h:18,m:30};
+    const stdSlots = new Set();
+    let th=TIME_START.h, tm=TIME_START.m;
+    while(th<TIME_END.h||(th===TIME_END.h&&tm<=TIME_END.m)){
+      stdSlots.add(`${String(th).padStart(2,'0')}:${String(tm).padStart(2,'0')}`);
+      tm+=30; if(tm>=60){tm-=60;th++;}
+    }
 
-    // Day headers — สีแต่ละวัน
-    const DAY_BG    = ['#E74C3C','#F1C40F','#E91E8C','#27AE60','#E67E22','#3498DB','#8E44AD'];
-    const DAY_COLOR = ['#fff',   '#333',   '#fff',   '#fff',   '#fff',   '#fff',   '#fff'];
-    html += `<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:3px;">`;
-    DAYS.forEach((d,i)=>{
-      html += `<div style="text-align:center;font-size:12px;font-weight:800;color:${DAY_COLOR[i]};padding:6px 0;background:${DAY_BG[i]};border-radius:6px;">${d}</div>`;
+    // รวม slot พิเศษจากนัดที่มีเวลานอก standard slot
+    const extraSlots = new Set();
+    apts.forEach(a=>{
+      if(!a.time) return;
+      const t = a.time.slice(0,5);
+      if(!stdSlots.has(t)) extraSlots.add(t);
     });
-    html += `</div>`;
 
-    // Calendar grid
-    html += `<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;">`;
+    // รวมและ sort ทุก slot
+    const allSlots = [...stdSlots, ...extraSlots].sort();
 
-    // Empty before first day
-    for(let i=0;i<firstDay;i++){
-      html += `<div style="min-height:90px;background:rgba(0,0,0,0.02);border-radius:6px;"></div>`;
-    }
-
+    // Build weeks array
+    const firstDow = new Date(y,m-1,1).getDay();
+    const days = []; // {date, d, dow}
     for(let d=1;d<=daysInMonth;d++){
-      const ds      = `${month}-${String(d).padStart(2,'0')}`;
-      const dayApts = apts.filter(a=>a.date===ds).sort((a,b)=>(a.time||'').localeCompare(b.time||''));
-      const isToday = ds===today;
-      const dow     = new Date(y,m-1,d).getDay();
-      const isSun   = dow===0; const isSat = dow===6;
-
-      // สรุปหมอ + จำนวนนัดของวันนั้น
-      const docSummary = {};
-      dayApts.forEach(a=>{ if(a.docName) docSummary[a.docName]=(docSummary[a.docName]||0)+1; });
-
-      // ชื่อหมอ + จำนวน inline (บรรทัดเดียวกับวันที่)
-      const docInlineHtml = Object.entries(docSummary).map(([name,cnt])=>
-        `<span style="font-size:11px;font-weight:800;color:${docColor(name)};">${name.replace('หมอ','')}·${cnt}</span>`
-      ).join(' ');
-
-      // Progress bar แยกแต่ละหมอ
-      const MAX_SLOTS = 16;
-      const perDocBars = Object.entries(docSummary).map(([name, cnt])=>{
-        const pct = Math.min(Math.round(cnt/MAX_SLOTS*100), 100);
-        const barColor = pct>=100?'var(--red)':pct>=75?'var(--orange)':pct>=40?'var(--gold)':'var(--green)';
-        const free = MAX_SLOTS - cnt;
-        const shortName = name.replace('หมอ','');
-        return `<div style="margin-bottom:3px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1px;">
-            <span style="font-size:9px;font-weight:700;color:${docColor(name)};">${shortName}</span>
-            <span style="font-size:9px;color:${barColor};font-weight:700;">${cnt}/${MAX_SLOTS}${free>0?` <span style="color:var(--green)">ว่าง${free}</span>`:' <span style="color:var(--red)">เต็ม</span>'}</span>
-          </div>
-          <div style="height:4px;background:rgba(0,0,0,0.08);border-radius:4px;overflow:hidden;">
-            <div style="height:100%;width:${pct}%;background:${barColor};border-radius:4px;transition:width 0.3s;"></div>
-          </div>
-        </div>`;
-      }).join('');
-
-      // โน้ตวัน — ดึงจาก localStorage ไม่ผ่าน innerHTML เพื่อป้องกันหาย
-      const dayNote = getDayNote(ds)||'';
-
-      html += `<div style="min-height:110px;border-radius:6px;border:1.5px solid ${isToday?'var(--wine)':'var(--border)'};
-        background:${isToday?'var(--wine-pale)':isSun?'rgba(231,76,90,0.03)':isSat?'rgba(52,152,219,0.03)':'#fff'};
-        padding:4px;overflow:hidden;position:relative;">
-        <!-- Date number + หมอ inline + add button -->
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;gap:4px;">
-          <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;flex:1;min-width:0;">
-            <div style="font-size:14px;font-weight:${isToday?'900':'700'};flex-shrink:0;color:${isToday?'#fff':isSun?'var(--red)':isSat?'var(--blue)':'var(--text-mid)'};
-              ${isToday?`background:var(--wine);border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;`:''}">
-              ${d}
-            </div>
-            <div style="display:flex;flex-wrap:wrap;gap:3px;">${docInlineHtml}</div>
-          </div>
-          <button onclick="openAddApt(null,'${ds}')" title="เพิ่มนัด ${ds}"
-            style="background:none;border:none;cursor:pointer;font-size:14px;padding:0;line-height:1;color:var(--wine-light);opacity:0.6;flex-shrink:0;"
-            onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'">＋</button>
-        </div>
-        <!-- Per-doctor progress bars -->
-        ${perDocBars}
-        <!-- Day note — ใช้ data-date แล้ว restore ค่าผ่าน JS หลัง render เพื่อป้องกันหาย -->
-        <input type="text" placeholder="โน้ต..." maxlength="40"
-          class="cal-note-input" data-date="${ds}"
-          onclick="event.stopPropagation()"
-          onchange="saveDayNote(this.dataset.date,this.value)"
-          style="width:100%;border:none;border-bottom:1px dashed rgba(107,45,94,0.2);
-          background:transparent;font-size:10px;color:var(--text-mid);padding:1px 2px;
-          outline:none;margin-bottom:3px;font-family:'Sarabun',sans-serif;">
-        `;
-
-      dayApts.slice(0,3).forEach(a=>{
-        const sc = STATUS_COLOR[a.status]||'#999';
-        const shortName = (a.patName||'').split(' ')[0];
-        const safeId = String(a.id).replace(/"/g,'');
-        html += `<div data-apt-id="${safeId}" onclick="openEditApt(this.dataset.aptId)"
-          style="font-size:10px;background:${sc}20;border-left:2.5px solid ${sc};
-          padding:2px 5px;border-radius:3px;margin-bottom:2px;cursor:pointer;
-          white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:background 0.12s;"
-          onmouseover="this.style.background='${sc}35'" onmouseout="this.style.background='${sc}20'"
-          title="${a.time||''} ${(a.patName||'').replace(/"/g,'')} (${a.docName||''}) — ${a.status||''}">
-          <span style="color:${sc};font-weight:700;">${a.time||''}</span> ${shortName}
-          <span style="opacity:0.85;font-size:9px;font-weight:700;color:${docColor(a.docName)}">${a.docName||''}</span>
-        </div>`;
-      });
-      if(dayApts.length>3){
-        html += `<div onclick="showDayApts('${ds}')" style="font-size:10px;color:var(--wine);font-weight:700;text-align:center;cursor:pointer;padding:2px 0;border-radius:3px;background:var(--wine-pale);">
-          +${dayApts.length-3} รายการ
-        </div>`;
-      }
-      html += `</div>`;
+      const ds = `${month}-${String(d).padStart(2,'0')}`;
+      const dow = new Date(y,m-1,d).getDay();
+      days.push({ds,d,dow});
     }
-    html += `</div>`;
+    // Group into weeks
+    const weeks = [];
+    let week = new Array(firstDow).fill(null);
+    days.forEach(day=>{
+      week.push(day);
+      if(week.length===7){weeks.push(week);week=[];}
+    });
+    if(week.length>0){while(week.length<7)week.push(null);weeks.push(week);}
+
+    // apt map: date -> time -> [apts]
+    const aptMap = {};
+    apts.forEach(a=>{
+      if(!a.date||!a.time) return;
+      if(!aptMap[a.date]) aptMap[a.date]={};
+      const slotKey = a.time.slice(0,5);
+      if(!aptMap[a.date][slotKey]) aptMap[a.date][slotKey]=[];
+      aptMap[a.date][slotKey].push(a);
+    });
+
+    let html = `<div style="font-size:17px;font-weight:800;color:var(--wine-dark);text-align:center;margin-bottom:12px;font-family:'Prompt',sans-serif;">${MONTH_TH[m-1]} ${y+543}</div>`;
+
+    // Render each week as a table
+    weeks.forEach((wk, wi)=>{
+      // Week header — วันที่
+      html += `<div style="overflow-x:auto;margin-bottom:8px;">
+      <table style="width:100%;border-collapse:collapse;table-layout:fixed;min-width:600px;">
+        <colgroup><col style="width:44px;">${wk.map(()=>'<col>').join('')}</colgroup>
+        <thead><tr>
+          <th style="background:#f5f5f5;border:1px solid #e0e0e0;font-size:10px;padding:4px;text-align:center;color:#999;">เวลา</th>`;
+      wk.forEach(day=>{
+        if(!day){
+          html += `<th style="background:#fafafa;border:1px solid #e0e0e0;"></th>`;
+          return;
+        }
+        const isToday = day.ds===today;
+        const bg = isToday ? 'var(--wine)' : DAY_BG[day.dow];
+        const fg = isToday ? '#fff' : DAY_COLOR[day.dow];
+        // หมอที่มีนัดในวันนั้น
+        const dayDocSummary = {};
+        (apts.filter(a=>a.date===day.ds)).forEach(a=>{ if(a.docName) dayDocSummary[a.docName]=(dayDocSummary[a.docName]||0)+1; });
+        const docTagsHtml = Object.entries(dayDocSummary).map(([name,cnt])=>
+          `<span style="display:inline-block;background:rgba(255,255,255,0.85);border-radius:6px;padding:0 4px;font-size:9px;font-weight:800;color:${docColor(name)};margin:1px;">${name.replace('หมอ','')}·${cnt}</span>`
+        ).join('');
+        html += `<th style="background:${bg};border:1px solid #e0e0e0;padding:4px 2px;text-align:center;">
+          <div style="font-size:10px;font-weight:700;color:${fg};opacity:0.85;">${DAY_NAMES[day.dow]}</div>
+          <div style="font-size:14px;font-weight:900;color:${fg};">${day.d}</div>
+          ${docTagsHtml ? `<div style="margin-top:2px;display:flex;flex-wrap:wrap;justify-content:center;gap:1px;">${docTagsHtml}</div>` : ''}
+          <button onclick="openAddApt(null,'${day.ds}')"
+            style="font-size:10px;background:rgba(255,255,255,0.25);border:none;border-radius:4px;
+            color:${fg};cursor:pointer;padding:1px 6px;margin-top:2px;">+ นัด</button>
+        </th>`;
+      });
+      html += `</tr></thead><tbody>`;
+
+      // Time slot rows
+      allSlots.forEach(slot=>{
+        const isStd  = stdSlots.has(slot);
+        const isHour = slot.endsWith(':00');
+        const isExtra = !isStd;
+        const rowBg  = isExtra ? 'rgba(255,193,7,0.06)' : isHour ? 'rgba(107,45,94,0.03)' : '#fff';
+        const timeBg = isExtra ? '#FFF8E1' : isHour ? 'var(--wine-pale)' : '#fafafa';
+        const timeColor = isExtra ? '#E65100' : isHour ? 'var(--wine-dark)' : '#aaa';
+        const timeFw = (isHour||isExtra) ? '700' : '400';
+        const timeLabel = isExtra ? `⚡${slot}` : slot;
+
+        html += `<tr style="background:${rowBg};">
+          <td style="border:1px solid #e8e8e8;font-size:10px;font-weight:${timeFw};
+            color:${timeColor};text-align:center;padding:2px;
+            white-space:nowrap;background:${timeBg};">${timeLabel}</td>`;
+        wk.forEach(day=>{
+          if(!day){ html += `<td style="border:1px solid #f0f0f0;background:#f9f9f9;"></td>`; return; }
+          const cellApts = (aptMap[day.ds]||{})[slot]||[];
+          const isToday = day.ds===today;
+          html += `<td style="border:1px solid #f0f0f0;padding:1px 2px;vertical-align:top;
+            background:${isToday?'rgba(107,45,94,0.03)':'#fff'};cursor:pointer;"
+            onclick="openAddApt(null,'${day.ds}')" title="เพิ่มนัด ${day.ds} ${slot}">`;
+          cellApts.forEach(a=>{
+            const sc = STATUS_COLOR[a.status]||'#999';
+            const safeId = String(a.id).replace(/"/g,'');
+            const shortName = (a.patName||'').split(' ')[0].substring(0,6);
+            html += `<div data-apt-id="${safeId}" onclick="event.stopPropagation();openEditApt(this.dataset.aptId)"
+              style="font-size:9px;background:${sc}18;border-left:2px solid ${sc};border-radius:2px;
+              padding:1px 3px;margin-bottom:1px;cursor:pointer;white-space:nowrap;overflow:hidden;
+              text-overflow:ellipsis;font-weight:600;color:${sc};"
+              title="${a.patName||''} (${a.docName||''}) ${a.status||''}">${shortName}</div>`;
+          });
+          html += `</td>`;
+        });
+        html += `</tr>`;
+      });
+      html += `</tbody></table></div>`;
+    });
 
     const calEl = document.getElementById('scheduleCalendar');
     if(calEl){
       calEl.innerHTML = html;
-      // Restore note values after render (ป้องกันหายเมื่อ syncAll re-render)
-      calEl.querySelectorAll('.cal-note-input').forEach(inp=>{
-        const note = getDayNote(inp.dataset.date);
-        if(note) inp.value = note;
-      });
     }
 
     // ---- Build list table ----
