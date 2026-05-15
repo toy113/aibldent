@@ -1707,16 +1707,15 @@ function renderHome(){
 
 function statusBgColor(s){
   const map = {
-    'นัดวันนี้':'rgba(107,45,94,0.07)',
-    'รอทำ':'rgba(230,126,34,0.08)',
-    'คอนเฟิร์ม':'rgba(52,152,219,0.08)',
-    'confirm':'rgba(107,45,94,0.07)',
-    'เสร็จสิ้น':'rgba(46,204,113,0.08)',
-    'เสร็จ':'rgba(46,204,113,0.08)',
-    'ยกเลิก':'rgba(231,76,60,0.07)',
-    'walk-in':'rgba(52,152,219,0.06)',
+    'นัดวันนี้'   :'rgba(107,45,94,0.08)',
+    'confirm'     :'rgba(107,45,94,0.08)',
+    'รอทำ'        :'rgba(230,126,34,0.10)',
+    'คอนเฟิร์ม'  :'rgba(52,152,219,0.10)',
+    'เสร็จสิ้น'  :'rgba(39,174,96,0.14)',
+    'เสร็จ'       :'rgba(39,174,96,0.14)',
+    'ยกเลิก'      :'rgba(231,76,60,0.13)',
+    'walk-in'     :'rgba(52,152,219,0.07)',
     'ไม่คอนเฟิร์ม':'rgba(0,0,0,0.03)',
-    'นัดวันนี้':'rgba(107,45,94,0.07)',
   };
   return map[s]||'transparent';
 }
@@ -2555,6 +2554,11 @@ async function syncAll(){
     if(Array.isArray(d.appointments)) appointments = d.appointments.filter(r=>sid(r)).map(normRow);
     if(Array.isArray(d.treatments))  treatments  = d.treatments.filter(r=>sid(r)).map(normRow);
     if(Array.isArray(d.labs))        labs        = d.labs.filter(r=>sid(r)).map(normRow);
+    // Load day_notes
+    if(Array.isArray(d.day_notes)){
+      dayNotes = {};
+      d.day_notes.forEach(r=>{ if(r.date && r.note) dayNotes[String(r.date).trim()] = r.note; });
+    }
     // ---- Apply settings from Sheet (pin, share, specialty, gender) ----
     if(Array.isArray(d.settings) && d.settings.length){
       d.settings.forEach(s=>{
@@ -2722,13 +2726,22 @@ function renderSchedulePage(){
         const docTagsHtml = Object.entries(dayDocSummary).map(([name,cnt])=>
           `<span style="display:inline-block;background:rgba(255,255,255,0.85);border-radius:6px;padding:0 4px;font-size:9px;font-weight:800;color:${docColor(name)};margin:1px;">${name.replace('หมอ','')}·${cnt}</span>`
         ).join('');
-        html += `<th style="background:${bg};border:1px solid #e0e0e0;padding:4px 2px;text-align:center;">
+        const noteVal = (getDayNote(day.ds)||'').replace(/"/g,'&quot;');
+        html += `<th style="background:${bg};border:1px solid #e0e0e0;padding:4px 2px;text-align:center;vertical-align:top;">
           <div style="font-size:10px;font-weight:700;color:${fg};opacity:0.85;">${DAY_NAMES[day.dow]}</div>
           <div style="font-size:14px;font-weight:900;color:${fg};">${day.d}</div>
           ${docTagsHtml ? `<div style="margin-top:2px;display:flex;flex-wrap:wrap;justify-content:center;gap:1px;">${docTagsHtml}</div>` : ''}
+          <input type="text" placeholder="โน้ต..." maxlength="40"
+            class="cal-note-input" data-date="${day.ds}"
+            onclick="event.stopPropagation()"
+            onchange="saveDayNote(this.dataset.date,this.value)"
+            style="width:90%;border:none;border-bottom:1px dashed rgba(255,255,255,0.5);
+            background:rgba(255,255,255,0.15);border-radius:4px;margin-top:3px;
+            font-size:9px;color:${fg};padding:2px 4px;outline:none;
+            font-family:'Sarabun',sans-serif;text-align:left;">
           <button onclick="openAddApt(null,'${day.ds}')"
             style="font-size:10px;background:rgba(255,255,255,0.25);border:none;border-radius:4px;
-            color:${fg};cursor:pointer;padding:1px 6px;margin-top:2px;">+ นัด</button>
+            color:${fg};cursor:pointer;padding:1px 6px;margin-top:3px;">+ นัด</button>
         </th>`;
       });
       html += `</tr></thead><tbody>`;
@@ -2773,6 +2786,11 @@ function renderSchedulePage(){
     const calEl = document.getElementById('scheduleCalendar');
     if(calEl){
       calEl.innerHTML = html;
+      // Restore note values from dayNotes object
+      calEl.querySelectorAll('.cal-note-input').forEach(inp=>{
+        const note = getDayNote(inp.dataset.date);
+        if(note) inp.value = note;
+      });
     }
 
     // ---- Build list table ----
@@ -2895,19 +2913,18 @@ let _autoSyncStarted = false;
 // ============================================================
 //  DAY NOTES (localStorage only)
 // ============================================================
+// day_notes array (loaded from Sheet via syncAll)
+let dayNotes = {}; // { 'YYYY-MM-DD': 'note text' }
+
 function getDayNote(date){
-  try {
-    const notes = JSON.parse(localStorage.getItem('bl_day_notes')||'{}');
-    return notes[date] || '';
-  } catch(e){ return ''; }
+  return dayNotes[date] || '';
 }
 function saveDayNote(date, val){
-  try {
-    const notes = JSON.parse(localStorage.getItem('bl_day_notes')||'{}');
-    if(val) notes[date] = val;
-    else delete notes[date];
-    localStorage.setItem('bl_day_notes', JSON.stringify(notes));
-  } catch(e){}
+  if(!date) return;
+  if(val) dayNotes[date] = val;
+  else delete dayNotes[date];
+  // sync ไป Sheet
+  syncToSheet('day_notes', { id: date, date: date, note: val||'' });
 }
 
 function autoFillPatient(hn, prefix){
