@@ -1705,6 +1705,22 @@ function renderHome(){
   renderTreatList(treats);
 }
 
+function statusBgColor(s){
+  const map = {
+    'นัดวันนี้':'rgba(107,45,94,0.07)',
+    'รอทำ':'rgba(230,126,34,0.08)',
+    'คอนเฟิร์ม':'rgba(52,152,219,0.08)',
+    'confirm':'rgba(107,45,94,0.07)',
+    'เสร็จสิ้น':'rgba(46,204,113,0.08)',
+    'เสร็จ':'rgba(46,204,113,0.08)',
+    'ยกเลิก':'rgba(231,76,60,0.07)',
+    'walk-in':'rgba(52,152,219,0.06)',
+    'ไม่คอนเฟิร์ม':'rgba(0,0,0,0.03)',
+    'นัดวันนี้':'rgba(107,45,94,0.07)',
+  };
+  return map[s]||'transparent';
+}
+
 function renderAptList(today){
   let apts = appointments.filter(a=>a.date===today);
   if(!isManager) apts = apts.filter(a=>a.docName===currentUser.name);
@@ -1723,7 +1739,7 @@ function renderAptList(today){
 
   if(!apts.length){ el.innerHTML=`<div style="padding:20px;text-align:center;color:var(--text-light);font-size:14px;">ไม่มีนัดวันนี้</div>`; return; }
   el.innerHTML = apts.map(a=>`
-    <div class="${rowClass}">
+    <div class="${rowClass}" style="background:${statusBgColor(a.status)};">
       <div style="font-weight:700;color:var(--wine)">${a.time}</div>
       <div style="font-size:12px;color:var(--text-light)">${a.hn||'—'}</div>
       <div style="font-weight:600">${a.patName}</div>
@@ -2646,23 +2662,14 @@ function renderSchedulePage(){
     // Generate time slots 10:00 - 18:30 ทุก 30 นาที
     const TIME_START = {h:10,m:0};
     const TIME_END   = {h:18,m:30};
+    const allSlots = [];
     const stdSlots = new Set();
     let th=TIME_START.h, tm=TIME_START.m;
     while(th<TIME_END.h||(th===TIME_END.h&&tm<=TIME_END.m)){
-      stdSlots.add(`${String(th).padStart(2,'0')}:${String(tm).padStart(2,'0')}`);
+      const s = `${String(th).padStart(2,'0')}:${String(tm).padStart(2,'0')}`;
+      allSlots.push(s); stdSlots.add(s);
       tm+=30; if(tm>=60){tm-=60;th++;}
     }
-
-    // รวม slot พิเศษจากนัดที่มีเวลานอก standard slot
-    const extraSlots = new Set();
-    apts.forEach(a=>{
-      if(!a.time) return;
-      const t = a.time.slice(0,5);
-      if(!stdSlots.has(t)) extraSlots.add(t);
-    });
-
-    // รวมและ sort ทุก slot
-    const allSlots = [...stdSlots, ...extraSlots].sort();
 
     // Build weeks array
     const firstDow = new Date(y,m-1,1).getDay();
@@ -2728,19 +2735,16 @@ function renderSchedulePage(){
 
       // Time slot rows
       allSlots.forEach(slot=>{
-        const isStd  = stdSlots.has(slot);
         const isHour = slot.endsWith(':00');
-        const isExtra = !isStd;
-        const rowBg  = isExtra ? 'rgba(255,193,7,0.06)' : isHour ? 'rgba(107,45,94,0.03)' : '#fff';
-        const timeBg = isExtra ? '#FFF8E1' : isHour ? 'var(--wine-pale)' : '#fafafa';
-        const timeColor = isExtra ? '#E65100' : isHour ? 'var(--wine-dark)' : '#aaa';
-        const timeFw = (isHour||isExtra) ? '700' : '400';
-        const timeLabel = isExtra ? `⚡${slot}` : slot;
+        const rowBg  = isHour ? 'rgba(107,45,94,0.03)' : '#fff';
+        const timeBg = isHour ? 'var(--wine-pale)' : '#fafafa';
+        const timeColor = isHour ? 'var(--wine-dark)' : '#aaa';
+        const timeFw = isHour ? '700' : '400';
 
         html += `<tr style="background:${rowBg};">
           <td style="border:1px solid #e8e8e8;font-size:10px;font-weight:${timeFw};
             color:${timeColor};text-align:center;padding:2px;
-            white-space:nowrap;background:${timeBg};">${timeLabel}</td>`;
+            white-space:nowrap;background:${timeBg};">${slot}</td>`;
         wk.forEach(day=>{
           if(!day){ html += `<td style="border:1px solid #f0f0f0;background:#f9f9f9;"></td>`; return; }
           const cellApts = (aptMap[day.ds]||{})[slot]||[];
@@ -2752,11 +2756,12 @@ function renderSchedulePage(){
             const sc = STATUS_COLOR[a.status]||'#999';
             const safeId = String(a.id).replace(/"/g,'');
             const shortName = (a.patName||'').split(' ')[0].substring(0,6);
+            const noteText = a.note ? ` · ${a.note}` : '';
             html += `<div data-apt-id="${safeId}" onclick="event.stopPropagation();openEditApt(this.dataset.aptId)"
               style="font-size:9px;background:${sc}18;border-left:2px solid ${sc};border-radius:2px;
               padding:1px 3px;margin-bottom:1px;cursor:pointer;white-space:nowrap;overflow:hidden;
               text-overflow:ellipsis;font-weight:600;color:${sc};"
-              title="${a.patName||''} (${a.docName||''}) ${a.status||''}">${shortName}</div>`;
+              title="${a.patName||''} ${a.note||''} (${a.docName||''}) ${a.status||''}">${shortName}<span style="font-weight:400;opacity:0.8;">${noteText}</span></div>`;
           });
           html += `</td>`;
         });
