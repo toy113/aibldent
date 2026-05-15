@@ -460,7 +460,9 @@ select.form-control { cursor: pointer; }
 .time-slot:hover { border-color: var(--wine-light); }
 
 /* APPOINTMENT MINI */
-.apt-row { display: grid; grid-template-columns: 80px 70px 160px 150px 180px 110px 100px; gap: 8px; align-items: center; padding: 10px 14px; border-bottom: 1px solid rgba(107,45,94,0.06); font-size: 13px; transition: background 0.14s; }
+.apt-row { display: grid; gap: 8px; align-items: center; padding: 10px 14px; border-bottom: 1px solid rgba(107,45,94,0.06); font-size: 13px; transition: background 0.14s; }
+.apt-row.no-phone { grid-template-columns: 80px 70px 160px 150px 180px 110px 100px; }
+.apt-row.with-phone { grid-template-columns: 80px 70px 150px 110px 140px 170px 110px 100px; }
 .apt-row:hover { background: rgba(107,45,94,0.02); }
 .apt-row:last-child { border-bottom: none; }
 .apt-hdr { font-size: 11px; font-weight: 700; color: var(--wine-dark); text-transform: uppercase; letter-spacing: 0.4px; background: var(--wine-pale); border-bottom: 1px solid var(--border); }
@@ -555,10 +557,10 @@ select.form-control { cursor: pointer; }
   .income-item-value { font-size: 16px !important; }
 
   /* Apt table */
-  .apt-row { grid-template-columns: 60px 60px 1fr 90px !important; gap: 6px; font-size:12px; }
-  .apt-row > div:nth-child(4) { display: none; } /* hide รายการ */
-  .apt-row > div:nth-child(5) { display: none; } /* hide หมายเหตุ */
-  .apt-row > div:nth-child(6) { display: none; } /* hide หมอ on small */
+  .apt-row.no-phone, .apt-row.with-phone { grid-template-columns: 60px 60px 1fr 90px !important; gap: 6px; font-size:12px; }
+  .apt-row > div:nth-child(4) { display: none; }
+  .apt-row > div:nth-child(5) { display: none; }
+  .apt-row > div:nth-child(6) { display: none; }
   .apt-hdr > div:nth-child(4), .apt-hdr > div:nth-child(5), .apt-hdr > div:nth-child(6) { display:none; }
 
   /* Tables - make scrollable */
@@ -814,9 +816,7 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
           <div class="card-box-title">📅 ตารางนัดวันนี้</div>
           <button class="btn btn-primary btn-sm" id="btnAddAptHome" onclick="openAddApt()">+ เพิ่มนัด</button>
         </div>
-        <div class="apt-row apt-hdr">
-          <div>เวลา</div><div>HN</div><div>ชื่อ-สกุล</div><div>รายการ</div><div>หมายเหตุ</div><div>หมอ</div><div>สถานะ</div>
-        </div>
+        <div id="aptListHdr" class="apt-row apt-hdr"></div>
         <div id="aptList"></div>
       </div>
 
@@ -1070,7 +1070,7 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
             <thead>
               <tr>
                 <th>วันที่</th><th>เวลา</th><th>HN</th><th>ชื่อ-สกุล</th>
-                <th>รายการ</th><th>หมอ</th><th>สถานะ</th><th>จัดการ</th>
+                <th>เบอร์โทร</th><th>รายการ</th><th>หมอ</th><th>สถานะ</th><th>จัดการ</th>
               </tr>
             </thead>
             <tbody id="schListBody"></tbody>
@@ -1699,17 +1699,29 @@ function renderAptList(today){
   if(!isManager) apts = apts.filter(a=>a.docName===currentUser.name);
   apts.sort((a,b)=>a.time.localeCompare(b.time));
   const el = document.getElementById('aptList');
+  const hdr = document.getElementById('aptListHdr');
+  const rowClass = isManager ? 'apt-row with-phone' : 'apt-row no-phone';
+
+  // Set header
+  if(hdr){
+    hdr.className = rowClass + ' apt-hdr';
+    hdr.innerHTML = isManager
+      ? '<div>เวลา</div><div>HN</div><div>ชื่อ-สกุล</div><div>เบอร์โทร</div><div>รายการ</div><div>หมายเหตุ</div><div>หมอ</div><div>สถานะ</div>'
+      : '<div>เวลา</div><div>HN</div><div>ชื่อ-สกุล</div><div>รายการ</div><div>หมายเหตุ</div><div>หมอ</div><div>สถานะ</div>';
+  }
+
   if(!apts.length){ el.innerHTML=`<div style="padding:20px;text-align:center;color:var(--text-light);font-size:14px;">ไม่มีนัดวันนี้</div>`; return; }
   el.innerHTML = apts.map(a=>`
-    <div class="apt-row">
+    <div class="${rowClass}">
       <div style="font-weight:700;color:var(--wine)">${a.time}</div>
       <div style="font-size:12px;color:var(--text-light)">${a.hn||'—'}</div>
       <div style="font-weight:600">${a.patName}</div>
+      ${isManager ? `<div style="font-size:12px;color:var(--text-mid)">${a.phone||'—'}</div>` : ''}
       <div style="font-size:12px;">${procBadge(a.proc)}</div>
       <div style="font-size:12px;color:var(--text-light);font-style:${a.note?'normal':'italic'}">${a.note||'—'}</div>
       <div style="font-size:12px;font-weight:700;color:${docColor(a.docName)}">${a.docName}</div>
       <div>
-        <span class="${statusClass(a.status)}" onclick="openStatusDropdown(event,'${a.id}')" style="cursor:pointer">${a.status}</span>
+        <span class="${statusClass(a.status)}" data-apt-id="${a.id}" onclick="openStatusDropdown(event,this.dataset.aptId)" style="cursor:${isManager?'pointer':'default'}">${a.status}</span>
       </div>
     </div>`).join('');
 }
@@ -1824,6 +1836,7 @@ function deleteApt(id){
 // ============================================================
 let statusTarget = null;
 function openStatusDropdown(e,id){
+  if(!isManager) return; // หมอกดไม่ได้
   e.stopPropagation();
   statusTarget=id;
   const dd=document.getElementById('statusDropdown');
@@ -2617,12 +2630,13 @@ function renderSchedulePage(){
       dayApts.slice(0,3).forEach(a=>{
         const sc = STATUS_COLOR[a.status]||'#999';
         const shortName = (a.patName||'').split(' ')[0];
-        html += `<div onclick="openEditApt('${a.id}')"
+        const safeId = String(a.id).replace(/"/g,'');
+        html += `<div data-apt-id="${safeId}" onclick="openEditApt(this.dataset.aptId)"
           style="font-size:10px;background:${sc}20;border-left:2.5px solid ${sc};
           padding:2px 5px;border-radius:3px;margin-bottom:2px;cursor:pointer;
           white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:background 0.12s;"
           onmouseover="this.style.background='${sc}35'" onmouseout="this.style.background='${sc}20'"
-          title="${a.time||''} ${a.patName||''} (${a.docName||''}) — ${a.status||''}">
+          title="${a.time||''} ${(a.patName||'').replace(/"/g,'')} (${a.docName||''}) — ${a.status||''}">
           <span style="color:${sc};font-weight:700;">${a.time||''}</span> ${shortName}
           <span style="opacity:0.85;font-size:9px;font-weight:700;color:${docColor(a.docName)}">${a.docName||''}</span>
         </div>`;
@@ -2648,7 +2662,7 @@ function renderSchedulePage(){
 
     const tbody = document.getElementById('schListBody');
     if(!sortedApts.length){
-      tbody.innerHTML=`<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--text-light);">ไม่มีนัดในเดือนนี้</td></tr>`;
+      tbody.innerHTML=`<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--text-light);">ไม่มีนัดในเดือนนี้</td></tr>`;
     } else {
       tbody.innerHTML = sortedApts.map(a=>`
         <tr>
@@ -2656,13 +2670,14 @@ function renderSchedulePage(){
           <td style="font-weight:700;color:var(--wine);">${a.time||'—'}</td>
           <td style="font-size:12px;color:var(--text-light);">${a.hn||'—'}</td>
           <td style="font-weight:600;">${a.patName||'—'}</td>
+          <td style="font-size:12px;color:var(--text-mid);">${a.phone||'—'}</td>
           <td style="font-size:12px;">${procBadge(a.proc)}</td>
           <td style="font-size:12px;font-weight:700;color:${docColor(a.docName)}">${a.docName||'—'}</td>
-          <td><span class="${statusClass(a.status)}" onclick="openStatusDropdown(event,'${a.id}')" style="cursor:pointer;">${a.status||'รอ'}</span></td>
+          <td><span class="${statusClass(a.status)}" data-apt-id="${a.id}" onclick="openStatusDropdown(event,this.dataset.aptId)" style="cursor:${isManager?'pointer':'default'};">${a.status||'รอ'}</span></td>
           <td>
             <div style="display:flex;gap:6px;">
-              <button class="btn btn-ghost btn-sm" onclick="openEditApt('${a.id}')">✏️</button>
-              <button class="btn btn-danger btn-sm" onclick="deleteApt('${a.id}')">🗑️</button>
+              <button class="btn btn-ghost btn-sm" data-apt-id="${a.id}" onclick="openEditApt(this.dataset.aptId)">✏️</button>
+              <button class="btn btn-danger btn-sm" data-apt-id="${a.id}" onclick="deleteApt(this.dataset.aptId)">🗑️</button>
             </div>
           </td>
         </tr>`).join('');
