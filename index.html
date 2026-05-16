@@ -1824,6 +1824,17 @@ function saveApt(){
   const aptTimeEl = document.getElementById('apt-time');
   // normalize เวลา — ถ้าพิมพ์ยังไม่ครบให้ format ก่อน
   if(aptTimeEl) fmtTimeBlur(aptTimeEl);
+  // normalize อีกครั้งแบบ standalone เผื่อ element ไม่ได้ blur
+  let aptTimeVal = aptTimeEl?.value || '10:00';
+  // รองรับ dot separator เช่น "16.22"
+  aptTimeVal = aptTimeVal.replace('.', ':');
+  const aptDigits = aptTimeVal.replace(/[^0-9]/g,'');
+  if(aptDigits.length >= 3){
+    const h = aptDigits.slice(0,2), m = aptDigits.slice(2,4).padEnd(2,'0');
+    if(parseInt(h)<24 && parseInt(m)<60) aptTimeVal = h+':'+m;
+    else aptTimeVal = '10:00';
+  }
+  if(aptTimeEl) aptTimeEl.value = aptTimeVal;
   const apt = {
     id: _editAptId || Date.now().toString(),
     date: document.getElementById('apt-date').value||todayStr(),
@@ -1841,18 +1852,11 @@ function saveApt(){
   if(idx>-1) appointments[idx]=apt; else appointments.push(apt);
   saveLocal();
 
-  // ถ้าเวลานัดไม่ตรง slot ไหน → เพิ่ม slot ใหม่อัตโนมัติ
+  // ถ้าไม่มี slot ที่ตรงเวลาพอดี → เพิ่ม slot ใหม่อัตโนมัติ
   if(apt.time && apt.date){
-    const [ah,am] = apt.time.split(':').map(Number);
-    const aptMins = ah*60+am;
     const slots = getSchSlots(apt.date);
-    const inAnySlot = slots.some(s=>{
-      const [sh,sm] = s.split(':').map(Number);
-      const slotMins = sh*60+sm;
-      return aptMins >= slotMins && aptMins < slotMins+30;
-    });
-    if(!inAnySlot){
-      // เพิ่ม slot ที่เวลานัดพอดี แล้ว sort
+    const exactMatch = slots.includes(apt.time);
+    if(!exactMatch){
       slots.push(apt.time);
       slots.sort();
       saveSchSlots(apt.date, slots);
@@ -2652,7 +2656,7 @@ async function manualSync(){
 // ============================================================
 const SCH_SLOTS_KEY = 'bl_sch_slots'; // { 'YYYY-MM-DD': ['10:00','10:30',...] }
 const SCH_BLOCKED_KEY = 'bl_sch_blocked'; // { 'YYYY-MM-DD_HH:MM': true }
-const DEFAULT_SLOTS = ['10:00','10:30','11:00','11:30','12:00','12:30','13:00','13:30','14:00','14:30','15:00','15:30','16:00','16:30','17:00','17:30','18:00','18:30'];
+const DEFAULT_SLOTS = ['10:00','10:30','11:00','11:30','12:00','12:30','13:00','13:30','14:00','14:30','15:00','15:30','16:00','16:30','17:00','17:30','18:00'];
 
 function schGoToday(){
   document.getElementById('schDate').value = todayStr();
