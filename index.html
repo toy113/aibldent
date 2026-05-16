@@ -632,11 +632,41 @@ select.form-control { cursor: pointer; }
 input[type="time"] {
   -webkit-appearance: none;
   appearance: none;
+  font-family: 'Prompt', 'Sarabun', sans-serif;
+  letter-spacing: 0.5px;
 }
-input[type="time"]::-webkit-calendar-picker-indicator {
-  cursor: pointer;
+input[type="time"]::-webkit-calendar-picker-indicator { cursor: pointer; }
+
+/* ===== Custom 24h Time Picker ===== */
+.tp-wrap { position:relative; display:inline-block; }
+.tp-display {
+  font-size:15px;font-weight:700;color:var(--wine-dark);
+  background:#f8f8f8;border:1.5px solid var(--border);border-radius:8px;
+  padding:6px 12px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;
+  min-width:86px;user-select:none;
 }
-/* Override AM/PM via locale hint */
+.tp-display:hover { border-color:var(--wine);background:var(--wine-pale); }
+.tp-dropdown {
+  position:absolute;top:calc(100% + 4px);left:0;z-index:9999;
+  background:#fff;border:1px solid var(--border);border-radius:12px;
+  box-shadow:0 8px 24px rgba(0,0,0,0.18);padding:10px;
+  display:none;flex-direction:row;gap:2px;align-items:flex-start;
+}
+.tp-dropdown.open { display:flex; }
+.tp-col {
+  display:flex;flex-direction:column;align-items:center;
+  max-height:220px;overflow-y:auto;scroll-snap-type:y mandatory;
+  scrollbar-width:thin;
+}
+.tp-col::-webkit-scrollbar { width:3px; }
+.tp-col::-webkit-scrollbar-thumb { background:#ddd;border-radius:2px; }
+.tp-item {
+  padding:6px 14px;border-radius:6px;cursor:pointer;font-size:15px;font-weight:600;
+  color:#555;scroll-snap-align:start;min-width:44px;text-align:center;white-space:nowrap;
+}
+.tp-item:hover { background:var(--wine-pale);color:var(--wine); }
+.tp-item.sel { background:var(--wine);color:#fff;font-weight:800; }
+.tp-sep { font-size:20px;font-weight:800;color:var(--wine-dark);padding:6px 2px; }
 
 /* SCROLLBAR */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -1000,114 +1030,43 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
 
     <!-- ===== SCHEDULE PAGE (Manager only) ===== -->
     <div class="page" id="page-schedule">
-      <!-- Header controls -->
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px;">
-        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-          <input type="month" class="form-control" id="scheduleMonth" onchange="renderSchedulePage()" style="height:36px;width:180px;">
-          <select class="form-control" id="scheduleDocFilter" onchange="renderSchedulePage()" style="height:36px;width:160px;">
-            <option value="">— หมอทั้งหมด —</option>
-          </select>
-          <div style="position:relative;">
-            <input type="text" class="form-control" id="scheduleSearch" placeholder="🔍 ค้นหา HN / ชื่อ..."
-              oninput="renderSchedulePage()"
-              style="height:36px;width:200px;padding-left:10px;">
-            <button onclick="document.getElementById('scheduleSearch').value='';renderSchedulePage();"
-              style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#aaa;font-size:14px;padding:0;line-height:1;"
-              title="ล้างการค้นหา">✕</button>
-          </div>
-        </div>
-        <button class="btn btn-primary" id="btnAddAptSchedule" onclick="openAddAptSchedule()">+ เพิ่มนัด</button>
+
+      <!-- Top bar: วันที่ + เพิ่มนัด -->
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
+        <button onclick="schChangeDay(-1)" class="btn btn-ghost" style="padding:6px 12px;font-size:18px;">‹</button>
+        <input type="date" class="form-control" id="schDate" onchange="renderScheduleDay()" style="height:36px;width:160px;font-weight:700;color:var(--wine-dark);">
+        <button onclick="schChangeDay(1)" class="btn btn-ghost" style="padding:6px 12px;font-size:18px;">›</button>
+        <button onclick="schGoToday()" class="btn btn-ghost" style="height:36px;font-size:13px;">วันนี้</button>
+        <div style="flex:1;"></div>
+        <button class="btn btn-primary" id="btnAddAptSchedule" onclick="openAddAptSchedule()" style="height:36px;">+ เพิ่มนัด</button>
       </div>
 
-      <!-- Summary stat strip -->
-      <div id="schStatStrip" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;">
-        <div style="background:#fff;border-radius:10px;padding:10px 18px;box-shadow:var(--shadow);border:1px solid var(--border);display:flex;align-items:center;gap:8px;">
-          <span style="font-size:20px;">📅</span>
-          <div>
-            <div style="font-size:11px;color:var(--text-light);font-weight:700;">นัดทั้งหมด</div>
-            <div style="font-size:22px;font-weight:800;color:var(--wine-dark);font-family:'Prompt',sans-serif;" id="sch-total">0</div>
-          </div>
-        </div>
-        <div style="background:#fff;border-radius:10px;padding:10px 18px;box-shadow:var(--shadow);border:1px solid var(--border);display:flex;align-items:center;gap:8px;">
-          <span style="font-size:20px;">✅</span>
-          <div>
-            <div style="font-size:11px;color:var(--text-light);font-weight:700;">คอนเฟิร์ม</div>
-            <div style="font-size:22px;font-weight:800;color:var(--blue);font-family:'Prompt',sans-serif;" id="sch-confirm">0</div>
-          </div>
-        </div>
-        <div style="background:#fff;border-radius:10px;padding:10px 18px;box-shadow:var(--shadow);border:1px solid var(--border);display:flex;align-items:center;gap:8px;">
-          <span style="font-size:20px;">🎉</span>
-          <div>
-            <div style="font-size:11px;color:var(--text-light);font-weight:700;">เสร็จสิ้น</div>
-            <div style="font-size:22px;font-weight:800;color:var(--green);font-family:'Prompt',sans-serif;" id="sch-done">0</div>
-          </div>
-        </div>
-        <div style="background:#fff;border-radius:10px;padding:10px 18px;box-shadow:var(--shadow);border:1px solid var(--border);display:flex;align-items:center;gap:8px;">
-          <span style="font-size:20px;">🚶</span>
-          <div>
-            <div style="font-size:11px;color:var(--text-light);font-weight:700;">Walk-in</div>
-            <div style="font-size:22px;font-weight:800;color:var(--blue);font-family:'Prompt',sans-serif;" id="sch-walkin">0</div>
-          </div>
-        </div>
-        <div style="background:#fff;border-radius:10px;padding:10px 18px;box-shadow:var(--shadow);border:1px solid var(--border);display:flex;align-items:center;gap:8px;">
-          <span style="font-size:20px;">❌</span>
-          <div>
-            <div style="font-size:11px;color:var(--text-light);font-weight:700;">ยกเลิก</div>
-            <div style="font-size:22px;font-weight:800;color:var(--red);font-family:'Prompt',sans-serif;" id="sch-cancel">0</div>
-          </div>
-        </div>
-      </div>
+      <!-- Stat strip (hidden) -->
+      <div id="schDayStats" style="display:none;"></div>
 
-      <!-- Calendar card -->
-      <div class="card-box" style="margin-bottom:20px;">
-        <div class="card-box-hdr">
-          <div class="card-box-title">📆 ปฏิทินนัด</div>
-          <!-- color legend -->
-          <div style="display:flex;gap:10px;flex-wrap:wrap;font-size:11px;font-weight:700;">
-            <span style="color:var(--wine);">📅 นัดวันนี้</span>
-            <span style="color:var(--orange);">⏳ รอทำ</span>
-            <span style="color:var(--blue);">✅ คอนเฟิร์ม</span>
-            <span style="color:var(--green);">🎉 เสร็จสิ้น</span>
-            <span style="color:var(--red);">❌ ยกเลิก</span>
-            <span style="color:#3498DB;">🚶 Walk-in</span>
-          </div>
-        </div>
-        <div style="padding:16px;">
-          <div id="scheduleCalendar"></div>
-        </div>
-      </div>
+      <!-- 2-column: วันที่เลือก | วันถัดไป -->
+      <div id="schSlotView" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;"></div>
 
-      <!-- Appointment list table -->
+      <!-- Monthly calendar overview -->
       <div class="card-box">
         <div class="card-box-hdr">
-          <div class="card-box-title">📋 รายการนัดทั้งหมดในเดือนนี้</div>
-          <div id="schListCount" style="font-size:13px;font-weight:700;color:var(--wine-mid);"></div>
+          <div class="card-box-title">📆 ภาพรวมนัดตลอดเดือน</div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <button onclick="schCalPrevMonth()" class="btn btn-ghost" style="padding:4px 10px;">‹</button>
+            <span id="schCalMonthLabel" style="font-size:13px;font-weight:700;color:var(--wine-dark);"></span>
+            <button onclick="schCalNextMonth()" class="btn btn-ghost" style="padding:4px 10px;">›</button>
+          </div>
         </div>
-        <div style="overflow-x:auto;">
-          <table>
-            <thead>
-              <tr>
-                <th>วันที่</th><th>เวลา</th><th>HN</th><th>ชื่อ-สกุล</th>
-                <th>เบอร์โทร</th><th>รายการ</th><th>หมอ</th><th>สถานะ</th><th>จัดการ</th>
-              </tr>
-            </thead>
-            <tbody id="schListBody"></tbody>
-          </table>
+        <div style="padding:12px;">
+          <div id="schMiniCal"></div>
         </div>
       </div>
+
     </div>
 
     <!-- ===== SETTINGS PAGE ===== -->
     <div class="page" id="page-settings">
       <div class="settings-grid" id="settingsGrid"></div>
-
-      <!-- DAY SLOT SETTINGS -->
-      <div style="margin-top:20px;background:#fff;border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);border:1px solid var(--border);">
-        <div style="font-size:15px;font-weight:700;color:var(--wine-dark);margin-bottom:4px;font-family:'Prompt',sans-serif;">📅 ตั้งค่า Slot แต่ละวัน</div>
-        <div style="font-size:12px;color:var(--text-light);margin-bottom:16px;">กำหนดเวลาเปิด-ปิด และจำนวน slot สูงสุดของแต่ละวันในสัปดาห์</div>
-        <div id="daySlotSettingsGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;"></div>
-        <button class="btn btn-primary" onclick="saveDaySlotSettings()" style="margin-top:16px;">💾 บันทึกการตั้งค่า Slot</button>
-      </div>
 
       <!-- DANGER ZONE - Manager only -->
       <div style="margin-top:20px;background:#fff;border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);border:1.5px solid rgba(231,76,90,0.25);">
@@ -1158,9 +1117,15 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
       </div>
       <div class="form-group">
         <label>เวลา</label>
-        <input type="text" class="form-control" id="apt-time" placeholder="10:00" maxlength="5"
-          oninput="this.value=this.value.replace(/[^0-9:]/g,'');if(this.value.length===2&&!this.value.includes(':'))this.value+=':';"
-          style="font-size:16px;font-weight:600;letter-spacing:2px;">
+        <div class="tp-wrap" id="tp-apt">
+          <div class="tp-display" onclick="tpToggle('apt')" id="tp-apt-display">🕐 10:00</div>
+          <input type="hidden" id="apt-time" value="10:00">
+          <div class="tp-dropdown" id="tp-apt-dd">
+            <div class="tp-col" id="tp-apt-h"></div>
+            <div class="tp-sep">:</div>
+            <div class="tp-col" id="tp-apt-m"></div>
+          </div>
+        </div>
       </div>
       <div class="form-group">
         <label>หมอ</label>
@@ -1229,9 +1194,15 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
       </div>
       <div class="form-group">
         <label>เวลา</label>
-        <input type="text" class="form-control" id="treat-time" placeholder="10:00" maxlength="5"
-          oninput="this.value=this.value.replace(/[^0-9:]/g,'');if(this.value.length===2&&!this.value.includes(':'))this.value+=':';"
-          style="font-size:16px;font-weight:600;letter-spacing:2px;">
+        <div class="tp-wrap" id="tp-treat">
+          <div class="tp-display" onclick="tpToggle('treat')" id="tp-treat-display">🕐 10:00</div>
+          <input type="hidden" id="treat-time" value="10:00">
+          <div class="tp-dropdown" id="tp-treat-dd">
+            <div class="tp-col" id="tp-treat-h"></div>
+            <div class="tp-sep">:</div>
+            <div class="tp-col" id="tp-treat-m"></div>
+          </div>
+        </div>
       </div>
       <div class="form-group">
         <label>HN</label>
@@ -1698,7 +1669,13 @@ function showPage(p){
   if(p==='lab') renderLabPage();
   if(p==='settings') buildSettingsPage();
   if(p==='schedule'){
-    requestAnimationFrame(()=>requestAnimationFrame(renderSchedulePage));
+    const el = document.getElementById('schDate');
+    if(el && !el.value) el.value = todayStr();
+    if(!schCalMonth) schCalMonth = todayStr().slice(0,7);
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      renderScheduleDay();
+      renderSchMiniCal();
+    }));
   }
   setMobileNav(p);
 }
@@ -1820,14 +1797,14 @@ function openAddApt(apt=null, prefillDate=null, prefillTime=null){
   document.getElementById('apt-status').value = apt?.status || 'นัดวันนี้';
   // Time — prefillTime จาก slot > apt.time > ปัดเวลาปัจจุบัน
   if(apt?.time){
-    document.getElementById('apt-time').value = apt.time;
+    tpSet('apt', apt.time);
   } else if(prefillTime){
-    document.getElementById('apt-time').value = prefillTime;
+    tpSet('apt', prefillTime);
   } else {
     const nowH=new Date();
     let hh=nowH.getHours(), mm=nowH.getMinutes()>=30?30:0;
     if(hh<10){hh=10;mm=0;} if(hh>18||(hh===18&&mm>30)){hh=18;mm=30;}
-    document.getElementById('apt-time').value=`${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}`;
+    tpSet('apt', `${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}`);
   }
   // Proc checkboxes
   clearProcSelection();
@@ -1874,7 +1851,7 @@ function saveApt(){
   // Re-render whichever page is active
   const p=document.querySelector('.page.active')?.id?.replace('page-','');
   if(p==='home') renderHome();
-  else if(p==='schedule') renderSchedulePage();
+  else if(p==='schedule'){ renderScheduleDay(); renderSchMiniCal(); }
   showToast(_editAptId ? 'แก้ไขนัดสำเร็จ' : 'เพิ่มนัดสำเร็จ');
   syncToSheet('appointments', apt).then(()=>{
     setTimeout(syncAll, 2000);
@@ -1897,7 +1874,7 @@ function deleteApt(id){
   saveLocal();
   const p=document.querySelector('.page.active')?.id?.replace('page-','');
   if(p==='home') renderHome();
-  else if(p==='schedule') renderSchedulePage();
+  else if(p==='schedule'){ renderScheduleDay(); renderSchMiniCal(); }
   showToast('ลบนัดสำเร็จ');
   syncToSheet('delete',{type:'appointments',id});
 }
@@ -1934,7 +1911,7 @@ function setStatus(s){
     // Re-render whichever page is active
     const p=document.querySelector('.page.active')?.id?.replace('page-','');
     if(p==='home') renderHome();
-    else if(p==='schedule') renderSchedulePage();
+    else if(p==='schedule'){ renderScheduleDay(); renderSchMiniCal(); }
   }
 }
 // ปิด dropdown เมื่อคลิกนอก — ต้องไม่ปิดตอนคลิกใน dropdown เอง
@@ -1953,12 +1930,12 @@ function openAddTreat(t=null){
   document.getElementById('treat-date').value = t?.date||today;
   // เวลาปัจจุบัน rounded to nearest minute
   if(t?.time){
-    document.getElementById('treat-time').value = t.time;
+    tpSet('treat', t.time);
   } else {
     const now = new Date();
     const hh = String(now.getHours()).padStart(2,'0');
     const mm = String(now.getMinutes()).padStart(2,'0');
-    document.getElementById('treat-time').value = `${hh}:${mm}`;
+    tpSet('treat', `${hh}:${mm}`);
   }
   document.getElementById('treat-hn').value = t?.hn||'';
   document.getElementById('treat-name').value = t?.patName||'';
@@ -2631,7 +2608,7 @@ async function syncAll(){
     else if(p==='treatment') renderTreatPage();
     else if(p==='lab') renderLabPage();
     else if(p==='income') renderIncome();
-    else if(p==='schedule') renderSchedulePage();
+    else if(p==='schedule'){ renderScheduleDay(); renderSchMiniCal(); }
     const t=new Date().toLocaleTimeString('th-TH');
     if(txt) txt.textContent='ซิงค์แล้ว '+t;
     if(dot) dot.style.background='var(--green)';
@@ -2656,15 +2633,370 @@ async function manualSync(){
 }
 
 // ============================================================
-//  SCHEDULE PAGE (Manager only)
+//  SCHEDULE PAGE — DAY VIEW (2-column slot)
 // ============================================================
-function openAddAptSchedule(){
-  // Pre-fill date from currently viewed month (first day or today)
-  const monthEl = document.getElementById('scheduleMonth');
-  const month = monthEl?.value || todayStr().slice(0,7);
+const SCH_SLOTS_KEY = 'bl_sch_slots'; // { 'YYYY-MM-DD': ['10:00','10:30',...] }
+const SCH_BLOCKED_KEY = 'bl_sch_blocked'; // { 'YYYY-MM-DD_HH:MM': true }
+const DEFAULT_SLOTS = ['10:00','10:30','11:00','11:30','12:00','12:30','13:00','13:30','14:00','14:30','15:00','15:30','16:00','16:30','17:00','17:30','18:00','18:30'];
+
+function schGoToday(){
+  document.getElementById('schDate').value = todayStr();
+  renderScheduleDay();
+}
+function schChangeDay(delta){
+  const el = document.getElementById('schDate');
+  const d = new Date(el.value || todayStr());
+  d.setDate(d.getDate() + delta);
+  el.value = d.toISOString().slice(0,10);
+  renderScheduleDay();
+}
+function getSchSlots(date){
+  try {
+    const all = JSON.parse(localStorage.getItem(SCH_SLOTS_KEY)||'{}');
+    return all[date] || [...DEFAULT_SLOTS];
+  } catch(e){ return [...DEFAULT_SLOTS]; }
+}
+function saveSchSlots(date, slots){
+  try {
+    const all = JSON.parse(localStorage.getItem(SCH_SLOTS_KEY)||'{}');
+    all[date] = slots;
+    localStorage.setItem(SCH_SLOTS_KEY, JSON.stringify(all));
+  } catch(e){}
+}
+function isSlotBlocked(date, slot){
+  try {
+    const all = JSON.parse(localStorage.getItem(SCH_BLOCKED_KEY)||'{}');
+    return !!all[`${date}_${slot}`];
+  } catch(e){ return false; }
+}
+function toggleSlotBlocked(date, slot){
+  try {
+    const all = JSON.parse(localStorage.getItem(SCH_BLOCKED_KEY)||'{}');
+    const key = `${date}_${slot}`;
+    if(all[key]) delete all[key]; else all[key] = true;
+    localStorage.setItem(SCH_BLOCKED_KEY, JSON.stringify(all));
+    renderScheduleDay();
+  } catch(e){}
+}
+function schAddSlot(date){
+  const slots = getSchSlots(date);
+  // ถามเวลาที่จะเพิ่ม
+  const t = prompt('ใส่เวลา slot ใหม่ (HH:MM)', '');
+  if(!t || !/^\d{2}:\d{2}$/.test(t)) return;
+  if(!slots.includes(t)) slots.push(t);
+  slots.sort();
+  saveSchSlots(date, slots);
+  renderScheduleDay();
+}
+function schRemoveSlot(date, slot){
+  const slots = getSchSlots(date).filter(s=>s!==slot);
+  saveSchSlots(date, slots);
+  renderScheduleDay();
+}
+function schUpdateSlotTime(date, oldSlot, newVal){
+  const slots = getSchSlots(date);
+  const idx = slots.indexOf(oldSlot);
+  if(idx>=0 && newVal && /^\d{2}:\d{2}$/.test(newVal)){
+    slots[idx] = newVal;
+    slots.sort();
+    saveSchSlots(date, slots);
+    renderScheduleDay();
+  }
+}
+
+function renderScheduleDay(){
+  const el = document.getElementById('schDate');
+  if(!el.value) el.value = todayStr();
+  const date1 = el.value;
+
+  // วันที่ 2 = วันถัดไป
+  const d2 = new Date(date1); d2.setDate(d2.getDate()+1);
+  const date2 = d2.toISOString().slice(0,10);
+
+  const DAY_NAMES_TH = ['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
+  const DAY_BG_PASTEL = ['#FFACAC','#FFE08A','#FFB3DE','#A8E6BC','#FFD0A0','#A8D8F0','#C9B8F0'];
+  const DAY_FG_PASTEL = ['#7B2020','#6B4A00','#7B2060','#1A6B40','#7B4000','#1A4A7B','#3D1A7B'];
+
+  // Stat strip — รวม 2 วัน
+  const allApts2Days = appointments.filter(a=>a.date===date1||a.date===date2);
+  const statsEl = document.getElementById('schDayStats');
+  if(statsEl){
+    const total = allApts2Days.length;
+    const done  = allApts2Days.filter(a=>['เสร็จสิ้น','เสร็จ'].includes(a.status)).length;
+    const conf  = allApts2Days.filter(a=>['คอนเฟิร์ม','confirm'].includes(a.status)).length;
+    const cancel= allApts2Days.filter(a=>a.status==='ยกเลิก').length;
+    statsEl.innerHTML = [
+      ['📅','นัด 2 วัน',total,'var(--wine-dark)'],
+      ['✅','คอนเฟิร์ม',conf,'var(--blue)'],
+      ['🎉','เสร็จสิ้น',done,'var(--green)'],
+      ['❌','ยกเลิก',cancel,'var(--red)'],
+    ].map(([ic,lb,v,c])=>`
+      <div style="background:#fff;border-radius:10px;padding:8px 14px;box-shadow:var(--shadow);border:1px solid var(--border);display:flex;align-items:center;gap:8px;">
+        <span style="font-size:18px;">${ic}</span>
+        <div>
+          <div style="font-size:10px;color:var(--text-light);font-weight:700;">${lb}</div>
+          <div style="font-size:20px;font-weight:800;color:${c};font-family:'Prompt',sans-serif;">${v}</div>
+        </div>
+      </div>`).join('');
+  }
+
+  const view = document.getElementById('schSlotView');
+  if(!view) return;
+  view.innerHTML = buildDayColumn(date1, DAY_NAMES_TH, DAY_BG_PASTEL, DAY_FG_PASTEL)
+                 + buildDayColumn(date2, DAY_NAMES_TH, DAY_BG_PASTEL, DAY_FG_PASTEL);
+
+  // Restore note values
+  view.querySelectorAll('.cal-note-input').forEach(inp=>{
+    const note = getDayNote(inp.dataset.date);
+    if(note) inp.value = note;
+  });
+}
+
+function buildDayColumn(date, DAY_NAMES_TH, DAY_BG_PASTEL, DAY_FG_PASTEL){
+  const d = new Date(date+'T00:00:00');
+  const dow = d.getDay();
+  const slots = getSchSlots(date);
+  const dayApts = appointments.filter(a=>a.date===date).sort((a,b)=>(a.time||'').localeCompare(b.time||''));
+  const isToday = date===todayStr();
+  const bg = isToday ? 'var(--wine)' : DAY_BG_PASTEL[dow];
+  const fg = isToday ? '#fff' : DAY_FG_PASTEL[dow];
+
+  // หมอที่มีนัดวันนี้
+  const docSet = {};
+  dayApts.forEach(a=>{ if(a.docName) docSet[a.docName]=(docSet[a.docName]||0)+1; });
+  const docList = Object.keys(docSet);
+  const has2Docs = docList.length >= 2;
+
+  // โน้ตวัน (sync กับ Sheet ผ่าน dayNotes)
+  const noteVal = getDayNote(date)||'';
+
+  const STATUS_COLOR = {
+    'นัดวันนี้':'var(--wine)','รอทำ':'var(--orange)',
+    'คอนเฟิร์ม':'var(--blue)','confirm':'var(--blue)',
+    'เสร็จสิ้น':'var(--green)','เสร็จ':'var(--green)',
+    'ยกเลิก':'var(--red)','walk-in':'#3498DB'
+  };
+
+  function getSlotApts(slot, filterDoc){
+    const [sh,sm] = slot.split(':').map(Number);
+    const slotMins = sh*60+sm;
+    return dayApts.filter(a=>{
+      if(filterDoc && a.docName!==filterDoc) return false;
+      const t = String(a.time||'').slice(0,5);
+      const [th2,tm2] = t.split(':').map(Number);
+      const aptMins = th2*60+tm2;
+      return aptMins>=slotMins && aptMins<slotMins+30;
+    });
+  }
+
+  function aptCard(a){
+    const sc = STATUS_COLOR[a.status]||'#999';
+    const safeId = String(a.id).replace(/"/g,'');
+    return `<div data-apt-id="${safeId}" onclick="openEditApt(this.dataset.aptId)"
+      style="background:${sc}12;border-left:3px solid ${sc};border-radius:6px;
+      padding:5px 8px;cursor:pointer;margin-top:4px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:4px;">
+        <span style="font-weight:700;color:${sc};font-size:12px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${a.patName||'—'}</span>
+        <span class="${statusClass(a.status)}" style="font-size:9px;flex-shrink:0;">${a.status||''}</span>
+      </div>
+      <div style="font-size:10px;color:var(--text-light);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+        ${a.hn||''} · ${a.phone||''}
+      </div>
+      ${a.proc?`<div style="margin-top:2px;">${procBadge(a.proc)}</div>`:''}
+      ${a.note?`<div style="font-size:10px;color:var(--text-mid);margin-top:1px;">📝 ${a.note}</div>`:''}
+    </div>`;
+  }
+
+  // build slot card (รองรับ filterDoc สำหรับ 2-doctor split)
+  function slotCard(slot, filterDoc){
+    const blocked = isSlotBlocked(date, slot);
+    const slotApts = getSlotApts(slot, filterDoc||null);
+    const aptCards = blocked ? '' : slotApts.map(aptCard).join('');
+    const addDocParam = filterDoc ? `,'${filterDoc}'` : '';
+    return `<div style="background:${blocked?'rgba(0,0,0,0.03)':'#fff'};
+      border:1.5px solid ${blocked?'#e0e0e0':'var(--border)'};
+      border-radius:10px;padding:8px 10px;box-shadow:var(--shadow);
+      opacity:${blocked?'0.5':'1'};margin-bottom:6px;">
+      <div style="display:flex;align-items:center;gap:4px;">
+        <input type="time" value="${slot}"
+          onchange="schUpdateSlotTime('${date}','${slot}',this.value)"
+          onclick="event.stopPropagation()"
+          style="font-size:14px;font-weight:800;color:var(--wine-dark);border:none;
+          background:transparent;padding:0;width:78px;cursor:pointer;outline:none;font-family:'Prompt',sans-serif;">
+        <div style="flex:1;"></div>
+        ${blocked
+          ? `<button onclick="toggleSlotBlocked('${date}','${slot}')" style="font-size:10px;background:#e8e8e8;border:none;border-radius:6px;padding:2px 7px;cursor:pointer;color:#555;">เปิด</button>`
+          : `<button onclick="openAddApt(null,'${date}','${slot}')" style="font-size:10px;background:var(--wine);color:#fff;border:none;border-radius:6px;padding:2px 9px;cursor:pointer;font-weight:700;">+นัด</button>
+             <button onclick="toggleSlotBlocked('${date}','${slot}')" title="เว้นว่าง" style="font-size:12px;background:#f5f5f5;border:1px solid #ddd;border-radius:6px;padding:1px 7px;cursor:pointer;color:#aaa;">⊘</button>`
+        }
+        <button onclick="schRemoveSlot('${date}','${slot}')" style="font-size:10px;background:none;border:none;cursor:pointer;color:#ddd;padding:0 2px;">✕</button>
+      </div>
+      ${blocked?`<div style="font-size:10px;color:#bbb;text-align:center;padding:3px 0;">— เว้นว่าง —</div>`:''}
+      ${aptCards}
+    </div>`;
+  }
+
+  // Slots section — ถ้า 2 หมอ แบ่ง 2 sub-column
+  let slotsSection = '';
+  if(has2Docs){
+    const doc1 = docList[0], doc2 = docList[1];
+    slotsSection = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px;">
+        <div style="font-size:11px;font-weight:800;color:${docColor(doc1)};padding:3px 6px;background:${docColor(doc1)}15;border-radius:6px;text-align:center;">${doc1}</div>
+        <div style="font-size:11px;font-weight:800;color:${docColor(doc2)};padding:3px 6px;background:${docColor(doc2)}15;border-radius:6px;text-align:center;">${doc2}</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <div>${slots.map(s=>slotCard(s,doc1)).join('')}</div>
+        <div>${slots.map(s=>slotCard(s,doc2)).join('')}</div>
+      </div>`;
+  } else {
+    slotsSection = `<div>${slots.map(s=>slotCard(s,null)).join('')}</div>`;
+  }
+
+  // ชื่อหมอใน header
+  const docTagsHtml = docList.map(name=>
+    `<span style="display:inline-block;background:rgba(255,255,255,0.3);border-radius:8px;padding:1px 7px;font-size:10px;font-weight:800;color:${fg};margin:1px;">${name.replace('หมอ','')}</span>`
+  ).join('');
+
+  return `<div>
+    <!-- Day header -->
+    <div style="background:${bg};border-radius:12px;padding:10px 14px;margin-bottom:10px;
+      ${isToday?'box-shadow:0 0 0 3px #FFD700;':''}">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:4px;">
+        <div>
+          <span style="font-size:11px;font-weight:700;color:${fg};opacity:0.8;">${DAY_NAMES_TH[dow]}</span>
+          ${isToday?`<span style="font-size:9px;background:#FFD700;color:#333;border-radius:8px;padding:0 5px;font-weight:800;margin-left:5px;">วันนี้</span>`:''}
+          <div style="font-size:20px;font-weight:900;color:${fg};font-family:'Prompt',sans-serif;line-height:1.1;">${fmtDate(date)}</div>
+          ${docTagsHtml?`<div style="margin-top:4px;">${docTagsHtml}</div>`:''}
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:10px;color:${fg};opacity:0.8;">นัด</div>
+          <div style="font-size:22px;font-weight:900;color:${fg};">${dayApts.length}</div>
+        </div>
+      </div>
+      <!-- Note input -->
+      <input type="text" placeholder="📝 โน้ตประจำวัน..." maxlength="60"
+        class="cal-note-input" data-date="${date}"
+        onchange="saveDayNote(this.dataset.date,this.value)"
+        style="width:100%;border:none;border-bottom:1px dashed rgba(255,255,255,0.5);
+        background:rgba(255,255,255,0.15);border-radius:4px;margin-top:6px;
+        font-size:11px;color:${fg};padding:3px 6px;outline:none;
+        font-family:'Sarabun',sans-serif;::placeholder{color:${fg}60;}">
+    </div>
+    <!-- Slots -->
+    ${slotsSection}
+    <!-- เพิ่ม slot -->
+    <button onclick="schAddSlot('${date}')"
+      style="width:100%;border:1.5px dashed var(--border);background:transparent;border-radius:10px;
+      padding:8px;color:var(--text-light);cursor:pointer;font-size:12px;font-weight:600;margin-top:4px;">
+      ＋ เพิ่ม slot
+    </button>
+  </div>`;
+}
+
+// compat stub — old renderSchedulePage calls this page
+function renderSchedulePage(){ renderScheduleDay(); }
+
+// ============================================================
+//  MINI CALENDAR (monthly overview)
+// ============================================================
+let schCalMonth = ''; // YYYY-MM
+
+function schCalPrevMonth(){
+  const [y,m] = schCalMonth.split('-').map(Number);
+  const d = new Date(y, m-2, 1);
+  schCalMonth = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+  renderSchMiniCal();
+}
+function schCalNextMonth(){
+  const [y,m] = schCalMonth.split('-').map(Number);
+  const d = new Date(y, m, 1);
+  schCalMonth = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+  renderSchMiniCal();
+}
+function renderSchMiniCal(){
+  const calEl = document.getElementById('schMiniCal');
+  const labelEl = document.getElementById('schCalMonthLabel');
+  if(!calEl) return;
+
+  if(!schCalMonth) schCalMonth = todayStr().slice(0,7);
+  const [y,m] = schCalMonth.split('-').map(Number);
+  const MONTH_TH = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+  const DAY_NAMES_S = ['อา','จ','อ','พ','พฤ','ศ','ส'];
+  const DAY_BG_P = ['#FFACAC','#FFE08A','#FFB3DE','#A8E6BC','#FFD0A0','#A8D8F0','#C9B8F0'];
+  const DAY_FG_P = ['#7B2020','#6B4A00','#7B2060','#1A6B40','#7B4000','#1A4A7B','#3D1A7B'];
+  const STATUS_COLOR = {'นัดวันนี้':'var(--wine)','รอทำ':'var(--orange)','คอนเฟิร์ม':'var(--blue)','confirm':'var(--blue)','เสร็จสิ้น':'var(--green)','เสร็จ':'var(--green)','ยกเลิก':'var(--red)','walk-in':'#3498DB'};
+
+  if(labelEl) labelEl.textContent = `${MONTH_TH[m-1]} ${y+543}`;
+
+  const firstDow = new Date(y,m-1,1).getDay();
+  const daysInMonth = new Date(y,m,0).getDate();
   const today = todayStr();
-  const prefillDate = today.startsWith(month) ? today : month+'-01';
-  openAddApt(null, prefillDate);
+
+  // apt map for this month
+  const monthApts = appointments.filter(a=>a.date&&a.date.startsWith(schCalMonth));
+
+  // Day headers
+  let html = `<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:3px;">`;
+  DAY_NAMES_S.forEach((d,i)=>{
+    html += `<div style="text-align:center;font-size:11px;font-weight:700;
+      color:${DAY_FG_P[i]};padding:5px 0;background:${DAY_BG_P[i]};border-radius:5px;">${d}</div>`;
+  });
+  html += `</div><div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;">`;
+
+  // Empty cells
+  for(let i=0;i<firstDow;i++) html += `<div></div>`;
+
+  for(let d=1;d<=daysInMonth;d++){
+    const ds = `${schCalMonth}-${String(d).padStart(2,'0')}`;
+    const dayApts = monthApts.filter(a=>a.date===ds);
+    const isToday = ds===today;
+    const dow = new Date(y,m-1,d).getDay();
+    const isSelected = ds === (document.getElementById('schDate')?.value||'');
+
+    // Doc summary
+    const docSummary = {};
+    dayApts.forEach(a=>{ if(a.docName) docSummary[a.docName]=(docSummary[a.docName]||0)+1; });
+    const docTags = Object.entries(docSummary).map(([name,cnt])=>
+      `<div style="font-size:8px;font-weight:700;color:${docColor(name)};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${name.replace('หมอ','')}·${cnt}</div>`
+    ).join('');
+
+    // Status dots
+    const statusDots = dayApts.slice(0,5).map(a=>`
+      <div style="width:6px;height:6px;border-radius:50%;background:${STATUS_COLOR[a.status]||'#999'};display:inline-block;margin:1px;"></div>`
+    ).join('');
+
+    html += `<div onclick="schJumpToDate('${ds}')" style="min-height:70px;border-radius:8px;
+      border:${isSelected?'2px solid var(--wine)':isToday?'2px solid #FFD700':'1px solid var(--border)'};
+      background:${isSelected?'var(--wine-pale)':isToday?'#FFFDE7':'#fff'};
+      padding:4px;cursor:pointer;transition:all 0.12s;overflow:hidden;"
+      onmouseover="this.style.background='var(--wine-pale)'" onmouseout="this.style.background='${isSelected?'var(--wine-pale)':isToday?'#FFFDE7':'#fff'}'">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;">
+        <span style="font-size:12px;font-weight:${isToday||isSelected?'900':'600'};
+          color:${isSelected?'var(--wine)':isToday?'#F57F17':dow===0?'#E74C3C':dow===6?'#3498DB':'var(--text-mid)'};">${d}</span>
+        ${dayApts.length?`<span style="font-size:9px;font-weight:700;background:var(--wine);color:#fff;border-radius:8px;padding:0 4px;">${dayApts.length}</span>`:''}
+      </div>
+      ${docTags}
+      <div style="display:flex;flex-wrap:wrap;gap:1px;margin-top:2px;">${statusDots}</div>
+      ${getDayNote(ds)?`<div style="font-size:8px;color:var(--text-light);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">📝 ${getDayNote(ds)}</div>`:''}
+    </div>`;
+  }
+  html += `</div>`;
+  calEl.innerHTML = html;
+}
+
+function schJumpToDate(date){
+  const el = document.getElementById('schDate');
+  if(el){ el.value = date; renderScheduleDay(); }
+  // re-render calendar to update selected highlight
+  renderSchMiniCal();
+  // scroll to top of page-schedule
+  document.getElementById('page-schedule')?.scrollTo({top:0,behavior:'smooth'});
+}
+
+function openAddAptSchedule(){
+  const date = document.getElementById('schDate')?.value || todayStr();
+  openAddApt(null, date);
 }
 
 function renderSchedulePage(){
@@ -3008,6 +3340,78 @@ document.addEventListener('click', function(e){
 });
 
 let _autoSyncStarted = false;
+// ============================================================
+//  CUSTOM 24H TIME PICKER
+// ============================================================
+const HOURS24 = Array.from({length:24},(_,i)=>String(i).padStart(2,'0'));
+const MINS    = Array.from({length:60},(_,i)=>String(i).padStart(2,'0'));
+
+function tpInit(id, val){
+  const [hh,mm] = (val||'10:00').split(':');
+  const hCol = document.getElementById(`tp-${id}-h`);
+  const mCol = document.getElementById(`tp-${id}-m`);
+  if(!hCol||!mCol) return;
+
+  hCol.innerHTML = HOURS24.map(h=>
+    `<div class="tp-item${h===hh?' sel':''}" onclick="tpSelect('${id}','h','${h}')">${h}</div>`
+  ).join('');
+  mCol.innerHTML = MINS.map(m=>
+    `<div class="tp-item${m===mm||(!MINS.includes(mm)&&m==='00')?' sel':''}" onclick="tpSelect('${id}','m','${m}')">${m}</div>`
+  ).join('');
+
+  tpSetDisplay(id, hh, mm);
+}
+
+function tpSelect(id, part, val){
+  const hidden = document.getElementById(`${id}-time`)||document.getElementById(`apt-time`);
+  let [hh,mm] = (document.getElementById(`${id === 'apt'?'apt':'treat'}-time`)?.value||'10:00').split(':');
+  if(part==='h') hh=val; else mm=val;
+
+  // update hidden input
+  const inp = document.getElementById(`${id==='apt'?'apt':'treat'}-time`);
+  if(inp) inp.value=`${hh}:${mm}`;
+
+  // update selected class
+  document.querySelectorAll(`#tp-${id}-h .tp-item`).forEach(el=>el.classList.toggle('sel',el.textContent===hh));
+  document.querySelectorAll(`#tp-${id}-m .tp-item`).forEach(el=>el.classList.toggle('sel',el.textContent===mm));
+  tpSetDisplay(id, hh, mm);
+}
+
+function tpSetDisplay(id, hh, mm){
+  const disp = document.getElementById(`tp-${id}-display`);
+  if(disp) disp.textContent = `🕐 ${hh}:${mm}`;
+}
+
+function tpToggle(id){
+  const dd = document.getElementById(`tp-${id}-dd`);
+  if(!dd) return;
+  const isOpen = dd.classList.contains('open');
+  // close all
+  document.querySelectorAll('.tp-dropdown.open').forEach(el=>el.classList.remove('open'));
+  if(!isOpen){
+    dd.classList.add('open');
+    // scroll selected into view
+    setTimeout(()=>{
+      dd.querySelectorAll('.sel').forEach(el=>el.scrollIntoView({block:'center',behavior:'auto'}));
+    },50);
+  }
+}
+
+// Close picker on outside click
+document.addEventListener('click',function(e){
+  if(!e.target.closest('.tp-wrap')){
+    document.querySelectorAll('.tp-dropdown.open').forEach(el=>el.classList.remove('open'));
+  }
+});
+
+// Helper: get time value from custom picker
+function tpGet(id){ return document.getElementById(`${id}-time`)?.value||'10:00'; }
+function tpSet(id, val){
+  const inp = document.getElementById(`${id}-time`);
+  if(inp) inp.value = val||'10:00';
+  tpInit(id, val||'10:00');
+}
+
 // ============================================================
 //  AUTO-FILL PATIENT FROM HN
 // ============================================================
