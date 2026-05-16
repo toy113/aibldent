@@ -1835,7 +1835,7 @@ function saveApt(){
   const apt = {
     id: _editAptId || Date.now().toString(),
     date: document.getElementById('apt-date').value||todayStr(),
-    time: document.getElementById('apt-time').value,
+    time: tpGet('apt'),
     docName: document.getElementById('apt-doc').value,
     hn: document.getElementById('apt-hn').value,
     phone: document.getElementById('apt-phone')?.value||'',
@@ -1848,6 +1848,26 @@ function saveApt(){
   const idx = appointments.findIndex(a=>String(a.id)===String(apt.id));
   if(idx>-1) appointments[idx]=apt; else appointments.push(apt);
   saveLocal();
+
+  // ถ้าเวลานัดไม่ตรง slot ไหน → เพิ่ม slot ใหม่อัตโนมัติ
+  if(apt.time && apt.date){
+    const [ah,am] = apt.time.split(':').map(Number);
+    const aptMins = ah*60+am;
+    const slots = getSchSlots(apt.date);
+    const inAnySlot = slots.some(s=>{
+      const [sh,sm] = s.split(':').map(Number);
+      const slotMins = sh*60+sm;
+      return aptMins >= slotMins && aptMins < slotMins+30;
+    });
+    if(!inAnySlot){
+      // เพิ่ม slot ที่เวลานัดพอดี แล้ว sort
+      slots.push(apt.time);
+      slots.sort();
+      saveSchSlots(apt.date, slots);
+      showToast(`เพิ่ม slot ${apt.time} อัตโนมัติ`);
+    }
+  }
+
   closeModal('modalApt');
   // Re-render whichever page is active
   const p=document.querySelector('.page.active')?.id?.replace('page-','');
@@ -2832,11 +2852,18 @@ function buildDayColumn(date, DAY_NAMES_TH, DAY_BG_PASTEL, DAY_FG_PASTEL){
     const blocked = isSlotBlocked(date, slot);
     const slotApts = getSlotApts(slot, filterDoc||null);
     const aptCards = blocked ? '' : slotApts.map(aptCard).join('');
+
+    // สีพื้นหลัง slot ตามสถานะนัดแรกในช่องนั้น
+    let slotBg = '#fff';
+    if(!blocked && slotApts.length > 0){
+      slotBg = statusBgColor(slotApts[0].status);
+    }
+    if(blocked) slotBg = 'rgba(0,0,0,0.03)';
     const addDocParam = filterDoc ? `,'${filterDoc}'` : '';
-    return `<div style="background:${blocked?'rgba(0,0,0,0.03)':'#fff'};
-      border:1.5px solid ${blocked?'#e0e0e0':'var(--border)'};
+    return `<div style="background:${slotBg};
+      border:1.5px solid ${blocked?'#e0e0e0':slotApts.length>0?'rgba(0,0,0,0.1)':'var(--border)'};
       border-radius:10px;padding:8px 10px;box-shadow:var(--shadow);
-      opacity:${blocked?'0.5':'1'};margin-bottom:6px;">
+      opacity:${blocked?'0.5':'1'};margin-bottom:6px;transition:background 0.2s;">
       <div style="display:flex;align-items:center;gap:4px;">
         <div class="tp-wrap" style="display:inline-block;">
           <div class="tp-display" onclick="event.stopPropagation();tpToggle('slot_${date}_${slot.replace(':','')}')"
