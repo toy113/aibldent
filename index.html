@@ -1259,7 +1259,7 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
       </div>
       <div class="form-group">
         <label>HN</label>
-        <input class="form-control" id="lab-hn" placeholder="xxxxx">
+        <input class="form-control" id="lab-hn" placeholder="xx-xxxxx" maxlength="8" oninput="fmtHN(this)">
       </div>
       <div class="form-group">
         <label>ชื่อ-สกุล</label>
@@ -1852,8 +1852,8 @@ function saveApt(){
   if(idx>-1) appointments[idx]=apt; else appointments.push(apt);
   saveLocal();
 
-  // ถ้าไม่มี slot ที่ตรงเวลาพอดี → เพิ่ม slot ใหม่อัตโนมัติ
-  if(apt.time && apt.date){
+  // สร้าง slot อัตโนมัติเฉพาะตอนเพิ่มนัดใหม่ ไม่ใช่แก้ไข
+  if(!_editAptId && apt.time && apt.date){
     const slots = getSchSlots(apt.date);
     const exactMatch = slots.includes(apt.time);
     if(!exactMatch){
@@ -3055,10 +3055,15 @@ function renderSchMiniCal(){
 function schJumpToDate(date){
   const el = document.getElementById('schDate');
   if(el){ el.value = date; renderScheduleDay(); }
-  // re-render calendar to update selected highlight
   renderSchMiniCal();
-  // scroll to top of page-schedule
-  document.getElementById('page-schedule')?.scrollTo({top:0,behavior:'smooth'});
+  // scroll ไปด้านบนสุดของหน้า schedule
+  setTimeout(()=>{
+    const page = document.getElementById('page-schedule');
+    const topBar = document.querySelector('#page-schedule > div:first-child');
+    if(page) page.scrollTop = 0;
+    window.scrollTo({top: 0, behavior:'smooth'});
+    if(topBar) topBar.scrollIntoView({behavior:'smooth', block:'start'});
+  }, 80);
 }
 
 function openAddAptSchedule(){
@@ -3713,8 +3718,9 @@ function procBadge(proc){
 function fmt(n){ return Math.round(n).toLocaleString('th-TH'); }
 function fmtDate(s){
   if(!s) return '—';
-  const d=new Date(s);
-  return d.toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'2-digit'});
+  const [y,m,d] = String(s).split('-').map(Number);
+  if(!y||!m||!d) return s;
+  return `${String(d).padStart(2,'0')}/${String(m).padStart(2,'0')}/${y}`;
 }
 function statusClass(s){
   return {
