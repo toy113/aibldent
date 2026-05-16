@@ -932,7 +932,7 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
               <button class="period-tab active" id="treatModeDay" onclick="setTreatMode('day',this)">รายวัน</button>
               <button class="period-tab" id="treatModeMonth" onclick="setTreatMode('month',this)">รายเดือน</button>
             </div>
-            <input type="date" class="form-control" lang="en-CA" id="treatFilterDate" onchange="renderTreatPage()" style="height:36px;">
+            <input type="text" class="form-control" id="treatFilterDate" placeholder="DD/MM/YYYY" maxlength="10" inputmode="numeric" oninput="fmtDateInput(this)" onblur="fmtDateBlur(this);renderTreatPage();" style="height:36px;width:150px;">
             <input type="month" class="form-control" id="treatFilterMonth" onchange="renderTreatPage()" style="height:36px;display:none;">
             <div class="search-box"><input type="text" class="form-control" placeholder="ค้นหาชื่อ/HN" id="treatSearch" oninput="renderTreatPage()" style="height:36px;padding-left:32px;width:180px;"></div>
             <button class="btn btn-primary btn-sm" id="btnAddTreat" onclick="openAddTreat()">+ เพิ่มรายการ</button>
@@ -971,13 +971,13 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
             <button class="period-tab" id="iperiod-range" onclick="setPeriod('range',this)">ช่วงวันที่</button>
           </div>
           <!-- date picker shown per mode -->
-          <input type="date" id="income-filter-day" lang="en-CA" class="form-control" style="height:36px;width:160px;" onchange="renderIncome()">
+          <input type="text" id="income-filter-day" class="form-control" placeholder="DD/MM/YYYY" maxlength="10" inputmode="numeric" oninput="fmtDateInput(this)" onblur="fmtDateBlur(this);renderIncome();" style="height:36px;width:160px;">
           <input type="month" id="income-filter-month" class="form-control" style="height:36px;width:150px;display:none;" onchange="renderIncome()">
           <input type="number" id="income-filter-year" class="form-control" style="height:36px;width:100px;display:none;" placeholder="ปี พ.ศ." min="2560" max="2600" onchange="renderIncome()">
           <div id="income-filter-range" style="display:none;display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
-            <input type="date" id="income-range-start" lang="en-CA" class="form-control" style="height:36px;width:145px;" onchange="renderIncome()">
+            <input type="text" id="income-range-start" class="form-control" placeholder="DD/MM/YYYY" maxlength="10" inputmode="numeric" oninput="fmtDateInput(this)" onblur="fmtDateBlur(this);renderIncome();" style="height:36px;width:145px;">
             <span style="color:var(--text-light);font-size:13px;">ถึง</span>
-            <input type="date" id="income-range-end" lang="en-CA" class="form-control" style="height:36px;width:145px;" onchange="renderIncome()">
+            <input type="text" id="income-range-end" class="form-control" placeholder="DD/MM/YYYY" maxlength="10" inputmode="numeric" oninput="fmtDateInput(this)" onblur="fmtDateBlur(this);renderIncome();" style="height:36px;width:145px;">
           </div>
         </div>
       </div>
@@ -1038,7 +1038,7 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
       <!-- Top bar: วันที่ + เพิ่มนัด -->
       <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
         <button onclick="schChangeDay(-1)" class="btn btn-ghost" style="padding:6px 12px;font-size:18px;">‹</button>
-        <input type="date" class="form-control" lang="en-CA" id="schDate" onchange="renderScheduleDay()" style="height:36px;width:160px;font-weight:700;color:var(--wine-dark);">
+        <input type="text" class="form-control" id="schDate" placeholder="DD/MM/YYYY" maxlength="10" inputmode="numeric" oninput="fmtDateInput(this)" onblur="fmtDateBlur(this);renderScheduleDay();" style="height:36px;width:160px;font-weight:700;color:var(--wine-dark);">
         <button onclick="schChangeDay(1)" class="btn btn-ghost" style="padding:6px 12px;font-size:18px;">›</button>
         <button onclick="schGoToday()" class="btn btn-ghost" style="height:36px;font-size:13px;">วันนี้</button>
         <button onclick="schResetSlots()" class="btn btn-ghost" style="height:36px;font-size:12px;color:var(--text-light);" title="รีเซ็ต slot เป็นค่าเริ่มต้น 10:00-18:30">↺ Reset Slots</button>
@@ -1118,8 +1118,8 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
     <div class="form-grid">
       <div class="form-group">
         <label>วันที่</label>
-        <input type="date" class="form-control" lang="en-CA" id="apt-date"
-          onchange="showDateLabel('apt-date','apt-date-label')">
+        <input type="text" class="form-control" id="apt-date" placeholder="DD/MM/YYYY" maxlength="10" inputmode="numeric"
+          oninput="fmtDateInput(this)" onblur="fmtDateBlur(this);showDateLabel('apt-date','apt-date-label')">
         <div id="apt-date-label" style="font-size:11px;color:var(--wine-dark);font-weight:700;margin-top:3px;"></div>
       </div>
       <div class="form-group">
@@ -1191,8 +1191,8 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
     <div class="form-grid">
       <div class="form-group">
         <label>วันที่</label>
-        <input type="date" class="form-control" lang="en-CA" id="treat-date"
-          onchange="showDateLabel('treat-date','treat-date-label')">
+        <input type="text" class="form-control" id="treat-date" placeholder="DD/MM/YYYY" maxlength="10" inputmode="numeric"
+          oninput="fmtDateInput(this)" onblur="fmtDateBlur(this);showDateLabel('treat-date','treat-date-label')">
         <div id="treat-date-label" style="font-size:11px;color:var(--wine-dark);font-weight:700;margin-top:3px;"></div>
       </div>
       <div class="form-group">
@@ -1259,8 +1259,8 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
     <div class="form-grid">
       <div class="form-group">
         <label>วันที่</label>
-        <input type="date" class="form-control" lang="en-CA" id="lab-date"
-          onchange="showDateLabel('lab-date','lab-date-label')">
+        <input type="text" class="form-control" id="lab-date" placeholder="DD/MM/YYYY" maxlength="10" inputmode="numeric"
+          oninput="fmtDateInput(this)" onblur="fmtDateBlur(this);showDateLabel('lab-date','lab-date-label')">
         <div id="lab-date-label" style="font-size:11px;color:var(--wine-dark);font-weight:700;margin-top:3px;"></div>
       </div>
       <div class="form-group">
@@ -1792,7 +1792,7 @@ function openAddApt(apt=null, prefillDate=null, prefillTime=null){
   _editAptId = apt ? apt.id : null;
   _prefillSlot = (!apt && prefillTime) ? prefillTime : null; // เก็บ slot ต้นทางเฉพาะเพิ่มใหม่
   document.getElementById('aptModalTitle').textContent = apt ? 'แก้ไขนัด' : 'เพิ่มนัด';
-  document.getElementById('apt-date').value = apt?.date || prefillDate || todayStr();
+  setDateInput('apt-date', apt?.date || prefillDate || todayStr());
   showDateLabel('apt-date','apt-date-label');
   document.getElementById('apt-hn').value   = apt?.hn || '';
   document.getElementById('apt-name').value = apt?.patName || '';
@@ -1850,7 +1850,7 @@ function saveApt(){
   if(aptTimeEl) aptTimeEl.value = aptTimeVal;
   const apt = {
     id: _editAptId || Date.now().toString(),
-    date: document.getElementById('apt-date').value||todayStr(),
+    date: getDateInput('apt-date')||todayStr(),
     time: aptTimeEl?.value || '10:00',
     docName: document.getElementById('apt-doc').value,
     hn: document.getElementById('apt-hn').value,
@@ -1895,7 +1895,7 @@ function saveApt(){
   else if(p==='schedule'){ renderScheduleDay(); renderSchMiniCal(); }
   showToast(_editAptId ? 'แก้ไขนัดสำเร็จ' : 'เพิ่มนัดสำเร็จ');
   syncToSheet('appointments', apt).then(()=>{
-    setTimeout(syncAll, 2000);
+    setTimeout(syncAll, 500);
   }).catch(()=>{
     showToast('⚠️ บันทึกไม่สำเร็จ กรุณาตรวจสอบการเชื่อมต่อ', 'error');
   });
@@ -1968,7 +1968,7 @@ function openAddTreat(t=null){
   document.getElementById('treatModalTitle').textContent = t?'แก้ไขรายการรักษา':'เพิ่มรายการรักษา';
   const today=todayStr();
   document.getElementById('treat-id').value = t?.id||'';
-  document.getElementById('treat-date').value = t?.date||today;
+  setDateInput('treat-date', t?.date||today);
   showDateLabel('treat-date','treat-date-label');
   // เวลาปัจจุบัน
   const treatTimeEl = document.getElementById('treat-time');
@@ -2007,7 +2007,7 @@ function saveTreat(){
   if(treatTimeEl) fmtTimeBlur(treatTimeEl);
   const id = document.getElementById('treat-id').value || Date.now().toString();
   const t = {
-    id, date:document.getElementById('treat-date').value,
+    id, date:getDateInput('treat-date'),
     time:treatTimeEl?.value||'10:00',
     hn:document.getElementById('treat-hn').value,
     patName:document.getElementById('treat-name').value,
@@ -2028,7 +2028,7 @@ function saveTreat(){
   renderHome(); renderTreatPage();
   showToast('บันทึกการรักษาสำเร็จ');
   syncToSheet('treatments', t).then(()=>{
-    setTimeout(syncAll, 2000);
+    setTimeout(syncAll, 500);
   }).catch(err => {
     showToast('⚠️ บันทึกไม่สำเร็จ กรุณาตรวจสอบการเชื่อมต่อ', 'error');
   });
@@ -2324,7 +2324,7 @@ function buildShareGrid(rows){
 function openAddLab(l=null){
   document.getElementById('labModalTitle').textContent=l?'แก้ไขค่าแลป':'เพิ่มค่าแลป';
   document.getElementById('lab-id').value=l?.id||'';
-  document.getElementById('lab-date').value=l?.date||todayStr();
+  setDateInput('lab-date', l?.date||todayStr());
   showDateLabel('lab-date','lab-date-label');
   document.getElementById('lab-doc').value=l?.docName||(isManager?doctors[0]?.name:currentUser.name);
   document.getElementById('lab-hn').value=l?.hn||'';
@@ -2343,7 +2343,7 @@ function saveLab(){
   const id=document.getElementById('lab-id').value||Date.now().toString();
   const priceEl = document.getElementById('lab-price'); const rawPrice = priceEl.value || priceEl.dataset.val || '';
   const l={
-    id, date:document.getElementById('lab-date').value,
+    id, date:getDateInput('lab-date'),
     docName:document.getElementById('lab-doc').value,
     hn:document.getElementById('lab-hn').value,
     patName:document.getElementById('lab-name').value,
@@ -2685,11 +2685,11 @@ const SCH_BLOCKED_KEY = 'bl_sch_blocked'; // { 'YYYY-MM-DD_HH:MM': true }
 const DEFAULT_SLOTS = ['10:00','10:30','11:00','11:30','12:00','12:30','13:00','13:30','14:00','14:30','15:00','15:30','16:00','16:30','17:00','17:30','18:00'];
 
 function schGoToday(){
-  document.getElementById('schDate').value = todayStr();
+  setDateInput('schDate', todayStr());
   renderScheduleDay();
 }
 function schResetSlots(){
-  const date = document.getElementById('schDate')?.value || todayStr();
+  const date = getDateInput('schDate') || todayStr();
   if(!confirm(`รีเซ็ต slot วันที่ ${fmtDate(date)} เป็น 10:00-18:30?`)) return;
   // ลบ slot ของวันนี้ใน localStorage
   try {
@@ -2702,9 +2702,10 @@ function schResetSlots(){
 }
 function schChangeDay(delta){
   const el = document.getElementById('schDate');
-  const d = new Date(el.value || todayStr());
+  const cur = getDateInput('schDate') || todayStr();
+  const d = new Date(cur + 'T00:00:00');
   d.setDate(d.getDate() + delta);
-  el.value = d.toISOString().slice(0,10);
+  setDateInput('schDate', d.toISOString().slice(0,10));
   renderScheduleDay();
 }
 function getSchSlots(date){
@@ -2842,14 +2843,9 @@ function buildDayColumn(date, DAY_NAMES_TH, DAY_BG_PASTEL, DAY_FG_PASTEL){
   };
 
   function getSlotApts(slot, filterDoc){
-    const [sh,sm] = slot.split(':').map(Number);
-    const slotMins = sh*60+sm;
     return dayApts.filter(a=>{
       if(filterDoc && a.docName!==filterDoc) return false;
-      const t = String(a.time||'').slice(0,5);
-      const [th2,tm2] = t.split(':').map(Number);
-      const aptMins = th2*60+tm2;
-      return aptMins>=slotMins && aptMins<slotMins+30;
+      return String(a.time||'').slice(0,5) === slot;
     });
   }
 
@@ -3032,7 +3028,7 @@ function renderSchMiniCal(){
     const dayApts = monthApts.filter(a=>a.date===ds);
     const isToday = ds===today;
     const dow = new Date(y,m-1,d).getDay();
-    const isSelected = ds === (document.getElementById('schDate')?.value||'');
+    const isSelected = ds === (getDateInput('schDate')||'');
 
     // Doc summary
     const docSummary = {};
@@ -3093,7 +3089,7 @@ function schJumpToDate(date){
 }
 
 function openAddAptSchedule(){
-  const date = document.getElementById('schDate')?.value || todayStr();
+  const date = getDateInput('schDate') || todayStr();
   openAddApt(null, date);
 }
 
@@ -3438,14 +3434,65 @@ document.addEventListener('click', function(e){
 });
 
 let _autoSyncStarted = false;
+// ============================================================
+//  DATE INPUT FORMATTER (DD/MM/YYYY ↔ YYYY-MM-DD)
+// ============================================================
+function fmtDateInput(input){
+  let v = input.value.replace(/[^0-9]/g,'');
+  if(v.length > 2) v = v.slice(0,2)+'/'+v.slice(2);
+  if(v.length > 5) v = v.slice(0,5)+'/'+v.slice(5,9);
+  input.value = v;
+}
+function fmtDateBlur(input){
+  const v = input.value.trim();
+  const parts = v.split('/');
+  if(parts.length === 3){
+    const [d,m,y] = parts.map(p=>p.padStart(2,'0'));
+    const dN=parseInt(d), mN=parseInt(m), yN=parseInt(y);
+    if(dN>=1&&dN<=31&&mN>=1&&mN<=12&&yN>=2000&&yN<=2100){
+      input.value = `${d}/${m}/${y}`;
+      return;
+    }
+  }
+  // ถ้า format ผิด ล้างค่า
+  if(v && v.length > 0) input.value = v; // คงค่าไว้ให้แก้
+}
+// แปลง DD/MM/YYYY → YYYY-MM-DD (สำหรับเก็บใน data)
+function dateToISO(v){
+  if(!v) return '';
+  if(/^\d{4}-\d{2}-\d{2}$/.test(v)) return v; // already ISO
+  const parts = v.split('/');
+  if(parts.length===3){
+    const [d,m,y] = parts;
+    return `${y.padStart(4,'0')}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
+  }
+  return v;
+}
+// แปลง YYYY-MM-DD → DD/MM/YYYY (สำหรับแสดงผล)
+function dateFromISO(v){
+  if(!v) return '';
+  if(/^\d{2}\/\d{2}\/\d{4}$/.test(v)) return v; // already display
+  const parts = v.split('-');
+  if(parts.length===3){
+    const [y,m,d] = parts;
+    return `${d}/${m}/${y}`;
+  }
+  return v;
+}
+// set date input value (ใส่ DD/MM/YYYY)
+function setDateInput(id, isoVal){
+  const el = document.getElementById(id);
+  if(el) el.value = isoVal ? dateFromISO(isoVal) : '';
+}
+// get date input value (คืน YYYY-MM-DD)
+function getDateInput(id){
+  const el = document.getElementById(id);
+  return el ? dateToISO(el.value) : '';
+}
+
 function showDateLabel(inputId, labelId){
-  const val = document.getElementById(inputId)?.value;
   const el = document.getElementById(labelId);
-  if(!el) return;
-  if(val){
-    const [y,m,d] = val.split('-');
-    el.textContent = `📅 ${d}/${m}/${y}`;
-  } else { el.textContent = ''; }
+  if(el) el.textContent = '';
 }
 
 // ============================================================
@@ -3729,7 +3776,7 @@ function buildDaySlotSettingsUI(){
 function startAutoSync(){
   if(_autoSyncStarted) return;
   _autoSyncStarted = true;
-  setInterval(syncAll,10000);
+  setInterval(syncAll, 5000); // sync ทุก 5 วินาที
 }
 
 // ============================================================
