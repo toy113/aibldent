@@ -724,16 +724,16 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
     <div class="login-doctor-grid">
       <!-- แถว 1: 4 คน -->
       <div class="login-doc-row row4">
-        <button class="login-doc-btn" type="button" data-id="toy" onclick="doSelectDoctor('toy')"><span>🦷</span><span>หมอทอย</span></button>
-        <button class="login-doc-btn" type="button" data-id="mind" onclick="doSelectDoctor('mind')"><span>👩‍⚕️</span><span>หมอมายด์</span></button>
-        <button class="login-doc-btn" type="button" data-id="koi" onclick="doSelectDoctor('koi')"><span>🌸</span><span>หมอก้อย</span></button>
-        <button class="login-doc-btn" type="button" data-id="pong" onclick="doSelectDoctor('pong')"><span>👨‍⚕️</span><span>หมอป้อง</span></button>
+        <button class="login-doc-btn" type="button" data-id="toy" onclick="doSelectDoctor('toy')"><span>หมอทอย</span></button>
+        <button class="login-doc-btn" type="button" data-id="mind" onclick="doSelectDoctor('mind')"><span>หมอมายด์</span></button>
+        <button class="login-doc-btn" type="button" data-id="koi" onclick="doSelectDoctor('koi')"><span>หมอก้อย</span></button>
+        <button class="login-doc-btn" type="button" data-id="pong" onclick="doSelectDoctor('pong')"><span>หมอป้อง</span></button>
       </div>
       <!-- แถว 2: 3 คน กึ่งกลาง -->
       <div class="login-doc-row row3">
-        <button class="login-doc-btn" type="button" data-id="aim" onclick="doSelectDoctor('aim')"><span>💫</span><span>หมอเอม</span></button>
-        <button class="login-doc-btn" type="button" data-id="khao" onclick="doSelectDoctor('khao')"><span>⭐</span><span>หมอข้าว</span></button>
-        <button class="login-doc-btn" type="button" data-id="part" onclick="doSelectDoctor('part')"><span>🔬</span><span>หมอพาร์ท</span></button>
+        <button class="login-doc-btn" type="button" data-id="aim" onclick="doSelectDoctor('aim')"><span>หมอเอม</span></button>
+        <button class="login-doc-btn" type="button" data-id="khao" onclick="doSelectDoctor('khao')"><span>หมอข้าว</span></button>
+        <button class="login-doc-btn" type="button" data-id="part" onclick="doSelectDoctor('part')"><span>หมอพาร์ท</span></button>
       </div>
     </div>
     <div class="login-divider"><span>หรือ</span></div>
@@ -850,7 +850,7 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
       <!-- 1) APPOINTMENT TABLE (TOP) -->
       <div class="card-box" style="margin-bottom:20px;">
         <div class="card-box-hdr">
-          <div class="card-box-title">📅 ตารางไม่คอนเฟิร์ม</div>
+          <div class="card-box-title">📅 ตารางนัด</div>
           <button class="btn btn-primary btn-sm" id="btnAddAptHome" onclick="openAddApt()">+ เพิ่มนัด</button>
         </div>
         <div id="aptListHdr" class="apt-row apt-hdr"></div>
@@ -1118,15 +1118,9 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
       </div>
       <div class="form-group">
         <label>เวลา</label>
-        <div class="tp-wrap" id="tp-apt">
-          <div class="tp-display" onclick="tpToggle('apt')" id="tp-apt-display">🕐 10:00</div>
-          <input type="hidden" id="apt-time" value="10:00">
-          <div class="tp-dropdown" id="tp-apt-dd">
-            <div class="tp-col" id="tp-apt-h"></div>
-            <div class="tp-sep">:</div>
-            <div class="tp-col" id="tp-apt-m"></div>
-          </div>
-        </div>
+        <input class="form-control" id="apt-time" placeholder="HH:MM" maxlength="5"
+          style="font-size:18px;font-weight:700;letter-spacing:3px;color:var(--wine-dark);"
+          oninput="fmtTimeInput(this)" onblur="fmtTimeBlur(this)">
       </div>
       <div class="form-group">
         <label>หมอ</label>
@@ -1195,15 +1189,9 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
       </div>
       <div class="form-group">
         <label>เวลา</label>
-        <div class="tp-wrap" id="tp-treat">
-          <div class="tp-display" onclick="tpToggle('treat')" id="tp-treat-display">🕐 10:00</div>
-          <input type="hidden" id="treat-time" value="10:00">
-          <div class="tp-dropdown" id="tp-treat-dd">
-            <div class="tp-col" id="tp-treat-h"></div>
-            <div class="tp-sep">:</div>
-            <div class="tp-col" id="tp-treat-m"></div>
-          </div>
-        </div>
+        <input class="form-control" id="treat-time" placeholder="HH:MM" maxlength="5"
+          style="font-size:18px;font-weight:700;letter-spacing:3px;color:var(--wine-dark);"
+          oninput="fmtTimeInput(this)" onblur="fmtTimeBlur(this)">
       </div>
       <div class="form-group">
         <label>HN</label>
@@ -1356,7 +1344,7 @@ const DOCTORS_DATA = [
 ];
 const MANAGER = { id:'manager', name:'ผู้จัดการ', pin:'1234', emoji:'🔐', specialty:'จัดการระบบ', gender:'female', share:0 };
 
-const PROCEDURES = ['ขูดหินปูน','อุดฟัน','ถอนฟัน','ผ่าฟันคุด','ตรวจฟัน','X-Ray','TP','RPD','Valplast','Splint','จ่ายยา','ตัดไหม','เกลารากฟัน','รากฟันเทียม','จัดฟัน','ฟอกสีฟัน','ครอบฟัน','รักษารากฟัน','เคลือบหลุมร่องฟัน','อื่นๆ'];
+const PROCEDURES = ['ขูดหินปูน','อุดฟัน','ถอนฟัน','ผ่าฟันคุด','ตรวจฟัน','X-Ray','TP','RPD','Valplast','Splint','เดือยฟัน','จ่ายยา','ตัดไหม','เกลารากฟัน','รากฟันเทียม','จัดฟัน','ถอดเครื่องมือจัดฟัน','ฟอกสีฟัน','ครอบฟัน','รักษารากฟัน','เคลือบหลุมร่องฟัน','อื่นๆ'];
 
 const PROC_COLORS = {
   'ขูดหินปูน':    '#2980B9',
@@ -1369,11 +1357,13 @@ const PROC_COLORS = {
   'RPD':          '#E67E22',
   'Valplast':     '#F39C12',
   'Splint':       '#5D6D7E',
+  'เดือยฟัน':     '#A04000',
   'จ่ายยา':       '#1ABC9C',
   'ตัดไหม':       '#7F8C8D',
   'เกลารากฟัน':  '#2471A3',
   'รากฟันเทียม': '#922B21',
   'จัดฟัน':      '#6C3483',
+  'ถอดเครื่องมือจัดฟัน':'#9B59B6',
   'ฟอกสีฟัน':    '#F1C40F',
   'ครอบฟัน':      '#BA4A00',
   'รักษารากฟัน': '#117A65',
@@ -1797,15 +1787,14 @@ function openAddApt(apt=null, prefillDate=null, prefillTime=null){
   document.getElementById('apt-note').value = apt?.note || '';
   document.getElementById('apt-status').value = apt?.status || 'ไม่คอนเฟิร์ม';
   // Time — prefillTime จาก slot > apt.time > ปัดเวลาปัจจุบัน
-  if(apt?.time){
-    tpSet('apt', apt.time);
-  } else if(prefillTime){
-    tpSet('apt', prefillTime);
-  } else {
+  const aptTimeEl = document.getElementById('apt-time');
+  if(apt?.time && aptTimeEl) aptTimeEl.value = apt.time;
+  else if(prefillTime && aptTimeEl) aptTimeEl.value = prefillTime;
+  else if(aptTimeEl){
     const nowH=new Date();
     let hh=nowH.getHours(), mm=nowH.getMinutes()>=30?30:0;
     if(hh<10){hh=10;mm=0;} if(hh>18||(hh===18&&mm>30)){hh=18;mm=30;}
-    tpSet('apt', `${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}`);
+    aptTimeEl.value=`${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}`;
   }
   // Proc checkboxes
   clearProcSelection();
@@ -1832,10 +1821,13 @@ function saveApt(){
   if(_aptSaving) return;
   _aptSaving = true;
   setTimeout(()=>_aptSaving=false, 2000);
+  const aptTimeEl = document.getElementById('apt-time');
+  // normalize เวลา — ถ้าพิมพ์ยังไม่ครบให้ format ก่อน
+  if(aptTimeEl) fmtTimeBlur(aptTimeEl);
   const apt = {
     id: _editAptId || Date.now().toString(),
     date: document.getElementById('apt-date').value||todayStr(),
-    time: tpGet('apt'),
+    time: aptTimeEl?.value || '10:00',
     docName: document.getElementById('apt-doc').value,
     hn: document.getElementById('apt-hn').value,
     phone: document.getElementById('apt-phone')?.value||'',
@@ -1949,14 +1941,14 @@ function openAddTreat(t=null){
   const today=todayStr();
   document.getElementById('treat-id').value = t?.id||'';
   document.getElementById('treat-date').value = t?.date||today;
-  // เวลาปัจจุบัน rounded to nearest minute
-  if(t?.time){
-    tpSet('treat', t.time);
-  } else {
+  // เวลาปัจจุบัน
+  const treatTimeEl = document.getElementById('treat-time');
+  if(t?.time && treatTimeEl) treatTimeEl.value = t.time;
+  else if(treatTimeEl){
     const now = new Date();
     const hh = String(now.getHours()).padStart(2,'0');
     const mm = String(now.getMinutes()).padStart(2,'0');
-    tpSet('treat', `${hh}:${mm}`);
+    treatTimeEl.value = `${hh}:${mm}`;
   }
   document.getElementById('treat-hn').value = t?.hn||'';
   document.getElementById('treat-name').value = t?.patName||'';
@@ -1982,10 +1974,12 @@ function saveTreat(){
   if(_treatSaving) return;
   _treatSaving = true;
   setTimeout(()=>_treatSaving=false, 2000);
+  const treatTimeEl = document.getElementById('treat-time');
+  if(treatTimeEl) fmtTimeBlur(treatTimeEl);
   const id = document.getElementById('treat-id').value || Date.now().toString();
   const t = {
     id, date:document.getElementById('treat-date').value,
-    time:document.getElementById('treat-time').value,
+    time:treatTimeEl?.value||'10:00',
     hn:document.getElementById('treat-hn').value,
     patName:document.getElementById('treat-name').value,
     docName:document.getElementById('treat-doc').value,
@@ -2832,12 +2826,17 @@ function buildDayColumn(date, DAY_NAMES_TH, DAY_BG_PASTEL, DAY_FG_PASTEL){
   function aptCard(a){
     const sc = STATUS_COLOR[a.status]||'#999';
     const safeId = String(a.id).replace(/"/g,'');
-    return `<div data-apt-id="${safeId}" onclick="openEditApt(this.dataset.aptId)"
-      style="background:${sc}12;border-left:3px solid ${sc};border-radius:6px;
-      padding:5px 8px;cursor:pointer;margin-top:4px;">
+    return `<div style="background:${sc}12;border-left:3px solid ${sc};border-radius:6px;
+      padding:5px 8px;margin-top:4px;">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:4px;">
         <span style="font-weight:700;color:${sc};font-size:12px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${a.patName||'—'}</span>
-        <span class="${statusClass(a.status)}" style="font-size:9px;flex-shrink:0;">${a.status||''}</span>
+        <div style="display:flex;align-items:center;gap:3px;flex-shrink:0;">
+          <span class="${statusClass(a.status)}" style="font-size:9px;">${a.status||''}</span>
+          <button data-apt-id="${safeId}" onclick="event.stopPropagation();openEditApt(this.dataset.aptId)"
+            style="background:rgba(107,45,94,0.1);border:none;border-radius:4px;padding:2px 6px;cursor:pointer;font-size:11px;">✏️</button>
+          <button data-apt-id="${safeId}" onclick="event.stopPropagation();deleteApt(this.dataset.aptId)"
+            style="background:rgba(231,76,60,0.1);border:none;border-radius:4px;padding:2px 6px;cursor:pointer;font-size:11px;">🗑️</button>
+        </div>
       </div>
       <div style="font-size:10px;color:var(--text-light);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
         ${a.hn||''} · ${a.phone||''}
@@ -2865,26 +2864,20 @@ function buildDayColumn(date, DAY_NAMES_TH, DAY_BG_PASTEL, DAY_FG_PASTEL){
       border-radius:10px;padding:8px 10px;box-shadow:var(--shadow);
       opacity:${blocked?'0.5':'1'};margin-bottom:6px;transition:background 0.2s;">
       <div style="display:flex;align-items:center;gap:4px;">
-        <div class="tp-wrap" style="display:inline-block;">
-          <div class="tp-display" onclick="event.stopPropagation();tpToggle('slot_${date}_${slot.replace(':','')}')"
-            id="tp-slot_${date}_${slot.replace(':','')}-display"
-            style="font-size:14px;font-weight:800;color:var(--wine-dark);background:transparent;border:none;padding:0;min-width:unset;gap:3px;">
-            🕐 ${slot}
-          </div>
-          <input type="hidden" id="slot_${date}_${slot.replace(':','')}-time" value="${slot}">
-          <div class="tp-dropdown" id="tp-slot_${date}_${slot.replace(':','')}-dd" style="z-index:9999;">
-            <div class="tp-col" id="tp-slot_${date}_${slot.replace(':','')}-h"></div>
-            <div class="tp-sep">:</div>
-            <div class="tp-col" id="tp-slot_${date}_${slot.replace(':','')}-m"></div>
-          </div>
-        </div>
+        <input type="text" value="${slot}" placeholder="HH:MM" maxlength="5"
+          oninput="fmtTimeInput(this)"
+          onblur="schUpdateSlotTime('${date}','${slot}',this.value)"
+          onclick="event.stopPropagation()"
+          style="font-size:15px;font-weight:800;color:var(--wine-dark);border:none;
+          border-bottom:1.5px solid var(--border);background:transparent;padding:2px 4px;
+          width:58px;outline:none;font-family:'Prompt',sans-serif;letter-spacing:2px;">
         <div style="flex:1;"></div>
         ${blocked
           ? `<button onclick="toggleSlotBlocked('${date}','${slot}')" style="font-size:10px;background:#e8e8e8;border:none;border-radius:6px;padding:2px 7px;cursor:pointer;color:#555;">เปิด</button>`
           : `<button onclick="openAddApt(null,'${date}','${slot}')" style="font-size:10px;background:var(--wine);color:#fff;border:none;border-radius:6px;padding:2px 9px;cursor:pointer;font-weight:700;">+นัด</button>
              <button onclick="toggleSlotBlocked('${date}','${slot}')" title="เว้นว่าง" style="font-size:12px;background:#f5f5f5;border:1px solid #ddd;border-radius:6px;padding:1px 7px;cursor:pointer;color:#aaa;">⊘</button>`
         }
-        <button onclick="schRemoveSlot('${date}','${slot}')" style="font-size:10px;background:none;border:none;cursor:pointer;color:#ddd;padding:0 2px;">✕</button>
+        <button onclick="schRemoveSlot('${date}','${slot}')" style="font-size:10px;background:none;border:none;cursor:pointer;color:#ddd;padding:0 2px;display:none;">✕</button>
       </div>
       ${blocked?`<div style="font-size:10px;color:#bbb;text-align:center;padding:3px 0;">— เว้นว่าง —</div>`:''}
       ${aptCards}
@@ -3021,19 +3014,19 @@ function renderSchMiniCal(){
       <div style="width:6px;height:6px;border-radius:50%;background:${STATUS_COLOR[a.status]||'#999'};display:inline-block;margin:1px;"></div>`
     ).join('');
 
-    html += `<div onclick="schJumpToDate('${ds}')" style="min-height:70px;border-radius:8px;
+    html += `<div style="min-height:70px;border-radius:8px;
       border:${isSelected?'2px solid var(--wine)':isToday?'2px solid #FFD700':'1px solid var(--border)'};
       background:${isSelected?'var(--wine-pale)':isToday?'#FFFDE7':'#fff'};
-      padding:4px;cursor:pointer;transition:all 0.12s;overflow:hidden;"
-      onmouseover="this.style.background='var(--wine-pale)'" onmouseout="this.style.background='${isSelected?'var(--wine-pale)':isToday?'#FFFDE7':'#fff'}'">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;">
+      padding:4px;overflow:hidden;">
+      <!-- เลขวันที่ กดแล้ว jump -->
+      <div onclick="schJumpToDate('${ds}')" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;cursor:pointer;">
         <span style="font-size:12px;font-weight:${isToday||isSelected?'900':'600'};
           color:${isSelected?'var(--wine)':isToday?'#F57F17':dow===0?'#E74C3C':dow===6?'#3498DB':'var(--text-mid)'};">${d}</span>
         ${dayApts.length?`<span style="font-size:9px;font-weight:700;background:var(--wine);color:#fff;border-radius:8px;padding:0 4px;">${dayApts.length}</span>`:''}
       </div>
       ${docTags}
       <div style="display:flex;flex-wrap:wrap;gap:1px;margin-top:2px;">${statusDots}</div>
-      ${getDayNote(ds)?`<div style="font-size:8px;color:var(--text-light);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">📝 ${getDayNote(ds)}</div>`:''}
+      <!-- โน้ต — กดได้อิสระ ไม่ jump -->
       <input type="text" placeholder="+ โน้ต" maxlength="30"
         class="cal-note-input" data-date="${ds}"
         onclick="event.stopPropagation()"
@@ -3409,7 +3402,40 @@ document.addEventListener('click', function(e){
 
 let _autoSyncStarted = false;
 // ============================================================
-//  CUSTOM 24H TIME PICKER
+//  TIME INPUT FORMATTER (พิมพ์เลขแล้วใส่ : อัตโนมัติ)
+// ============================================================
+function fmtTimeInput(input){
+  let v = input.value.replace(/[^0-9]/g,'');
+  if(v.length > 2) v = v.slice(0,2)+':'+v.slice(2,4);
+  input.value = v;
+}
+function fmtTimeBlur(input){
+  // ถ้าพิมพ์ไม่ครบ เช่น "10" → "10:00"
+  let v = input.value.replace(/[^0-9:]/g,'');
+  if(/^\d{1,2}$/.test(v)) v = v.padStart(2,'0')+':00';
+  if(/^\d{2}:\d{1}$/.test(v)) v = v+'0';
+  if(/^\d{2}:\d{2}$/.test(v)){
+    const [h,m] = v.split(':').map(Number);
+    if(h<24 && m<60) v = String(h).padStart(2,'0')+':'+String(m).padStart(2,'0');
+    else v = '10:00';
+  } else { v = '10:00'; }
+  input.value = v;
+}
+
+// Helper: get/set time from modal inputs
+function tpGet(id){
+  const inp = document.getElementById(`${id}-time`);
+  return inp?.value || '10:00';
+}
+function tpSet(id, val){
+  const inp = document.getElementById(`${id}-time`);
+  if(inp){
+    inp.value = val||'10:00';
+  }
+}
+
+// ============================================================
+//  CUSTOM 24H TIME PICKER (legacy — kept for compatibility)
 // ============================================================
 const HOURS24 = Array.from({length:24},(_,i)=>String(i).padStart(2,'0'));
 const MINS    = Array.from({length:60},(_,i)=>String(i).padStart(2,'0'));
