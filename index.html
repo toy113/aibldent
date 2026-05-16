@@ -2865,12 +2865,14 @@ function buildDayColumn(date, DAY_NAMES_TH, DAY_BG_PASTEL, DAY_FG_PASTEL){
       opacity:${blocked?'0.5':'1'};margin-bottom:6px;transition:background 0.2s;">
       <div style="display:flex;align-items:center;gap:4px;">
         <input type="text" value="${slot}" placeholder="HH:MM" maxlength="5"
+          data-date="${date}" data-slot="${slot}"
           oninput="fmtTimeInput(this)"
-          onblur="schUpdateSlotTime('${date}','${slot}',this.value)"
-          onclick="event.stopPropagation()"
-          style="font-size:15px;font-weight:800;color:var(--wine-dark);border:none;
-          border-bottom:1.5px solid var(--border);background:transparent;padding:2px 4px;
-          width:58px;outline:none;font-family:'Prompt',sans-serif;letter-spacing:2px;">
+          onblur="fmtTimeBlur(this);schUpdateSlotTime(this.dataset.date,this.dataset.slot,this.value);this.dataset.slot=this.value;"
+          style="font-size:16px;font-weight:800;color:var(--wine-dark);
+          border:none;border-bottom:2px solid var(--wine-light);
+          background:transparent;padding:3px 6px;
+          width:76px;outline:none;font-family:'Prompt',sans-serif;
+          letter-spacing:2px;cursor:text;-webkit-user-select:text;user-select:text;">
         <div style="flex:1;"></div>
         ${blocked
           ? `<button onclick="toggleSlotBlocked('${date}','${slot}')" style="font-size:10px;background:#e8e8e8;border:none;border-radius:6px;padding:2px 7px;cursor:pointer;color:#555;">เปิด</button>`
@@ -3405,19 +3407,28 @@ let _autoSyncStarted = false;
 //  TIME INPUT FORMATTER (พิมพ์เลขแล้วใส่ : อัตโนมัติ)
 // ============================================================
 function fmtTimeInput(input){
-  let v = input.value.replace(/[^0-9]/g,'');
-  if(v.length > 2) v = v.slice(0,2)+':'+v.slice(2,4);
+  // รองรับทั้ง . และ : เป็น separator
+  let v = input.value.replace(/[^0-9.:]/g,'').replace('.', ':');
+  // ถ้าพิมพ์ตัวเลขล้วน ใส่ : อัตโนมัติที่ตำแหน่ง 2
+  const digits = v.replace(/:/g,'');
+  if(!v.includes(':') && digits.length > 2){
+    v = digits.slice(0,2)+':'+digits.slice(2,4);
+  }
   input.value = v;
 }
 function fmtTimeBlur(input){
-  // ถ้าพิมพ์ไม่ครบ เช่น "10" → "10:00"
-  let v = input.value.replace(/[^0-9:]/g,'');
-  if(/^\d{1,2}$/.test(v)) v = v.padStart(2,'0')+':00';
-  if(/^\d{2}:\d{1}$/.test(v)) v = v+'0';
-  if(/^\d{2}:\d{2}$/.test(v)){
-    const [h,m] = v.split(':').map(Number);
-    if(h<24 && m<60) v = String(h).padStart(2,'0')+':'+String(m).padStart(2,'0');
-    else v = '10:00';
+  let v = input.value.replace(/[^0-9.:]/g,'').replace('.', ':').trim();
+  // กรณี "1622" หรือ "16.22" หรือ "16:22"
+  const digits = v.replace(/[^0-9]/g,'');
+  if(digits.length >= 3){
+    const h = digits.slice(0,2);
+    const m = digits.slice(2,4).padEnd(2,'0');
+    const hN = parseInt(h), mN = parseInt(m);
+    if(hN >= 0 && hN < 24 && mN >= 0 && mN < 60){
+      v = h + ':' + m;
+    } else { v = '10:00'; }
+  } else if(digits.length === 2){
+    v = digits.padStart(2,'0') + ':00';
   } else { v = '10:00'; }
   input.value = v;
 }
