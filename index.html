@@ -629,7 +629,11 @@ select.form-control { cursor: pointer; }
 .search-box::before { content: '🔍'; position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 13px; z-index: 1; pointer-events: none; }
 
 /* FORCE 24HR TIME INPUT */
-input[type="time"] {
+/* Force date input to show DD/MM/YYYY — override browser locale */
+input[type="date"]::-webkit-datetime-edit-month-field { order: 2; }
+input[type="date"]::-webkit-datetime-edit-day-field   { order: 1; }
+input[type="date"]::-webkit-datetime-edit-year-field  { order: 3; }
+input[type="date"]::-webkit-datetime-edit-text        { order: 2; }
   -webkit-appearance: none;
   appearance: none;
   font-family: 'Prompt', 'Sarabun', sans-serif;
@@ -928,7 +932,7 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
               <button class="period-tab active" id="treatModeDay" onclick="setTreatMode('day',this)">รายวัน</button>
               <button class="period-tab" id="treatModeMonth" onclick="setTreatMode('month',this)">รายเดือน</button>
             </div>
-            <input type="date" class="form-control" id="treatFilterDate" onchange="renderTreatPage()" style="height:36px;">
+            <input type="date" class="form-control" lang="en-CA" id="treatFilterDate" onchange="renderTreatPage()" style="height:36px;">
             <input type="month" class="form-control" id="treatFilterMonth" onchange="renderTreatPage()" style="height:36px;display:none;">
             <div class="search-box"><input type="text" class="form-control" placeholder="ค้นหาชื่อ/HN" id="treatSearch" oninput="renderTreatPage()" style="height:36px;padding-left:32px;width:180px;"></div>
             <button class="btn btn-primary btn-sm" id="btnAddTreat" onclick="openAddTreat()">+ เพิ่มรายการ</button>
@@ -967,13 +971,13 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
             <button class="period-tab" id="iperiod-range" onclick="setPeriod('range',this)">ช่วงวันที่</button>
           </div>
           <!-- date picker shown per mode -->
-          <input type="date" id="income-filter-day" class="form-control" style="height:36px;width:160px;" onchange="renderIncome()">
+          <input type="date" id="income-filter-day" lang="en-CA" class="form-control" style="height:36px;width:160px;" onchange="renderIncome()">
           <input type="month" id="income-filter-month" class="form-control" style="height:36px;width:150px;display:none;" onchange="renderIncome()">
           <input type="number" id="income-filter-year" class="form-control" style="height:36px;width:100px;display:none;" placeholder="ปี พ.ศ." min="2560" max="2600" onchange="renderIncome()">
           <div id="income-filter-range" style="display:none;display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
-            <input type="date" id="income-range-start" class="form-control" style="height:36px;width:145px;" onchange="renderIncome()">
+            <input type="date" id="income-range-start" lang="en-CA" class="form-control" style="height:36px;width:145px;" onchange="renderIncome()">
             <span style="color:var(--text-light);font-size:13px;">ถึง</span>
-            <input type="date" id="income-range-end" class="form-control" style="height:36px;width:145px;" onchange="renderIncome()">
+            <input type="date" id="income-range-end" lang="en-CA" class="form-control" style="height:36px;width:145px;" onchange="renderIncome()">
           </div>
         </div>
       </div>
@@ -1034,7 +1038,7 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
       <!-- Top bar: วันที่ + เพิ่มนัด -->
       <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
         <button onclick="schChangeDay(-1)" class="btn btn-ghost" style="padding:6px 12px;font-size:18px;">‹</button>
-        <input type="date" class="form-control" id="schDate" onchange="renderScheduleDay()" style="height:36px;width:160px;font-weight:700;color:var(--wine-dark);">
+        <input type="date" class="form-control" lang="en-CA" id="schDate" onchange="renderScheduleDay()" style="height:36px;width:160px;font-weight:700;color:var(--wine-dark);">
         <button onclick="schChangeDay(1)" class="btn btn-ghost" style="padding:6px 12px;font-size:18px;">›</button>
         <button onclick="schGoToday()" class="btn btn-ghost" style="height:36px;font-size:13px;">วันนี้</button>
         <button onclick="schResetSlots()" class="btn btn-ghost" style="height:36px;font-size:12px;color:var(--text-light);" title="รีเซ็ต slot เป็นค่าเริ่มต้น 10:00-18:30">↺ Reset Slots</button>
@@ -1114,7 +1118,7 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
     <div class="form-grid">
       <div class="form-group">
         <label>วันที่</label>
-        <input type="date" class="form-control" id="apt-date">
+        <input type="date" class="form-control" lang="en-CA" id="apt-date">
       </div>
       <div class="form-group">
         <label>เวลา</label>
@@ -1185,7 +1189,7 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
     <div class="form-grid">
       <div class="form-group">
         <label>วันที่</label>
-        <input type="date" class="form-control" id="treat-date">
+        <input type="date" class="form-control" lang="en-CA" id="treat-date">
       </div>
       <div class="form-group">
         <label>เวลา</label>
@@ -1251,7 +1255,7 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
     <div class="form-grid">
       <div class="form-group">
         <label>วันที่</label>
-        <input type="date" class="form-control" id="lab-date">
+        <input type="date" class="form-control" lang="en-CA" id="lab-date">
       </div>
       <div class="form-group">
         <label>หมอ</label>
@@ -1853,10 +1857,17 @@ function saveApt(){
   saveLocal();
 
   // สร้าง slot อัตโนมัติเฉพาะตอนเพิ่มนัดใหม่ ไม่ใช่แก้ไข
+  // และไม่สร้างถ้าเวลานัดอยู่ใน range ของ slot ที่มีอยู่แล้ว (±30 นาที)
   if(!_editAptId && apt.time && apt.date){
     const slots = getSchSlots(apt.date);
-    const exactMatch = slots.includes(apt.time);
-    if(!exactMatch){
+    const [ah,am] = apt.time.split(':').map(Number);
+    const aptMins = ah*60+am;
+    const inExistingSlot = slots.some(s=>{
+      const [sh,sm] = s.split(':').map(Number);
+      const slotMins = sh*60+sm;
+      return aptMins >= slotMins && aptMins < slotMins+30;
+    });
+    if(!inExistingSlot){
       slots.push(apt.time);
       slots.sort();
       saveSchSlots(apt.date, slots);
