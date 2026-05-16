@@ -1101,6 +1101,14 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
     <div class="page" id="page-settings">
       <div class="settings-grid" id="settingsGrid"></div>
 
+      <!-- DAY SLOT SETTINGS -->
+      <div style="margin-top:20px;background:#fff;border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);border:1px solid var(--border);">
+        <div style="font-size:15px;font-weight:700;color:var(--wine-dark);margin-bottom:4px;font-family:'Prompt',sans-serif;">📅 ตั้งค่า Slot แต่ละวัน</div>
+        <div style="font-size:12px;color:var(--text-light);margin-bottom:16px;">กำหนดเวลาเปิด-ปิด และจำนวน slot สูงสุดของแต่ละวันในสัปดาห์</div>
+        <div id="daySlotSettingsGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;"></div>
+        <button class="btn btn-primary" onclick="saveDaySlotSettings()" style="margin-top:16px;">💾 บันทึกการตั้งค่า Slot</button>
+      </div>
+
       <!-- DANGER ZONE - Manager only -->
       <div style="margin-top:20px;background:#fff;border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);border:1.5px solid rgba(231,76,90,0.25);">
         <div style="font-size:15px;font-weight:700;color:#c0203a;margin-bottom:6px;font-family:'Prompt',sans-serif;">⚠️ จัดการข้อมูล</div>
@@ -1376,7 +1384,7 @@ const DOCTORS_DATA = [
 ];
 const MANAGER = { id:'manager', name:'ผู้จัดการ', pin:'1234', emoji:'🔐', specialty:'จัดการระบบ', gender:'female', share:0 };
 
-const PROCEDURES = ['ขูดหินปูน','อุดฟัน','ถอนฟัน','ผ่าฟันคุด','ตรวจฟัน','X-Ray','TP','RPD','Valplast','จ่ายยา','ตัดไหม','เกลารากฟัน','รากฟันเทียม','จัดฟัน','ฟอกสีฟัน','ครอบฟัน','รักษารากฟัน','เคลือบหลุมร่องฟัน','อื่นๆ'];
+const PROCEDURES = ['ขูดหินปูน','อุดฟัน','ถอนฟัน','ผ่าฟันคุด','ตรวจฟัน','X-Ray','TP','RPD','Valplast','Splint','จ่ายยา','ตัดไหม','เกลารากฟัน','รากฟันเทียม','จัดฟัน','ฟอกสีฟัน','ครอบฟัน','รักษารากฟัน','เคลือบหลุมร่องฟัน','อื่นๆ'];
 
 const PROC_COLORS = {
   'ขูดหินปูน':    '#2980B9',
@@ -1388,6 +1396,7 @@ const PROC_COLORS = {
   'TP':           '#D35400',
   'RPD':          '#E67E22',
   'Valplast':     '#F39C12',
+  'Splint':       '#5D6D7E',
   'จ่ายยา':       '#1ABC9C',
   'ตัดไหม':       '#7F8C8D',
   'เกลารากฟัน':  '#2471A3',
@@ -2452,6 +2461,8 @@ function buildSettingsPage(){
         <button class="btn btn-primary" style="width:100%" onclick="saveDocSettings('${doc.id}')">💾 บันทึกการตั้งค่า</button>
       </div>
     </div>`).join('');
+  // สร้าง UI ตั้งค่า slot แต่ละวัน
+  buildDaySlotSettingsUI();
 }
 function setGender(docId,gender,btn){
   btn.closest('.gender-toggle').querySelectorAll('.gender-btn').forEach(b=>b.classList.remove('active'));
@@ -2707,17 +2718,32 @@ function renderSchedulePage(){
     };
     const today = todayStr();
 
-    // Generate time slots 10:00 - 18:30 ทุก 30 นาที
-    const TIME_START = {h:10,m:0};
-    const TIME_END   = {h:18,m:30};
-    const allSlots = [];
-    const stdSlots = new Set();
-    let th=TIME_START.h, tm=TIME_START.m;
-    while(th<TIME_END.h||(th===TIME_END.h&&tm<=TIME_END.m)){
-      const s = `${String(th).padStart(2,'0')}:${String(tm).padStart(2,'0')}`;
-      allSlots.push(s); stdSlots.add(s);
-      tm+=30; if(tm>=60){tm-=60;th++;}
+    // โหลด slot config ของแต่ละวัน
+    const daySlotConfig = loadDaySlotConfig();
+
+    // Generate time slots จาก config ของแต่ละวันในสัปดาห์นี้
+    // รวม slot ทุกวันที่เปิด แล้วหา union ของ slot ทั้งหมด
+    function getDaySlots(dow){
+      const cfg = daySlotConfig.find(d=>d.dow===dow);
+      if(!cfg || !cfg.open) return [];
+      const slots = [];
+      const [sh,sm] = cfg.start.split(':').map(Number);
+      const [eh,em] = cfg.end.split(':').map(Number);
+      let th=sh, tm=sm;
+      while(th*60+tm <= eh*60+em){
+        slots.push(`${String(th).padStart(2,'0')}:${String(tm).padStart(2,'0')}`);
+        tm+=30; if(tm>=60){tm-=60;th++;}
+      }
+      return slots;
     }
+
+    // Generate union of all slots across all days in this week for time column
+    const allSlotSet = new Set();
+    const stdSlots = new Set();
+    for(let dow=0;dow<7;dow++){
+      getDaySlots(dow).forEach(s=>{allSlotSet.add(s);stdSlots.add(s);});
+    }
+    const allSlots = [...allSlotSet].sort();
 
     // Build weeks array
     const firstDow = new Date(y,m-1,1).getDay();
@@ -2806,20 +2832,35 @@ function renderSchedulePage(){
             color:${timeColor};text-align:center;padding:2px;
             white-space:nowrap;background:${timeBg};">${slot}</td>`;
         wk.forEach(day=>{
-          if(!day){ html += `<td style="border:1px solid #f0f0f0;background:#f9f9f9;"></td>`; return; }
-          // หา apt ที่ตรง slot นี้ หรืออยู่ในช่วง slot นี้ (เวลาที่ไม่ตรง :00/:30 จะ round ไป slot ใกล้ที่สุด)
+          if(!day){ html += `<td style="border:1px solid #f0f0f0;background:#f5f5f5;"></td>`; return; }
+          const dayCfg = daySlotConfig.find(d=>d.dow===day.dow);
+          const dayOpen = dayCfg?.open !== false;
+          const daySlotList = getDaySlots(day.dow);
+          const inRange = daySlotList.includes(slot);
+
+          if(!dayOpen || !inRange){
+            html += `<td style="border:1px solid #f0f0f0;background:${dayOpen?'rgba(0,0,0,0.015)':'rgba(0,0,0,0.05)'};"></td>`;
+            return;
+          }
+
           const slotMins = parseInt(slot.split(':')[0])*60 + parseInt(slot.split(':')[1]);
           const nextSlotMins = slotMins + 30;
           const cellApts = apts.filter(a=>{
             if(a.date !== day.ds || !a.time) return false;
             const t = String(a.time).slice(0,5);
-            const [th,tm] = t.split(':').map(Number);
-            const aptMins = th*60+tm;
+            const [th2,tm2] = t.split(':').map(Number);
+            const aptMins = th2*60+tm2;
             return aptMins >= slotMins && aptMins < nextSlotMins;
           });
           const isToday = day.ds===today;
+          const maxSlots = dayCfg?.maxSlots || 16;
+          const usagePct = Math.min(cellApts.length / maxSlots * 100, 100);
+          const slotBg = cellApts.length === 0 ? (isToday?'rgba(52,152,219,0.06)':'#fff') :
+                         usagePct >= 100 ? 'rgba(231,76,60,0.08)' :
+                         usagePct >= 60  ? 'rgba(230,126,34,0.06)' : 'rgba(39,174,96,0.05)';
+
           html += `<td style="border:1px solid ${isToday?'rgba(52,152,219,0.3)':'#f0f0f0'};padding:1px 2px;vertical-align:top;
-            background:${isToday?'rgba(52,152,219,0.06)':'#fff'};cursor:pointer;"
+            background:${slotBg};cursor:pointer;"
             onclick="openAddApt(null,'${day.ds}','${slot}')" title="เพิ่มนัด ${day.ds} ${slot}">`;
           cellApts.forEach(a=>{
             const sc = STATUS_COLOR[a.status]||'#999';
@@ -3045,6 +3086,80 @@ function autoFillPatient(hn, prefix){
   if(phoneEl && found.phone)   phoneEl.value = found.phone;
 
   if(hint) hint.innerHTML = `<span style="color:var(--green);font-weight:700;">✓ ${found.patName}${found.phone?' | '+found.phone:''}</span>`;
+}
+
+// ============================================================
+//  DAY SLOT CONFIG (เก็บใน localStorage)
+// ============================================================
+const DAY_NAMES_FULL = ['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
+const DEFAULT_DAY_SLOTS = [
+  { dow:0, name:'อาทิตย์', open:false, start:'10:00', end:'18:30', maxSlots:16 },
+  { dow:1, name:'จันทร์',  open:true,  start:'10:00', end:'18:30', maxSlots:16 },
+  { dow:2, name:'อังคาร', open:true,  start:'10:00', end:'18:30', maxSlots:16 },
+  { dow:3, name:'พุธ',    open:true,  start:'10:00', end:'18:30', maxSlots:16 },
+  { dow:4, name:'พฤหัส', open:true,  start:'10:00', end:'18:30', maxSlots:16 },
+  { dow:5, name:'ศุกร์',  open:true,  start:'10:00', end:'18:30', maxSlots:16 },
+  { dow:6, name:'เสาร์',  open:true,  start:'10:00', end:'14:00', maxSlots:8  },
+];
+
+function loadDaySlotConfig(){
+  try {
+    const saved = localStorage.getItem('bl_day_slots');
+    if(saved) return JSON.parse(saved);
+  } catch(e){}
+  return JSON.parse(JSON.stringify(DEFAULT_DAY_SLOTS));
+}
+
+function saveDaySlotSettings(){
+  const config = DEFAULT_DAY_SLOTS.map(d => {
+    const open  = document.getElementById(`ds_open_${d.dow}`)?.checked ?? d.open;
+    const start = document.getElementById(`ds_start_${d.dow}`)?.value || d.start;
+    const end   = document.getElementById(`ds_end_${d.dow}`)?.value || d.end;
+    const max   = parseInt(document.getElementById(`ds_max_${d.dow}`)?.value) || d.maxSlots;
+    return { ...d, open, start, end, maxSlots: max };
+  });
+  localStorage.setItem('bl_day_slots', JSON.stringify(config));
+  showToast('✅ บันทึกการตั้งค่า Slot แล้ว');
+  renderSchedulePage(); // re-render ปฏิทิน
+}
+
+function buildDaySlotSettingsUI(){
+  const config = loadDaySlotConfig();
+  const DAY_BG = ['#FFACAC','#FFE08A','#FFB3DE','#A8E6BC','#FFD0A0','#A8D8F0','#C9B8F0'];
+  const DAY_FG = ['#7B2020','#6B4A00','#7B2060','#1A6B40','#7B4000','#1A4A7B','#3D1A7B'];
+  const grid = document.getElementById('daySlotSettingsGrid');
+  if(!grid) return;
+  grid.innerHTML = config.map(d => `
+    <div style="border:1px solid var(--border);border-radius:10px;overflow:hidden;">
+      <div style="background:${DAY_BG[d.dow]};padding:8px 12px;display:flex;align-items:center;justify-content:space-between;">
+        <span style="font-weight:800;color:${DAY_FG[d.dow]};font-size:14px;">${d.name}</span>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+          <input type="checkbox" id="ds_open_${d.dow}" ${d.open?'checked':''} onchange="document.getElementById('ds_body_${d.dow}').style.opacity=this.checked?'1':'0.4'">
+          <span style="font-size:12px;font-weight:700;color:${DAY_FG[d.dow]};">${d.open?'เปิด':'ปิด'}</span>
+        </label>
+      </div>
+      <div id="ds_body_${d.dow}" style="padding:12px;opacity:${d.open?'1':'0.4'};transition:opacity 0.2s;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+          <div>
+            <div style="font-size:11px;color:var(--text-light);font-weight:700;margin-bottom:4px;">เวลาเริ่ม</div>
+            <input type="time" id="ds_start_${d.dow}" value="${d.start}" class="form-control" style="height:32px;font-size:13px;">
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--text-light);font-weight:700;margin-bottom:4px;">เวลาสิ้นสุด</div>
+            <input type="time" id="ds_end_${d.dow}" value="${d.end}" class="form-control" style="height:32px;font-size:13px;">
+          </div>
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--text-light);font-weight:700;margin-bottom:4px;">Slot สูงสุด</div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <input type="range" id="ds_max_${d.dow}" min="4" max="32" value="${d.maxSlots}" 
+              oninput="document.getElementById('ds_max_val_${d.dow}').textContent=this.value"
+              style="flex:1;">
+            <span id="ds_max_val_${d.dow}" style="font-weight:800;color:var(--wine);font-size:16px;min-width:28px;text-align:center;">${d.maxSlots}</span>
+          </div>
+        </div>
+      </div>
+    </div>`).join('');
 }
 
 function startAutoSync(){
