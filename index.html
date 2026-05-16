@@ -850,7 +850,7 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
       <!-- 1) APPOINTMENT TABLE (TOP) -->
       <div class="card-box" style="margin-bottom:20px;">
         <div class="card-box-hdr">
-          <div class="card-box-title">📅 ตารางนัดวันนี้</div>
+          <div class="card-box-title">📅 ตารางไม่คอนเฟิร์ม</div>
           <button class="btn btn-primary btn-sm" id="btnAddAptHome" onclick="openAddApt()">+ เพิ่มนัด</button>
         </div>
         <div id="aptListHdr" class="apt-row apt-hdr"></div>
@@ -1037,6 +1037,7 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
         <input type="date" class="form-control" id="schDate" onchange="renderScheduleDay()" style="height:36px;width:160px;font-weight:700;color:var(--wine-dark);">
         <button onclick="schChangeDay(1)" class="btn btn-ghost" style="padding:6px 12px;font-size:18px;">›</button>
         <button onclick="schGoToday()" class="btn btn-ghost" style="height:36px;font-size:13px;">วันนี้</button>
+        <button onclick="schResetSlots()" class="btn btn-ghost" style="height:36px;font-size:12px;color:var(--text-light);" title="รีเซ็ต slot เป็นค่าเริ่มต้น 10:00-18:30">↺ Reset Slots</button>
         <div style="flex:1;"></div>
         <button class="btn btn-primary" id="btnAddAptSchedule" onclick="openAddAptSchedule()" style="height:36px;">+ เพิ่มนัด</button>
       </div>
@@ -1158,7 +1159,7 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
       <div class="form-group">
         <label>สถานะ</label>
         <select class="form-control" id="apt-status">
-          <option value="นัดวันนี้">นัดวันนี้</option>
+          <option value="ไม่คอนเฟิร์ม">ไม่คอนเฟิร์ม</option>
           <option value="รอทำ">รอทำ</option>
           <option value="คอนเฟิร์ม">คอนเฟิร์ม</option>
           <option value="เสร็จสิ้น">เสร็จสิ้น</option>
@@ -1323,7 +1324,7 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
 <!-- STATUS CHANGE DROPDOWN -->
 <div id="statusDropdown" onclick="event.stopPropagation()" style="display:none;position:fixed;z-index:5000;background:#fff;border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow-lg);padding:6px;min-width:150px;">
   <div style="font-size:11px;color:var(--text-light);padding:4px 8px 6px;border-bottom:1px solid var(--border);margin-bottom:4px;font-weight:700;">เปลี่ยนสถานะ</div>
-  <div class="status-opt" onclick="setStatus('นัดวันนี้')"><span style="color:var(--wine)">📅</span> นัดวันนี้</div>
+  <div class="status-opt" onclick="setStatus('ไม่คอนเฟิร์ม')"><span style="color:var(--wine)">📅</span> ไม่คอนเฟิร์ม</div>
   <div class="status-opt" onclick="setStatus('รอทำ')"><span style="color:var(--orange)">⏳</span> รอทำ</div>
   <div class="status-opt" onclick="setStatus('คอนเฟิร์ม')"><span style="color:var(--blue)">✅</span> คอนเฟิร์ม</div>
   <div class="status-opt" onclick="setStatus('เสร็จสิ้น')"><span style="color:var(--green)">🎉</span> เสร็จสิ้น</div>
@@ -1716,7 +1717,7 @@ function renderHome(){
 
 function statusBgColor(s){
   const map = {
-    'นัดวันนี้'   :'rgba(107,45,94,0.08)',
+    'ไม่คอนเฟิร์ม'   :'rgba(107,45,94,0.08)',
     'confirm'     :'rgba(107,45,94,0.08)',
     'รอทำ'        :'rgba(230,126,34,0.10)',
     'คอนเฟิร์ม'  :'rgba(52,152,219,0.10)',
@@ -1745,7 +1746,7 @@ function renderAptList(today){
       : '<div>เวลา</div><div>HN</div><div>ชื่อ-สกุล</div><div>รายการ</div><div>หมายเหตุ</div><div>หมอ</div><div>สถานะ</div>';
   }
 
-  if(!apts.length){ el.innerHTML=`<div style="padding:20px;text-align:center;color:var(--text-light);font-size:14px;">ไม่มีนัดวันนี้</div>`; return; }
+  if(!apts.length){ el.innerHTML=`<div style="padding:20px;text-align:center;color:var(--text-light);font-size:14px;">ไม่มีไม่คอนเฟิร์ม</div>`; return; }
   el.innerHTML = apts.map(a=>`
     <div class="${rowClass}" style="background:${statusBgColor(a.status)};">
       <div style="font-weight:700;color:var(--wine)">${a.time}</div>
@@ -1794,7 +1795,7 @@ function openAddApt(apt=null, prefillDate=null, prefillTime=null){
   document.getElementById('apt-name').value = apt?.patName || '';
   document.getElementById('apt-phone').value= apt?.phone || '';
   document.getElementById('apt-note').value = apt?.note || '';
-  document.getElementById('apt-status').value = apt?.status || 'นัดวันนี้';
+  document.getElementById('apt-status').value = apt?.status || 'ไม่คอนเฟิร์ม';
   // Time — prefillTime จาก slot > apt.time > ปัดเวลาปัจจุบัน
   if(apt?.time){
     tpSet('apt', apt.time);
@@ -2643,6 +2644,18 @@ function schGoToday(){
   document.getElementById('schDate').value = todayStr();
   renderScheduleDay();
 }
+function schResetSlots(){
+  const date = document.getElementById('schDate')?.value || todayStr();
+  if(!confirm(`รีเซ็ต slot วันที่ ${fmtDate(date)} เป็น 10:00-18:30?`)) return;
+  // ลบ slot ของวันนี้ใน localStorage
+  try {
+    const all = JSON.parse(localStorage.getItem(SCH_SLOTS_KEY)||'{}');
+    delete all[date];
+    localStorage.setItem(SCH_SLOTS_KEY, JSON.stringify(all));
+  } catch(e){}
+  renderScheduleDay();
+  showToast('รีเซ็ต slot สำเร็จ');
+}
 function schChangeDay(delta){
   const el = document.getElementById('schDate');
   const d = new Date(el.value || todayStr());
@@ -2745,6 +2758,13 @@ function renderScheduleDay(){
   view.innerHTML = buildDayColumn(date1, DAY_NAMES_TH, DAY_BG_PASTEL, DAY_FG_PASTEL)
                  + buildDayColumn(date2, DAY_NAMES_TH, DAY_BG_PASTEL, DAY_FG_PASTEL);
 
+  // Init all slot time pickers
+  view.querySelectorAll('.tp-wrap [id^="tp-slot_"][id$="-display"]').forEach(el=>{
+    const id = el.id.replace('tp-','').replace('-display','');
+    const val = document.getElementById(`${id}-time`)?.value||'10:00';
+    tpInit(id, val);
+  });
+
   // Restore note values
   view.querySelectorAll('.cal-note-input').forEach(inp=>{
     const note = getDayNote(inp.dataset.date);
@@ -2761,7 +2781,7 @@ function buildDayColumn(date, DAY_NAMES_TH, DAY_BG_PASTEL, DAY_FG_PASTEL){
   const bg = isToday ? 'var(--wine)' : DAY_BG_PASTEL[dow];
   const fg = isToday ? '#fff' : DAY_FG_PASTEL[dow];
 
-  // หมอที่มีนัดวันนี้
+  // หมอที่มีไม่คอนเฟิร์ม
   const docSet = {};
   dayApts.forEach(a=>{ if(a.docName) docSet[a.docName]=(docSet[a.docName]||0)+1; });
   const docList = Object.keys(docSet);
@@ -2771,7 +2791,7 @@ function buildDayColumn(date, DAY_NAMES_TH, DAY_BG_PASTEL, DAY_FG_PASTEL){
   const noteVal = getDayNote(date)||'';
 
   const STATUS_COLOR = {
-    'นัดวันนี้':'var(--wine)','รอทำ':'var(--orange)',
+    'ไม่คอนเฟิร์ม':'var(--wine)','รอทำ':'var(--orange)',
     'คอนเฟิร์ม':'var(--blue)','confirm':'var(--blue)',
     'เสร็จสิ้น':'var(--green)','เสร็จ':'var(--green)',
     'ยกเลิก':'var(--red)','walk-in':'#3498DB'
@@ -2818,11 +2838,19 @@ function buildDayColumn(date, DAY_NAMES_TH, DAY_BG_PASTEL, DAY_FG_PASTEL){
       border-radius:10px;padding:8px 10px;box-shadow:var(--shadow);
       opacity:${blocked?'0.5':'1'};margin-bottom:6px;">
       <div style="display:flex;align-items:center;gap:4px;">
-        <input type="time" value="${slot}"
-          onchange="schUpdateSlotTime('${date}','${slot}',this.value)"
-          onclick="event.stopPropagation()"
-          style="font-size:14px;font-weight:800;color:var(--wine-dark);border:none;
-          background:transparent;padding:0;width:78px;cursor:pointer;outline:none;font-family:'Prompt',sans-serif;">
+        <div class="tp-wrap" style="display:inline-block;">
+          <div class="tp-display" onclick="event.stopPropagation();tpToggle('slot_${date}_${slot.replace(':','')}')"
+            id="tp-slot_${date}_${slot.replace(':','')}-display"
+            style="font-size:14px;font-weight:800;color:var(--wine-dark);background:transparent;border:none;padding:0;min-width:unset;gap:3px;">
+            🕐 ${slot}
+          </div>
+          <input type="hidden" id="slot_${date}_${slot.replace(':','')}-time" value="${slot}">
+          <div class="tp-dropdown" id="tp-slot_${date}_${slot.replace(':','')}-dd" style="z-index:9999;">
+            <div class="tp-col" id="tp-slot_${date}_${slot.replace(':','')}-h"></div>
+            <div class="tp-sep">:</div>
+            <div class="tp-col" id="tp-slot_${date}_${slot.replace(':','')}-m"></div>
+          </div>
+        </div>
         <div style="flex:1;"></div>
         ${blocked
           ? `<button onclick="toggleSlotBlocked('${date}','${slot}')" style="font-size:10px;background:#e8e8e8;border:none;border-radius:6px;padding:2px 7px;cursor:pointer;color:#555;">เปิด</button>`
@@ -2925,7 +2953,7 @@ function renderSchMiniCal(){
   const DAY_NAMES_S = ['อา','จ','อ','พ','พฤ','ศ','ส'];
   const DAY_BG_P = ['#FFACAC','#FFE08A','#FFB3DE','#A8E6BC','#FFD0A0','#A8D8F0','#C9B8F0'];
   const DAY_FG_P = ['#7B2020','#6B4A00','#7B2060','#1A6B40','#7B4000','#1A4A7B','#3D1A7B'];
-  const STATUS_COLOR = {'นัดวันนี้':'var(--wine)','รอทำ':'var(--orange)','คอนเฟิร์ม':'var(--blue)','confirm':'var(--blue)','เสร็จสิ้น':'var(--green)','เสร็จ':'var(--green)','ยกเลิก':'var(--red)','walk-in':'#3498DB'};
+  const STATUS_COLOR = {'ไม่คอนเฟิร์ม':'var(--wine)','รอทำ':'var(--orange)','คอนเฟิร์ม':'var(--blue)','confirm':'var(--blue)','เสร็จสิ้น':'var(--green)','เสร็จ':'var(--green)','ยกเลิก':'var(--red)','walk-in':'#3498DB'};
 
   if(labelEl) labelEl.textContent = `${MONTH_TH[m-1]} ${y+543}`;
 
@@ -2979,10 +3007,23 @@ function renderSchMiniCal(){
       ${docTags}
       <div style="display:flex;flex-wrap:wrap;gap:1px;margin-top:2px;">${statusDots}</div>
       ${getDayNote(ds)?`<div style="font-size:8px;color:var(--text-light);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">📝 ${getDayNote(ds)}</div>`:''}
+      <input type="text" placeholder="+ โน้ต" maxlength="30"
+        class="cal-note-input" data-date="${ds}"
+        onclick="event.stopPropagation()"
+        onchange="saveDayNote(this.dataset.date,this.value);renderSchMiniCal();"
+        style="width:100%;border:none;border-bottom:1px dashed rgba(0,0,0,0.15);
+        background:transparent;font-size:8px;color:var(--text-mid);padding:1px 2px;
+        outline:none;margin-top:2px;font-family:'Sarabun',sans-serif;">
     </div>`;
   }
   html += `</div>`;
   calEl.innerHTML = html;
+
+  // Restore note values
+  calEl.querySelectorAll('.cal-note-input').forEach(inp=>{
+    const note = getDayNote(inp.dataset.date);
+    if(note) inp.value = note;
+  });
 }
 
 function schJumpToDate(date){
@@ -3043,7 +3084,7 @@ function renderSchedulePage(){
     const DAY_BG    = ['#FFACAC','#FFE08A','#FFB3DE','#A8E6BC','#FFD0A0','#A8D8F0','#C9B8F0'];
     const DAY_COLOR = ['#7B2020','#6B4A00','#7B2060','#1A6B40','#7B4000','#1A4A7B','#3D1A7B'];
     const STATUS_COLOR = {
-      'นัดวันนี้':'var(--wine)','รอทำ':'var(--orange)',
+      'ไม่คอนเฟิร์ม':'var(--wine)','รอทำ':'var(--orange)',
       'คอนเฟิร์ม':'var(--blue)','confirm':'var(--wine)',
       'เสร็จสิ้น':'var(--green)','เสร็จ':'var(--green)',
       'ยกเลิก':'var(--red)','walk-in':'#3498DB','ไม่คอนเฟิร์ม':'#aaa'
@@ -3356,25 +3397,35 @@ function tpInit(id, val){
     `<div class="tp-item${h===hh?' sel':''}" onclick="tpSelect('${id}','h','${h}')">${h}</div>`
   ).join('');
   mCol.innerHTML = MINS.map(m=>
-    `<div class="tp-item${m===mm||(!MINS.includes(mm)&&m==='00')?' sel':''}" onclick="tpSelect('${id}','m','${m}')">${m}</div>`
+    `<div class="tp-item${m===mm?' sel':''}" onclick="tpSelect('${id}','m','${m}')">${m}</div>`
   ).join('');
 
   tpSetDisplay(id, hh, mm);
 }
 
 function tpSelect(id, part, val){
-  const hidden = document.getElementById(`${id}-time`)||document.getElementById(`apt-time`);
-  let [hh,mm] = (document.getElementById(`${id === 'apt'?'apt':'treat'}-time`)?.value||'10:00').split(':');
+  // หา hidden input — รองรับทั้ง apt-time, treat-time และ slot_date_HHMM-time
+  const inp = document.getElementById(`${id}-time`);
+  let cur = inp?.value || '10:00';
+  let [hh,mm] = cur.split(':');
   if(part==='h') hh=val; else mm=val;
+  const newVal = `${hh}:${mm}`;
 
-  // update hidden input
-  const inp = document.getElementById(`${id==='apt'?'apt':'treat'}-time`);
-  if(inp) inp.value=`${hh}:${mm}`;
+  if(inp) inp.value = newVal;
 
   // update selected class
   document.querySelectorAll(`#tp-${id}-h .tp-item`).forEach(el=>el.classList.toggle('sel',el.textContent===hh));
   document.querySelectorAll(`#tp-${id}-m .tp-item`).forEach(el=>el.classList.toggle('sel',el.textContent===mm));
   tpSetDisplay(id, hh, mm);
+
+  // ถ้าเป็น slot picker → เรียก schUpdateSlotTime
+  if(id.startsWith('slot_')){
+    // id = slot_YYYY-MM-DD_HHMM
+    const parts = id.replace('slot_','').split('_');
+    const date = parts[0];
+    const oldSlot = parts[1].slice(0,2)+':'+parts[1].slice(2);
+    schUpdateSlotTime(date, oldSlot, newVal);
+  }
 }
 
 function tpSetDisplay(id, hh, mm){
@@ -3599,7 +3650,7 @@ function fmtDate(s){
 }
 function statusClass(s){
   return {
-    'นัดวันนี้' :'badge badge-today',
+    'ไม่คอนเฟิร์ม' :'badge badge-today',
     'รอทำ'     :'badge badge-waiting',
     'คอนเฟิร์ม':'badge badge-confirmed',
     'เสร็จสิ้น':'badge badge-finished',
