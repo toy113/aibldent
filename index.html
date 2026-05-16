@@ -1788,9 +1788,11 @@ function renderTreatList(treats){
 // ============================================================
 let _editAptId = null;
 let _prefillSlot = null; // slot ที่กด +นัด มาจาก schedule page
+let _editAptOrigTime = null; // เวลาเดิมก่อนแก้ไข (สำหรับลบ slot เก่า)
 function openAddApt(apt=null, prefillDate=null, prefillTime=null){
   _editAptId = apt ? apt.id : null;
-  _prefillSlot = (!apt && prefillTime) ? prefillTime : null; // เก็บ slot ต้นทางเฉพาะเพิ่มใหม่
+  _prefillSlot = (!apt && prefillTime) ? prefillTime : null;
+  _editAptOrigTime = apt ? (apt.time||null) : null; // เก็บเวลาเดิมไว้ลบ slot
   document.getElementById('aptModalTitle').textContent = apt ? 'แก้ไขนัด' : 'เพิ่มนัด';
   setDateInput('apt-date', apt?.date || prefillDate || todayStr());
   showDateLabel('apt-date','apt-date-label');
@@ -1865,20 +1867,29 @@ function saveApt(){
   if(idx>-1) appointments[idx]=apt; else appointments.push(apt);
   saveLocal();
 
-  // จัดการ slot อัตโนมัติเฉพาะตอนเพิ่มนัดใหม่
-  if(!_editAptId && apt.time && apt.date){
+  // จัดการ slot
+  if(apt.time && apt.date){
     const slots = getSchSlots(apt.date);
 
-    if(_prefillSlot && apt.time !== _prefillSlot){
-      // เวลาต่างจาก slot ที่กดมา → ลบ slot เดิม + สร้าง slot ใหม่
-      let newSlots = slots.filter(s => s !== _prefillSlot);
+    if(_editAptId && _editAptOrigTime && apt.time !== _editAptOrigTime){
+      // EDIT: เวลาเปลี่ยน → ลบ slot เดิม + สร้าง slot ใหม่
+      let newSlots = slots.filter(s => s !== _editAptOrigTime);
       if(!newSlots.includes(apt.time)) newSlots.push(apt.time);
       newSlots.sort();
       saveSchSlots(apt.date, newSlots);
-      showToast(`ย้าย slot ${_prefillSlot} → ${apt.time}`);
-    } else if(!_prefillSlot){
-      // เพิ่มนัดโดยไม่ได้กดจาก slot → สร้างใหม่ถ้าไม่มี
-      if(!slots.includes(apt.time)){
+      showToast(`ย้าย slot ${_editAptOrigTime} → ${apt.time}`);
+
+    } else if(!_editAptId){
+      // ADD: เพิ่มนัดใหม่
+      if(_prefillSlot && apt.time !== _prefillSlot){
+        // กดจาก slot แล้วเปลี่ยนเวลา → ลบ slot เดิม + สร้างใหม่
+        let newSlots = slots.filter(s => s !== _prefillSlot);
+        if(!newSlots.includes(apt.time)) newSlots.push(apt.time);
+        newSlots.sort();
+        saveSchSlots(apt.date, newSlots);
+        showToast(`ย้าย slot ${_prefillSlot} → ${apt.time}`);
+      } else if(!_prefillSlot && !slots.includes(apt.time)){
+        // ไม่ได้กดจาก slot → สร้างใหม่ถ้าไม่มี
         slots.push(apt.time);
         slots.sort();
         saveSchSlots(apt.date, slots);
@@ -1887,6 +1898,7 @@ function saveApt(){
     }
   }
   _prefillSlot = null;
+  _editAptOrigTime = null;
 
   closeModal('modalApt');
   // Re-render whichever page is active
@@ -1895,7 +1907,7 @@ function saveApt(){
   else if(p==='schedule'){ renderScheduleDay(); renderSchMiniCal(); }
   showToast(_editAptId ? 'แก้ไขนัดสำเร็จ' : 'เพิ่มนัดสำเร็จ');
   syncToSheet('appointments', apt).then(()=>{
-    setTimeout(syncAll, 500);
+    setTimeout(syncAll, 2000);
   }).catch(()=>{
     showToast('⚠️ บันทึกไม่สำเร็จ กรุณาตรวจสอบการเชื่อมต่อ', 'error');
   });
@@ -2028,7 +2040,7 @@ function saveTreat(){
   renderHome(); renderTreatPage();
   showToast('บันทึกการรักษาสำเร็จ');
   syncToSheet('treatments', t).then(()=>{
-    setTimeout(syncAll, 500);
+    setTimeout(syncAll, 2000);
   }).catch(err => {
     showToast('⚠️ บันทึกไม่สำเร็จ กรุณาตรวจสอบการเชื่อมต่อ', 'error');
   });
@@ -3776,7 +3788,7 @@ function buildDaySlotSettingsUI(){
 function startAutoSync(){
   if(_autoSyncStarted) return;
   _autoSyncStarted = true;
-  setInterval(syncAll, 5000); // sync ทุก 5 วินาที
+  setInterval(syncAll, 10000); // sync ทุก 10 วินาที
 }
 
 // ============================================================
