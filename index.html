@@ -1118,7 +1118,9 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
     <div class="form-grid">
       <div class="form-group">
         <label>วันที่</label>
-        <input type="date" class="form-control" lang="en-CA" id="apt-date">
+        <input type="date" class="form-control" lang="en-CA" id="apt-date"
+          onchange="showDateLabel('apt-date','apt-date-label')">
+        <div id="apt-date-label" style="font-size:11px;color:var(--wine-dark);font-weight:700;margin-top:3px;"></div>
       </div>
       <div class="form-group">
         <label>เวลา</label>
@@ -1189,7 +1191,9 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
     <div class="form-grid">
       <div class="form-group">
         <label>วันที่</label>
-        <input type="date" class="form-control" lang="en-CA" id="treat-date">
+        <input type="date" class="form-control" lang="en-CA" id="treat-date"
+          onchange="showDateLabel('treat-date','treat-date-label')">
+        <div id="treat-date-label" style="font-size:11px;color:var(--wine-dark);font-weight:700;margin-top:3px;"></div>
       </div>
       <div class="form-group">
         <label>เวลา</label>
@@ -1255,7 +1259,9 @@ tbody tr.own-row { background: rgba(212,168,71,0.04); }
     <div class="form-grid">
       <div class="form-group">
         <label>วันที่</label>
-        <input type="date" class="form-control" lang="en-CA" id="lab-date">
+        <input type="date" class="form-control" lang="en-CA" id="lab-date"
+          onchange="showDateLabel('lab-date','lab-date-label')">
+        <div id="lab-date-label" style="font-size:11px;color:var(--wine-dark);font-weight:700;margin-top:3px;"></div>
       </div>
       <div class="form-group">
         <label>หมอ</label>
@@ -1781,10 +1787,13 @@ function renderTreatList(treats){
 //  APPOINTMENTS
 // ============================================================
 let _editAptId = null;
+let _prefillSlot = null; // slot ที่กด +นัด มาจาก schedule page
 function openAddApt(apt=null, prefillDate=null, prefillTime=null){
   _editAptId = apt ? apt.id : null;
+  _prefillSlot = (!apt && prefillTime) ? prefillTime : null; // เก็บ slot ต้นทางเฉพาะเพิ่มใหม่
   document.getElementById('aptModalTitle').textContent = apt ? 'แก้ไขนัด' : 'เพิ่มนัด';
   document.getElementById('apt-date').value = apt?.date || prefillDate || todayStr();
+  showDateLabel('apt-date','apt-date-label');
   document.getElementById('apt-hn').value   = apt?.hn || '';
   document.getElementById('apt-name').value = apt?.patName || '';
   document.getElementById('apt-phone').value= apt?.phone || '';
@@ -1856,24 +1865,28 @@ function saveApt(){
   if(idx>-1) appointments[idx]=apt; else appointments.push(apt);
   saveLocal();
 
-  // สร้าง slot อัตโนมัติเฉพาะตอนเพิ่มนัดใหม่ ไม่ใช่แก้ไข
-  // และไม่สร้างถ้าเวลานัดอยู่ใน range ของ slot ที่มีอยู่แล้ว (±30 นาที)
+  // จัดการ slot อัตโนมัติเฉพาะตอนเพิ่มนัดใหม่
   if(!_editAptId && apt.time && apt.date){
     const slots = getSchSlots(apt.date);
-    const [ah,am] = apt.time.split(':').map(Number);
-    const aptMins = ah*60+am;
-    const inExistingSlot = slots.some(s=>{
-      const [sh,sm] = s.split(':').map(Number);
-      const slotMins = sh*60+sm;
-      return aptMins >= slotMins && aptMins < slotMins+30;
-    });
-    if(!inExistingSlot){
-      slots.push(apt.time);
-      slots.sort();
-      saveSchSlots(apt.date, slots);
-      showToast(`เพิ่ม slot ${apt.time} อัตโนมัติ`);
+
+    if(_prefillSlot && apt.time !== _prefillSlot){
+      // เวลาต่างจาก slot ที่กดมา → ลบ slot เดิม + สร้าง slot ใหม่
+      let newSlots = slots.filter(s => s !== _prefillSlot);
+      if(!newSlots.includes(apt.time)) newSlots.push(apt.time);
+      newSlots.sort();
+      saveSchSlots(apt.date, newSlots);
+      showToast(`ย้าย slot ${_prefillSlot} → ${apt.time}`);
+    } else if(!_prefillSlot){
+      // เพิ่มนัดโดยไม่ได้กดจาก slot → สร้างใหม่ถ้าไม่มี
+      if(!slots.includes(apt.time)){
+        slots.push(apt.time);
+        slots.sort();
+        saveSchSlots(apt.date, slots);
+        showToast(`เพิ่ม slot ${apt.time} อัตโนมัติ`);
+      }
     }
   }
+  _prefillSlot = null;
 
   closeModal('modalApt');
   // Re-render whichever page is active
@@ -1956,6 +1969,7 @@ function openAddTreat(t=null){
   const today=todayStr();
   document.getElementById('treat-id').value = t?.id||'';
   document.getElementById('treat-date').value = t?.date||today;
+  showDateLabel('treat-date','treat-date-label');
   // เวลาปัจจุบัน
   const treatTimeEl = document.getElementById('treat-time');
   if(t?.time && treatTimeEl) treatTimeEl.value = t.time;
@@ -2311,6 +2325,7 @@ function openAddLab(l=null){
   document.getElementById('labModalTitle').textContent=l?'แก้ไขค่าแลป':'เพิ่มค่าแลป';
   document.getElementById('lab-id').value=l?.id||'';
   document.getElementById('lab-date').value=l?.date||todayStr();
+  showDateLabel('lab-date','lab-date-label');
   document.getElementById('lab-doc').value=l?.docName||(isManager?doctors[0]?.name:currentUser.name);
   document.getElementById('lab-hn').value=l?.hn||'';
   document.getElementById('lab-name').value=l?.patName||'';
@@ -3423,6 +3438,16 @@ document.addEventListener('click', function(e){
 });
 
 let _autoSyncStarted = false;
+function showDateLabel(inputId, labelId){
+  const val = document.getElementById(inputId)?.value;
+  const el = document.getElementById(labelId);
+  if(!el) return;
+  if(val){
+    const [y,m,d] = val.split('-');
+    el.textContent = `📅 ${d}/${m}/${y}`;
+  } else { el.textContent = ''; }
+}
+
 // ============================================================
 //  TIME INPUT FORMATTER (พิมพ์เลขแล้วใส่ : อัตโนมัติ)
 // ============================================================
